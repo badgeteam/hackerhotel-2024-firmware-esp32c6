@@ -15,6 +15,7 @@
 #include "libcsid.h"
 #include "sdmmc_cmd.h"
 #include "esp_vfs_fat.h"
+#include "pax_gfx.h"
 
 static const char* TAG = "main";
 
@@ -82,6 +83,9 @@ static void player_task(void *pvParameters) {
     }
 }
 
+pax_buf_t gfx;
+pax_col_t palette[] = { 0xffffffff, 0xffff0000, 0xff000000 };
+
 void app_main(void) {
     ESP_LOGI(TAG, "Starting NVS...");
     initialize_nvs();
@@ -112,7 +116,7 @@ void app_main(void) {
     printf("SID Info: %s\n", libcsid_getinfo());
 
     TaskHandle_t player_handle = NULL;
-    xTaskCreate(player_task, "Audio player task", 2048, NULL, tskIDLE_PRIORITY+2, &player_handle);
+    // xTaskCreate(player_task, "Audio player task", 2048, NULL, tskIDLE_PRIORITY+2, &player_handle);
 
     ESP_LOGI(TAG, "Starting SPI...");
     spi_bus_config_t busConfiguration = {0};
@@ -129,6 +133,31 @@ void app_main(void) {
         return;
     }
 
+    ESP_LOGI(TAG, "Creating graphics...");
+    pax_buf_init(&gfx, NULL, 152, 152, PAX_BUF_2_PAL);
+    gfx.palette = palette;
+    gfx.palette_size = sizeof(palette) / sizeof(pax_col_t);
+    // pax_buf_set_orientation(&gfx, PAX_O_FLIP_H);
+    
+    pax_background(&gfx, 0);
+    pax_set_pixel(&gfx, 1, 5, 5);
+    pax_set_pixel(&gfx, 2, 5, 10);
+    
+    pax_draw_rect(&gfx, 1, 0, 0, 50, 20);
+    pax_draw_text(&gfx, 0, pax_font_sky, 18, 1, 1, "Test");
+    pax_draw_rect(&gfx, 2, 50, 0, 50, 20);
+    pax_draw_text(&gfx, 0, pax_font_sky, 18, 51, 1, "Test");
+    
+    pax_draw_rect(&gfx, 0, 0, 20, 50, 20);
+    pax_draw_text(&gfx, 1, pax_font_sky, 18, 1, 21, "Test");
+    pax_draw_rect(&gfx, 2, 50, 20, 50, 20);
+    pax_draw_text(&gfx, 1, pax_font_sky, 18, 51, 21, "Test");
+    
+    pax_draw_rect(&gfx, 0, 0, 40, 50, 20);
+    pax_draw_text(&gfx, 2, pax_font_sky, 18, 1, 41, "Test");
+    pax_draw_rect(&gfx, 1, 50, 40, 50, 20);
+    pax_draw_text(&gfx, 2, pax_font_sky, 18, 51, 41, "Test");
+    
     ESP_LOGI(TAG, "Starting epaper...");
 
     HINK epaper = {
@@ -169,7 +198,7 @@ void app_main(void) {
     ESP_LOGI(TAG, "Writing to epaper...");
     //while (1) {
         //ESP_LOGI(TAG, "Hello world!");
-        hink_write(&epaper, NULL);
+        hink_write(&epaper, gfx.buf);
         //sdmmc_card_print_info(stdout, card);
     //    vTaskDelay(10000 / portTICK_PERIOD_MS);
     //}

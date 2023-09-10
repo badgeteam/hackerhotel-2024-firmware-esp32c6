@@ -94,7 +94,7 @@ esp_err_t hink_send_u8(HINK* device, const uint8_t data) {
 
 esp_err_t hink_reset(HINK* device) {
     if (device->pin_reset >= 0) {
-        ESP_LOGI(TAG, "reset");
+        ESP_LOGD(TAG, "reset");
         esp_err_t res = gpio_set_level(device->pin_reset, false);
         if (res != ESP_OK) return res;
         vTaskDelay(50 / portTICK_PERIOD_MS);
@@ -102,7 +102,7 @@ esp_err_t hink_reset(HINK* device) {
         if (res != ESP_OK) return res;
         vTaskDelay(50 / portTICK_PERIOD_MS);
     } else {
-        ESP_LOGI(TAG, "(no reset pin available)");
+        ESP_LOGD(TAG, "(no reset pin available)");
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
     return ESP_OK;
@@ -195,13 +195,13 @@ esp_err_t hink_write(HINK* device, const uint8_t *buffer) {
     uint16_t eink_x = 18;
     uint16_t eink_y = 151;
 
-    ESP_LOGI(TAG, "Reset");
+    ESP_LOGD(TAG, "Reset");
     hink_reset(device);
     hink_send_command(device, 0x12); // Software reset
     hink_wait(device);
     vTaskDelay(10 / portTICK_PERIOD_MS);
 
-    ESP_LOGI(TAG, "Configure");
+    ESP_LOGD(TAG, "Configure");
     hink_send_command(device, 0x74);//Set Analog Block Control
     hink_send_u8(device, 0x54);
 
@@ -251,7 +251,7 @@ esp_err_t hink_write(HINK* device, const uint8_t *buffer) {
     hink_send_command(device, 0x20);//Master Activation
     hink_wait(device);
 
-    ESP_LOGI(TAG, "Writing RED buffer");
+    ESP_LOGD(TAG, "Writing RED buffer");
 
     hink_send_command(device, 0x4E);//Set RAM X address counter
     hink_send_u8(device, 0x00);
@@ -262,13 +262,19 @@ esp_err_t hink_write(HINK* device, const uint8_t *buffer) {
 
     hink_send_command(device, 0x26);//Write RAM RED
 
-    for (uint32_t y = 0; y < 152; y++) {
-        for (uint32_t x = 0; x < 19; x++) {
-            hink_send_u8(device, (x < 9 && y > 50 && y < 120) ? 0xFF : 0x00);
+    for (int y = 0; y < 152; y++) {
+        for (int x = 18; x >= 0; x--) {
+            uint16_t pixels = buffer[y*38+x*2] | (buffer[y*38+x*2+1] << 8);
+            uint8_t  out = 0;
+            for (int bit = 0; bit < 8; bit++) {
+                out      = (out >> 1) | ((pixels & 1) << 7);
+                pixels >>= 2;
+            }
+            hink_send_u8(device, out);
         }
     }
 
-    ESP_LOGI(TAG, "Writing BLACK buffer");
+    ESP_LOGD(TAG, "Writing BLACK buffer");
 
     hink_send_command(device, 0x4E);//Set RAM X address counter
     hink_send_u8(device, 0x00);
@@ -279,13 +285,20 @@ esp_err_t hink_write(HINK* device, const uint8_t *buffer) {
 
     hink_send_command(device, 0x24);//WRITE RAM BLACK
 
-    for (uint32_t y = 0; y < 152; y++) {
-        for (uint32_t x = 0; x < 19; x++) {
-            hink_send_u8(device, (x > 9 && y > 100) ? 0xFF : 0x00);
+    for (int y = 0; y < 152; y++) {
+        for (int x = 18; x >= 0; x--) {
+            uint16_t pixels = buffer[y*38+x*2] | (buffer[y*38+x*2+1] << 8);
+            uint8_t  out = 0;
+            pixels >>= 1;
+            for (int bit = 0; bit < 8; bit++) {
+                out      = (out >> 1) | ((pixels & 1) << 7);
+                pixels >>= 2;
+            }
+            hink_send_u8(device, out);
         }
     }
 
-    ESP_LOGI(TAG, "Update");
+    ESP_LOGD(TAG, "Update");
 
     hink_send_command(device, 0x22);//Display Update Control 2
     hink_send_u8(device, 0xC7);
@@ -293,12 +306,12 @@ esp_err_t hink_write(HINK* device, const uint8_t *buffer) {
     hink_send_command(device, 0x20);//Master Activation
     hink_wait(device);
 
-    ESP_LOGI(TAG, "Sleep");
+    ESP_LOGD(TAG, "Sleep");
 
     hink_send_command(device, 0x10);//Deep Sleep mode
     hink_send_u8(device, 1);
 
-    ESP_LOGI(TAG, "--- DONE ---");
+    ESP_LOGD(TAG, "--- DONE ---");
 
     return ESP_OK;
 }
