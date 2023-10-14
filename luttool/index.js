@@ -246,6 +246,7 @@ function packLUT(lut) {
             writeVS(i, x, 0, lut.groups[i].phases[x].black);
             writeVS(i, x, 1, lut.groups[i].phases[x].white);
             writeVS(i, x, 2, lut.groups[i].phases[x].red);
+            writeVS(i, x, 3, lut.groups[i].phases[x].red);
             writeVS(i, x, 4, lut.groups[i].phases[x].vcom);
             raw[35+5*i+x] = lut.groups[i].phases[x].length;
         }
