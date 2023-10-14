@@ -90,6 +90,11 @@ size-components:
 size-files:
 	source "$(IDF_PATH)/export.sh" && idf.py size-files
 
+.PHONY: luttool
+luttool:
+	@echo 'LUT editing tool at http://0.0.0.0:8000/'
+	python -m http.server -d luttool
+
 # Formatting
 
 .PHONY: format
