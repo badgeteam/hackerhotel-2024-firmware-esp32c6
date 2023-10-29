@@ -1,5 +1,5 @@
 #include "driver/i2c.h"
-#include "driver/i2s.h"
+#include "driver/i2s_std.h"
 #include "drv2605.h"
 #include "epaper.h"
 #include "esp_err.h"
@@ -16,10 +16,10 @@
 #include "pax_gfx.h"
 #include "sdkconfig.h"
 #include "sdmmc_cmd.h"
+#include "sid.h"
 
 #include <stdio.h>
 
-#include <driver/i2s.h>
 #include <esp_err.h>
 #include <esp_log.h>
 #include <esp_system.h>
@@ -42,6 +42,8 @@
 #define GPIO_I2C_SDA 6
 
 static char const *TAG = "main";
+
+i2s_chan_handle_t i2s_handle = NULL;
 
 pax_buf_t gfx;
 pax_col_t palette[] = {0xffffffff, 0xffff0000, 0xff000000};
@@ -104,7 +106,7 @@ static esp_err_t initialize_system() {
     res = i2c_set_timeout(I2C_BUS, I2C_TIMEOUT * 80);
     if (res != ESP_OK) {
         ESP_LOGE(TAG, "Configuring I2C bus timeout failed");
-        return res;
+        // return res;
     }
 
     res = i2c_driver_install(I2C_BUS, i2c_config.mode, 0, 0, 0);
@@ -114,23 +116,44 @@ static esp_err_t initialize_system() {
     }
 
     // I2S audio
-    i2s_config_t i2s_config = {
-        .mode                 = I2S_MODE_MASTER | I2S_MODE_TX,
-        .sample_rate          = 16000,
-        .bits_per_sample      = I2S_BITS_PER_SAMPLE_16BIT,
-        .channel_format       = I2S_CHANNEL_FMT_RIGHT_LEFT,
-        .communication_format = I2S_COMM_FORMAT_I2S_LSB,
-        .dma_buf_count        = 32,
-        .dma_buf_len          = 64,
-        .intr_alloc_flags     = 0,
-        .use_apll             = false,
-        .bits_per_chan        = I2S_BITS_PER_SAMPLE_16BIT
-    };
-    i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
+    i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_AUTO, I2S_ROLE_MASTER);
 
-    i2s_pin_config_t pin_config =
-        {.mck_io_num = -1, .bck_io_num = 23, .ws_io_num = 17, .data_out_num = 22, .data_in_num = I2S_PIN_NO_CHANGE};
-    i2s_set_pin(I2S_NUM_0, &pin_config);
+    res = i2s_new_channel(&chan_cfg, &i2s_handle, NULL);
+    if (res != ESP_OK) {
+        ESP_LOGE(TAG, "Initializing I2S channel failed");
+        return res;
+    }
+
+    i2s_std_config_t i2s_config = {
+        .clk_cfg  = I2S_STD_CLK_DEFAULT_CONFIG(16000),
+        .slot_cfg = I2S_STD_MSB_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_STEREO),
+        .gpio_cfg =
+            {
+                .mclk = I2S_GPIO_UNUSED,
+                .bclk = GPIO_NUM_23,
+                .ws   = GPIO_NUM_17,
+                .dout = GPIO_NUM_22,
+                .din  = I2S_GPIO_UNUSED,
+                .invert_flags =
+                    {
+                        .mclk_inv = false,
+                        .bclk_inv = false,
+                        .ws_inv   = false,
+                    },
+            },
+    };
+
+    res = i2s_channel_init_std_mode(i2s_handle, &i2s_config);
+    if (res != ESP_OK) {
+        ESP_LOGE(TAG, "Configuring I2S channel failed");
+        return res;
+    }
+
+    res = i2s_channel_enable(i2s_handle);
+    if (res != ESP_OK) {
+        ESP_LOGE(TAG, "Enabling I2S channel failed");
+        return res;
+    }
 
     // GPIO for controlling power to the audio amplifier
     gpio_config_t pin_amp_enable_cfg = {
@@ -189,57 +212,20 @@ static esp_err_t initialize_system() {
 
     res = esp_vfs_fat_sdspi_mount("/sdcard", &host, &slot_config, &mount_config, &card);
     if (res != ESP_OK) {
-        ESP_LOGE(TAG, "Initializing SD card failed");
+        ESP_LOGW(TAG, "Initializing SD card failed");
         card = NULL;
+    }
+
+    // SID emulator
+    res = sid_init(i2s_handle);
+    if (res != ESP_OK) {
+        ESP_LOGE(TAG, "Initializing SID emulator failed");
         return res;
     }
 
     return res;
 }
 
-uint8_t lut[HINK_LUT_SIZE] = {1, 2, 3, 4};
-
-uint8_t const lut_rom[HINK_LUT_SIZE] = {
-    0x80, 0x66, 0x96, 0x51, 0x40, 0x04, 0x00, 0x00, 0x00, 0x00, 0x10, 0x66, 0x96, 0x88, 0x20, 0x20, 0x00, 0x00,
-    0x00, 0x00, 0x8A, 0x66, 0x96, 0x51, 0x0B, 0x2F, 0x00, 0x00, 0x00, 0x00, 0x8A, 0x66, 0x96, 0x51, 0x0B, 0x2F,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x5A, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x2D, 0x55, 0x28, 0x25,
-    0x00, 0x02, 0x03, 0x01, 0x02, 0x0C, 0x12, 0x01, 0x12, 0x01, 0x03, 0x05, 0x05, 0x02, 0x05, 0x02,
-};
-
-uint8_t const lut_alt[HINK_LUT_SIZE] = {0x80, 0x66, 0x96, 0x51, 0x40, 0x04, 0x00, 0x00, 0x00, 0x00, 0x10, 0x66,
-                                        0x96, 0x88, 0x20, 0x20, 0x00, 0x00, 0x00, 0x00, 0x8a, 0x00, 0x00, 0x00,
-                                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x8a, 0x66, 0x96, 0x51, 0x0b, 0x2f,
-                                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x5a, 0x40, 0x00, 0x00, 0x00, 0x00,
-                                        0x00, 0x00, 0x2d, 0x55, 0x28, 0x25, 0x00, 0x02, 0x03, 0x01, 0x02, 0x04,
-                                        0x24, 0x02, 0x24, 0x02, 0x11, 0x05, 0x05, 0x02, 0x05, 0x02};
-
-uint8_t const zeroes[HINK_LUT_SIZE] = {0};
-
-static void bitbang_tx(int tx_pin, int clk_pin, uint8_t byte) {
-    gpio_set_direction(tx_pin, GPIO_MODE_OUTPUT);
-    for (int i = 0; i < 8; i++) {
-        gpio_set_level(tx_pin, byte & 0x80);
-        byte <<= 1;
-        esp_rom_delay_us(1);
-        gpio_set_level(clk_pin, 1);
-        esp_rom_delay_us(1);
-        gpio_set_level(clk_pin, 0);
-    }
-}
-
-static uint8_t bitbang_rx(int rx_pin, int clk_pin) {
-    gpio_set_direction(rx_pin, GPIO_MODE_INPUT);
-    uint8_t byte = 0;
-    for (int i = 0; i < 8; i++) {
-        esp_rom_delay_us(1);
-        gpio_set_level(clk_pin, 1);
-        byte <<= 1;
-        byte  |= !!gpio_get_level(rx_pin);
-        esp_rom_delay_us(1);
-        gpio_set_level(clk_pin, 0);
-    }
-    return byte;
-}
 void test_time() {
     time_t    now;
     char      strftime_buf[64];
@@ -253,29 +239,6 @@ void test_time() {
     localtime_r(&now, &timeinfo);
     strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
     ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", strftime_buf);
-}
-
-void read_lut() {
-    spi_bus_remove_device(epaper.spi_device);
-    spi_bus_free(SPI2_HOST);
-
-    gpio_set_direction(21, GPIO_MODE_OUTPUT);
-    gpio_set_level(21, 0);
-    gpio_set_direction(5, GPIO_MODE_OUTPUT);
-    gpio_set_level(5, 0);
-    gpio_set_direction(8, GPIO_MODE_OUTPUT);
-    gpio_set_level(8, 1);
-    vTaskDelay(1);
-    gpio_set_level(8, 0);
-
-    bitbang_tx(19, 21, 0x33);
-    gpio_set_level(5, 1);
-    for (int i = 0; i < HINK_LUT_SIZE; i++) {
-        lut[i] = bitbang_rx(19, 21);
-    }
-
-    hexdump_vaddr("LUT:", lut, sizeof(lut), 0);
-    return;
 }
 
 void app_main(void) {

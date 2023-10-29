@@ -10,13 +10,13 @@
 extern "C" {
 #endif //__cplusplus
 
-#include "driver/i2s.h"
-#include "libcsid.h"
+#include "driver/i2s_std.h"
+#include "esp_err.h"
 
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <esp_err.h>
+esp_err_t sid_init(i2s_chan_handle_t i2s_handle);
 
 #ifdef __cplusplus
 }

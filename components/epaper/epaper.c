@@ -6,6 +6,8 @@
 
 #include "include/epaper.h"
 
+#include "hextools.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -33,6 +35,14 @@ static uint8_t const default_lut[HINK_LUT_SIZE] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x5A, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x2D, 0x55, 0x28, 0x25,
     0x00, 0x02, 0x03, 0x01, 0x02, 0x0C, 0x12, 0x01, 0x12, 0x01, 0x03, 0x05, 0x05, 0x02, 0x05, 0x02,
 };
+
+uint8_t lut_alt[HINK_LUT_SIZE] = {0x80, 0x66, 0x96, 0x51, 0x40, 0x04, 0x00, 0x00, 0x00, 0x00, 0x10, 0x66, 0x96, 0x88,
+                                  0x20, 0x20, 0x00, 0x00, 0x00, 0x00, 0x8a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                  0x00, 0x00, 0x8a, 0x66, 0x96, 0x51, 0x0b, 0x2f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                  0x5a, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x2d, 0x55, 0x28, 0x25, 0x00, 0x02,
+                                  0x03, 0x01, 0x02, 0x04, 0x24, 0x02, 0x24, 0x02, 0x11, 0x05, 0x05, 0x02, 0x05, 0x02};
+
+uint8_t const zeroes[HINK_LUT_SIZE] = {0};
 
 
 
@@ -80,15 +90,15 @@ static esp_err_t hink_write_init_data(HINK *device, uint8_t const *data) {
     return res;
 }
 
-static esp_err_t hink_send_command(HINK *device, const uint8_t cmd) {
+static esp_err_t hink_send_command(HINK *device, uint8_t const cmd) {
     return hink_send(device, &cmd, 1, false);
 }
 
-static esp_err_t hink_send_data(HINK *device, uint8_t const *data, const uint16_t length) {
+static esp_err_t hink_send_data(HINK *device, uint8_t const *data, uint16_t const length) {
     return hink_send(device, data, length, true);
 }
 
-static esp_err_t hink_send_u32(HINK *device, const uint32_t data) {
+static esp_err_t hink_send_u32(HINK *device, uint32_t const data) {
     uint8_t buffer[4];
     buffer[0] = (data >> 24) & 0xFF;
     buffer[1] = (data >> 16) & 0xFF;
@@ -97,14 +107,14 @@ static esp_err_t hink_send_u32(HINK *device, const uint32_t data) {
     return hink_send(device, buffer, 4, true);
 }
 
-static esp_err_t hink_send_u16(HINK *device, const uint32_t data) {
+static esp_err_t hink_send_u16(HINK *device, uint32_t const data) {
     uint8_t buffer[2];
     buffer[0] = (data >> 8) & 0xFF;
     buffer[1] = data & 0xFF;
     return hink_send(device, buffer, 2, true);
 }
 
-static esp_err_t hink_send_u8(HINK *device, const uint8_t data) {
+static esp_err_t hink_send_u8(HINK *device, uint8_t const data) {
     return hink_send(device, &data, 1, true);
 }
 
@@ -202,7 +212,8 @@ esp_err_t hink_init(HINK *device) {
             .flags            = SPI_DEVICE_HALFDUPLEX | SPI_DEVICE_3WIRE,
             .queue_size       = 1,
             .pre_cb           = hink_spi_pre_transfer_callback, // Handles D/C line
-            .post_cb          = NULL};
+            .post_cb          = NULL
+        };
         res = spi_bus_add_device(device->spi_bus, &devcfg, &device->spi_device);
         if (res != ESP_OK)
             return res;
@@ -371,4 +382,56 @@ esp_err_t hink_write(HINK *device, uint8_t const *buffer) {
 esp_err_t hink_set_lut(HINK *device, uint8_t const lut[HINK_LUT_SIZE]) {
     device->lut = lut;
     return ESP_OK;
+}
+
+static void bitbang_tx(int tx_pin, int clk_pin, uint8_t byte) {
+    gpio_set_direction(tx_pin, GPIO_MODE_OUTPUT);
+    for (int i = 0; i < 8; i++) {
+        gpio_set_level(tx_pin, byte & 0x80);
+        byte <<= 1;
+        esp_rom_delay_us(1);
+        gpio_set_level(clk_pin, 1);
+        esp_rom_delay_us(1);
+        gpio_set_level(clk_pin, 0);
+    }
+}
+
+static uint8_t bitbang_rx(int rx_pin, int clk_pin) {
+    gpio_set_direction(rx_pin, GPIO_MODE_INPUT);
+    uint8_t byte = 0;
+    for (int i = 0; i < 8; i++) {
+        esp_rom_delay_us(1);
+        gpio_set_level(clk_pin, 1);
+        byte <<= 1;
+        byte  |= !!gpio_get_level(rx_pin);
+        esp_rom_delay_us(1);
+        gpio_set_level(clk_pin, 0);
+    }
+    return byte;
+}
+
+void read_lut(HINK *device) {
+    spi_bus_remove_device(device->spi_device);
+    spi_bus_free(SPI2_HOST);
+
+    gpio_set_direction(21, GPIO_MODE_OUTPUT);
+    gpio_set_level(21, 0);
+    gpio_set_direction(5, GPIO_MODE_OUTPUT);
+    gpio_set_level(5, 0);
+    gpio_set_direction(8, GPIO_MODE_OUTPUT);
+    gpio_set_level(8, 1);
+    vTaskDelay(1);
+    gpio_set_level(8, 0);
+
+    bitbang_tx(19, 21, 0x33);
+    gpio_set_level(5, 1);
+
+    uint8_t lut[HINK_LUT_SIZE] = {0};
+
+    for (int i = 0; i < HINK_LUT_SIZE; i++) {
+        lut[i] = bitbang_rx(19, 21);
+    }
+
+    hexdump_vaddr("LUT:", lut, sizeof(lut), 0);
+    return;
 }

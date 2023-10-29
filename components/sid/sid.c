@@ -1,5 +1,11 @@
 #include "sid.h"
 
+#include "driver/i2s_std.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
+#include "freertos/task.h"
+#include "libcsid.h"
+
 /*#define NUM_SAMPLES 300
 unsigned short samples_data[2 * NUM_SAMPLES];
 
@@ -20,9 +26,10 @@ static void render_audio() {
 }*/
 
 #define NUM_SAMPLES 1200
-static unsigned short mono_samples_data[2 * NUM_SAMPLES];
-static unsigned short samples_data[2 * 2 * NUM_SAMPLES];
-static TaskHandle_t   player_handle = NULL;
+static unsigned short    mono_samples_data[2 * NUM_SAMPLES];
+static unsigned short    samples_data[2 * 2 * NUM_SAMPLES];
+static TaskHandle_t      player_handle     = NULL;
+static i2s_chan_handle_t player_i2s_handle = NULL;
 
 static void render_audio() {
     libcsid_render(mono_samples_data, NUM_SAMPLES);
@@ -40,7 +47,7 @@ static void render_audio() {
 
     while (left > 0) {
         size_t written = 0;
-        i2s_write(I2S_NUM_0, (char const *)ptr, left, &written, 100 / portTICK_PERIOD_MS);
+        i2s_channel_write(player_i2s_handle, (char const *)ptr, left, &written, 100 / portTICK_PERIOD_MS);
         pos  += written;
         ptr  += written;
         left -= written;
@@ -57,7 +64,8 @@ static void player_task(void *pvParameters) {
 }
 
 
-esp_err_t sid_init() {
+esp_err_t sid_init(i2s_chan_handle_t i2s_handle) {
+    player_i2s_handle = i2s_handle;
     libcsid_init(16000, SIDMODEL_6581);
     libcsid_load((unsigned char *)&phantom_of_the_opera_sid, phantom_of_the_opera_sid_len, 0);
 

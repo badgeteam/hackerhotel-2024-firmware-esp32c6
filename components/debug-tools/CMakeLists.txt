@@ -1,5 +1,5 @@
 idf_component_register(
-  REQUIRES driver debug-tools
-  SRCS "epaper.c"
+  REQUIRES driver
+  SRCS "hextools.c"
   INCLUDE_DIRS include
 )
