@@ -216,12 +216,16 @@ static esp_err_t initialize_system() {
         card = NULL;
     }
 
-    // SID emulator
+// SID emulator
+#if 0
     res = sid_init(i2s_handle);
     if (res != ESP_OK) {
         ESP_LOGE(TAG, "Initializing SID emulator failed");
         return res;
     }
+#else
+    res = ESP_OK;
+#endif
 
     return res;
 }
