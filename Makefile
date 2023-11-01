@@ -1,9 +1,15 @@
 PORT ?= /dev/ttyACM0
 BUILDDIR ?= build
+
 IDF_PATH ?= $(shell pwd)/esp-idf
+IDF_TOOLS_PATH ?= $(shell pwd)/esp-idf-tools
 IDF_BRANCH ?= release/v5.1
-IDF_EXPORT_QUIET ?= 0
+IDF_EXPORT_QUIET ?= 1
+
 SHELL := /usr/bin/env bash
+
+export IDF_TOOLS_PATH
+export IDF_GITHUB_ASSETS
 
 # General targets
 
@@ -25,6 +31,7 @@ submodules:
 .PHONY: sdk
 sdk:
 	rm -rf "$(IDF_PATH)"
+	rm -rf "$(IDF_TOOLS_PATH)"
 	git clone --recursive --branch "$(IDF_BRANCH)" https://github.com/espressif/esp-idf.git
 	cd "$(IDF_PATH)"; bash install.sh all
 	source "$(IDF_PATH)/export.sh" && idf.py --preview set-target esp32c6
@@ -69,6 +76,10 @@ erase:
 .PHONY: monitor
 monitor:
 	source "$(IDF_PATH)/export.sh" && idf.py monitor -p $(PORT)
+
+.PHONY: openocd
+openocd:
+	$(IDF_TOOLS_PATH)/tools/openocd-esp32/*/openocd-esp32/bin/openocd -f board/esp32c6-builtin.cfg
 
 # Emulation
 
