@@ -21,7 +21,7 @@ extern "C" {
 
 #define HINK_LUT_SIZE 70
 
-typedef struct HINK {
+typedef struct _hink {
     // Configuration
     int                 spi_bus;
     int                 pin_cs;
@@ -35,15 +35,65 @@ typedef struct HINK {
     bool                dc_level;
     SemaphoreHandle_t   mutex;
     uint8_t const      *lut;
-} HINK;
+} hink_t;
 
-esp_err_t hink_init(HINK *device);
-esp_err_t hink_deinit(HINK *device);
+#define HINK_CMD_DRIVER_OUTPUT_CONTROL          0x01
+#define HINK_CMD_GATE_DRIVING_VOLTAGE           0x03
+#define HINK_CMD_SOURCE_DRIVING_VOLTAGE_CONTROL 0x04
+#define HINK_CMD_BOOSTER_SOFT_START_CONTROL     0x0C
+#define HINK_CMD_GATE_SCAN_START_POSITION       0x0F
+#define HINK_CMD_DEEP_SLEEP_MODE                0x10
+#define HINK_CMD_DATA_ENTRY_MODE_SETTING        0x11
+#define HINK_CMD_SW_RESET                       0x12
+#define HINK_CMD_HV_READY_DETECTION             0x14
+#define HINK_CMD_VCI_DETECTION                  0x15
+#define HINK_CMD_TEMPERATURE_SENSOR_CONTROL     0x18
+#define HINK_CMD_TEMPERATURE_SENSOR_WRITE       0x1A
+#define HINK_CMD_TEMPERATURE_SENSOR_READ        0x1B
+#define HINK_CMD_TEMPERATURE_SENSOR_WRITE_REG   0x1C
+#define HINK_CMD_MASTER_ACTIVATION              0x20
+#define HINK_CMD_DISPLAY_UPDATE_CONTROL_1       0x21
+#define HINK_CMD_DISPLAY_UPDATE_CONTROL_2       0x22
+#define HINK_CMD_WRITE_RAM_BLACK                0x24
+#define HINK_CMD_WRITE_RAM_RED                  0x26
+#define HINK_CMD_READ_RAM                       0x27
+#define HINK_CMD_VCOM_SENSE                     0x28
+#define HINK_CMD_VCOM_SENSE_DURATION            0x29
+#define HINK_CMD_PROGRAM_VCOM_OTP               0x2A
+#define HINK_CMD_WRITE_VCOM_REGISTER            0x2C
+#define HINK_CMD_OTP_REGISTER_READ              0x2D
+#define HINK_CMD_USER_ID_READ                   0x2E
+#define HINK_CMD_STATUS_BIT_READ                0x2F
+#define HINK_CMD_PROGRAM_WS_OTP                 0x30
+#define HINK_CMD_LOAD_WS_OTP                    0x31
+#define HINK_CMD_WRITE_LUT_REGISTER             0x32
+#define HINK_CMD_CRC_CALCULATION                0x34
+#define HINK_CMD_CRC_STATUS_READ                0x35
+#define HINK_CMD_PROGRAM_OTP_SELECTION          0x36
+#define HINK_CMD_WRITE_OTP_SELECTION            0x37
+#define HINK_CMD_WRITE_USER_ID                  0x38
+#define HINK_CMD_OTP_PROGRAM_MODE               0x39
+#define HINK_CMD_SET_DUMMY_LINE_PERIOD          0x3A
+#define HINK_CMD_SET_GATE_LINE_WIDTH            0x3B
+#define HINK_CMD_BORDER_WAVEFORM_CONTROL        0x3C
+#define HINK_CMD_READ_RAM_OPTION                0x41
+#define HINK_CMD_SET_RAM_X_ADDRESS_LIMITS       0x44
+#define HINK_CMD_SET_RAM_Y_ADDRESS_LIMITS       0x45
+#define HINK_CMD_AUTO_WRITE_RED_RAM             0x46
+#define HINK_CMD_AUTO_WRITE_BW_RAM              0x47
+#define HINK_CMD_SET_RAM_X_ADDRESS_COUNTER      0x4E
+#define HINK_CMD_SET_RAM_Y_ADDRESS_COUNTER      0x4F
+#define HINK_CMD_SET_ANALOG_BLOCK_CONTROL       0x74
+#define HINK_CMD_SET_DIGITAL_BLOCK_CONTROL      0x7E
+#define HINK_CMD_NOP                            0x7F
+
+esp_err_t hink_init(hink_t *device);
+esp_err_t hink_deinit(hink_t *device);
 // Write data to the display.
-esp_err_t hink_write(HINK *device, uint8_t const *data);
+esp_err_t hink_write(hink_t *device, uint8_t const *data);
 // Set the active LUT.
 // Does not create a copy of the LUT.
-esp_err_t hink_set_lut(HINK *device, uint8_t const lut[HINK_LUT_SIZE]);
+esp_err_t hink_set_lut(hink_t *device, uint8_t const lut[HINK_LUT_SIZE]);
 
 #ifdef __cplusplus
 }
