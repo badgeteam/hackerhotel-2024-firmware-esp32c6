@@ -111,3 +111,4 @@ luttool:
 .PHONY: format
 format:
 	find main/ -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' | xargs clang-format -i
+	find components/epaper -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' | xargs clang-format -i

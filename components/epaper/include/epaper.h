@@ -8,7 +8,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif //__cplusplus
+#endif  //__cplusplus
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -45,6 +45,7 @@ typedef struct _hink {
 #define HINK_CMD_DEEP_SLEEP_MODE                0x10
 #define HINK_CMD_DATA_ENTRY_MODE_SETTING        0x11
 #define HINK_CMD_SW_RESET                       0x12
+#define HINK_CMD_SW_RESET_2                     0x13  // Not in datasheet
 #define HINK_CMD_HV_READY_DETECTION             0x14
 #define HINK_CMD_VCI_DETECTION                  0x15
 #define HINK_CMD_TEMPERATURE_SENSOR_CONTROL     0x18
@@ -60,6 +61,7 @@ typedef struct _hink {
 #define HINK_CMD_VCOM_SENSE                     0x28
 #define HINK_CMD_VCOM_SENSE_DURATION            0x29
 #define HINK_CMD_PROGRAM_VCOM_OTP               0x2A
+#define HINK_CMD_UNKNOWN_1                      0x2B  // Not in datasheet
 #define HINK_CMD_WRITE_VCOM_REGISTER            0x2C
 #define HINK_CMD_OTP_REGISTER_READ              0x2D
 #define HINK_CMD_USER_ID_READ                   0x2E
@@ -67,6 +69,7 @@ typedef struct _hink {
 #define HINK_CMD_PROGRAM_WS_OTP                 0x30
 #define HINK_CMD_LOAD_WS_OTP                    0x31
 #define HINK_CMD_WRITE_LUT_REGISTER             0x32
+#define HINK_CMD_READ_LUT_REGISTER              0x33  // Not in datasheet
 #define HINK_CMD_CRC_CALCULATION                0x34
 #define HINK_CMD_CRC_STATUS_READ                0x35
 #define HINK_CMD_PROGRAM_OTP_SELECTION          0x36
@@ -87,14 +90,26 @@ typedef struct _hink {
 #define HINK_CMD_SET_DIGITAL_BLOCK_CONTROL      0x7E
 #define HINK_CMD_NOP                            0x7F
 
+#define HINK_DISPLAY_UPDATE_CONTROL_2_CLOCK_OFF             0x01
+#define HINK_DISPLAY_UPDATE_CONTROL_2_ANALOG_OFF            0x02
+#define HINK_DISPLAY_UPDATE_CONTROL_2_USE_MODE_1            0x04
+#define HINK_DISPLAY_UPDATE_CONTROL_2_USE_MODE_2            0x08
+#define HINK_DISPLAY_UPDATE_CONTROL_2_LOAD_LUT              0x10
+#define HINK_DISPLAY_UPDATE_CONTROL_2_LATCH_TEMPERATURE_VAL 0x20
+#define HINK_DISPLAY_UPDATE_CONTROL_2_ANALOG_ON             0x40
+#define HINK_DISPLAY_UPDATE_CONTROL_2_CLOCK_ON              0x80
+
 esp_err_t hink_init(hink_t *device);
 esp_err_t hink_deinit(hink_t *device);
 // Write data to the display.
 esp_err_t hink_write(hink_t *device, uint8_t const *data);
+esp_err_t hink_write_2(hink_t *device, uint8_t const *buffer);
 // Set the active LUT.
 // Does not create a copy of the LUT.
 esp_err_t hink_set_lut(hink_t *device, uint8_t const lut[HINK_LUT_SIZE]);
 
+void hink_read_lut(hink_t *device);
+
 #ifdef __cplusplus
 }
-#endif //__cplusplus
+#endif  //__cplusplus

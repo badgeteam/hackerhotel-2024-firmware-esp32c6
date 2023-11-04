@@ -18,6 +18,7 @@
 #include "sdmmc_cmd.h"
 #include "sid.h"
 
+#include <inttypes.h>
 #include <stdio.h>
 
 #include <esp_err.h>
@@ -35,8 +36,8 @@
 #include <time.h>
 
 #define I2C_BUS     0
-#define I2C_SPEED   400000 // 400 kHz
-#define I2C_TIMEOUT 250    // us
+#define I2C_SPEED   400000  // 400 kHz
+#define I2C_TIMEOUT 250     // us
 
 #define GPIO_I2C_SCL 7
 #define GPIO_I2C_SDA 6
@@ -48,7 +49,7 @@ i2s_chan_handle_t i2s_handle = NULL;
 pax_buf_t gfx;
 pax_col_t palette[] = {0xffffffff, 0xffff0000, 0xff000000};
 
-HINK epaper = {
+hink_t epaper = {
     .spi_bus               = SPI2_HOST,
     .pin_cs                = 8,
     .pin_dcx               = 5,
@@ -94,8 +95,7 @@ static esp_err_t initialize_system() {
         .master.clk_speed = I2C_SPEED,
         .sda_pullup_en    = false,
         .scl_pullup_en    = false,
-        .clk_flags        = 0
-    };
+        .clk_flags        = 0};
 
     res = i2c_param_config(I2C_BUS, &i2c_config);
     if (res != ESP_OK) {
@@ -161,8 +161,7 @@ static esp_err_t initialize_system() {
         .mode         = GPIO_MODE_INPUT_OUTPUT,
         .pull_up_en   = false,
         .pull_down_en = false,
-        .intr_type    = GPIO_INTR_DISABLE
-    };
+        .intr_type    = GPIO_INTR_DISABLE};
     gpio_set_level(1, true);
     gpio_config(&pin_amp_enable_cfg);
 
@@ -207,8 +206,10 @@ static esp_err_t initialize_system() {
     slot_config.gpio_cs               = 18;
     slot_config.host_id               = SPI2_HOST;
 
-    esp_vfs_fat_sdmmc_mount_config_t mount_config =
-        {.format_if_mount_failed = false, .max_files = 5, .allocation_unit_size = 16 * 1024};
+    esp_vfs_fat_sdmmc_mount_config_t mount_config = {
+        .format_if_mount_failed = false,
+        .max_files              = 5,
+        .allocation_unit_size   = 16 * 1024};
 
     res = esp_vfs_fat_sdspi_mount("/sdcard", &host, &slot_config, &mount_config, &card);
     if (res != ESP_OK) {
@@ -245,6 +246,13 @@ void test_time() {
     ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", strftime_buf);
 }
 
+uint8_t lut_alt[HINK_LUT_SIZE] = {
+    0x80, 0x66, 0x96, 0x51, 0x40, 0x04, 0x00, 0x00, 0x00, 0x00, 0x10, 0x66, 0x96, 0x88, 0x20, 0x20, 0x00, 0x00,
+    0x00, 0x00, 0x8a, 0x20, 0x20, 0x00, 0x00, 0x00, 0x00, 0x8a, 0x00, 0x00, 0x8a, 0x66, 0x96, 0x51, 0x0b, 0x2f,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x5a, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x2d, 0x55, 0x28, 0x25,
+    0x00, 0x02, 0x03, 0x01, 0x02, 0x00, 0x12, 0x01, 0x12, 0x01, 0x00, 0x05, 0x05, 0x02, 0x05, 0x00,
+};
+
 void app_main(void) {
     esp_err_t res = initialize_system();
     if (res != ESP_OK) {
@@ -276,10 +284,20 @@ void app_main(void) {
     pax_draw_text(&gfx, 2, pax_font_sky, 18, 51, 41, "Test");
 
 
-    // hink_set_lut(&epaper, lut_alt);
+    hink_set_lut(&epaper, lut_alt);
     hink_write(&epaper, gfx.buf);
 
+    // hink_read_lut(&epaper);
+
+    uint32_t counter = 0;
     while (1) {
-        vTaskDelay(500 / portTICK_PERIOD_MS);
+        pax_background(&gfx, 0);
+        char counter_string[64];
+        sprintf(counter_string, "%" PRIu32, counter);
+        pax_draw_text(&gfx, 1, pax_font_sky, 18, 1, 21, counter_string);
+        pax_draw_text(&gfx, 2, pax_font_sky, 18, 1, 41, counter_string);
+        hink_write_2(&epaper, gfx.buf);
+        counter++;
+        // vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }
