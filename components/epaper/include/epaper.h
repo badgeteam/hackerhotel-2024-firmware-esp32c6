@@ -35,6 +35,7 @@ typedef struct _hink {
     bool                dc_level;
     SemaphoreHandle_t   mutex;
     uint8_t const      *lut;
+    uint8_t const      *lut_extra;
 } hink_t;
 
 #define HINK_CMD_DRIVER_OUTPUT_CONTROL          0x01
@@ -107,8 +108,14 @@ esp_err_t hink_write_2(hink_t *device, uint8_t const *buffer);
 // Set the active LUT.
 // Does not create a copy of the LUT.
 esp_err_t hink_set_lut(hink_t *device, uint8_t const lut[HINK_LUT_SIZE]);
+esp_err_t hink_set_lut_ext(hink_t *device, uint8_t const lut[HINK_LUT_SIZE]);
 
-void hink_read_lut(hink_t *device);
+esp_err_t hink_set_gate_driving_voltage(hink_t *device, uint8_t value);
+esp_err_t hink_set_source_driving_voltage(hink_t *device, uint8_t vsh1, uint8_t vsh2, uint8_t vsl);
+esp_err_t hink_set_dummy_line_period(hink_t *device, uint8_t period);
+esp_err_t hink_set_gate_line_width(hink_t *device, uint8_t width);
+
+void hink_read_lut(int pin_data, int pin_clk, int pin_cs, int pin_dc, int pin_reset, int pin_busy);
 
 #ifdef __cplusplus
 }

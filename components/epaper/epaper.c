@@ -166,7 +166,7 @@ static esp_err_t hink_write_lut(hink_t *device, uint8_t const lut[HINK_LUT_SIZE]
     return res;
 }
 
-static esp_err_t hink_set_gate_driving_voltage(hink_t *device, uint8_t value) {
+esp_err_t hink_set_gate_driving_voltage(hink_t *device, uint8_t value) {
     esp_err_t res;
     if (device->spi_device == NULL) {
         return ESP_FAIL;
@@ -176,10 +176,13 @@ static esp_err_t hink_set_gate_driving_voltage(hink_t *device, uint8_t value) {
         return res;
     }
     res = hink_send_u8(device, value & 0x1F);
+    if (res == ESP_OK) {
+        ESP_LOGI(TAG, "Gate driving voltage set to 0x%02x", value & 0x1F);
+    }
     return res;
 }
 
-static esp_err_t hink_set_source_driving_voltage(hink_t *device, uint8_t vsh1, uint8_t vsh2, uint8_t vsl) {
+esp_err_t hink_set_source_driving_voltage(hink_t *device, uint8_t vsh1, uint8_t vsh2, uint8_t vsl) {
     esp_err_t res;
     if (device->spi_device == NULL) {
         return ESP_FAIL;
@@ -197,10 +200,13 @@ static esp_err_t hink_set_source_driving_voltage(hink_t *device, uint8_t vsh1, u
         return res;
     }
     res = hink_send_u8(device, vsl);
+    if (res == ESP_OK) {
+        ESP_LOGI(TAG, "Source driving voltage set to 0x%02x 0x%02x 0x%02x", vsh1, vsh2, vsl);
+    }
     return res;
 }
 
-static esp_err_t hink_set_dummy_line_period(hink_t *device, uint8_t period) {
+esp_err_t hink_set_dummy_line_period(hink_t *device, uint8_t period) {
     esp_err_t res;
     if (device->spi_device == NULL) {
         return ESP_FAIL;
@@ -210,10 +216,13 @@ static esp_err_t hink_set_dummy_line_period(hink_t *device, uint8_t period) {
         return res;
     }
     res = hink_send_u8(device, period & 0x7F);
+    if (res == ESP_OK) {
+        ESP_LOGI(TAG, "Dummy line period set to 0x%02x", period & 0x7F);
+    }
     return res;
 }
 
-static esp_err_t hink_set_gate_line_width(hink_t *device, uint8_t width) {
+esp_err_t hink_set_gate_line_width(hink_t *device, uint8_t width) {
     esp_err_t res;
     if (device->spi_device == NULL) {
         return ESP_FAIL;
@@ -223,6 +232,9 @@ static esp_err_t hink_set_gate_line_width(hink_t *device, uint8_t width) {
         return res;
     }
     res = hink_send_u8(device, width & 0x0F);
+    if (res == ESP_OK) {
+        ESP_LOGI(TAG, "Gate line width set to 0x%02x", width & 0x0F);
+    }
     return res;
 }
 
@@ -428,114 +440,23 @@ esp_err_t hink_write(hink_t *device, uint8_t const *buffer) {
     ESP_LOGI(TAG, "Setting LUT");
 
     hink_write_lut(device, device->lut);
-    // hink_set_gate_driving_voltage(device, 0x07);
-    // hink_set_source_driving_voltage(device, 0x01, 0x07, 0x2A);
-    // hink_set_dummy_line_period(device, 0x04);
-    // hink_set_gate_line_width(device, 0x04);
 
-    // Default values
-    hink_set_gate_driving_voltage(device, 0x19);
-    hink_set_source_driving_voltage(device, 0x41, 0xA8, 0x32);
-    hink_set_dummy_line_period(device, 0x2C);
-    hink_set_gate_line_width(device, 0x0A);
-
-
-    ESP_LOGI(TAG, "Update");
-
-    hink_send_command(device, HINK_CMD_DISPLAY_UPDATE_CONTROL_2);
-    hink_send_u8(
-        device,
-        HINK_DISPLAY_UPDATE_CONTROL_2_CLOCK_ON | HINK_DISPLAY_UPDATE_CONTROL_2_ANALOG_ON |
-            HINK_DISPLAY_UPDATE_CONTROL_2_USE_MODE_1 | HINK_DISPLAY_UPDATE_CONTROL_2_USE_MODE_2 |
-            HINK_DISPLAY_UPDATE_CONTROL_2_ANALOG_OFF | HINK_DISPLAY_UPDATE_CONTROL_2_CLOCK_OFF
-    );
-
-    hink_send_command(device, HINK_CMD_MASTER_ACTIVATION);
-    hink_wait(device);
-
-    ESP_LOGI(TAG, "Done");
-
-    return ESP_OK;
-}
-
-esp_err_t hink_write_2(hink_t *device, uint8_t const *buffer) {
-    if (device->spi_device == NULL) {
-        return ESP_FAIL;
+    if (device->lut_extra != NULL) {
+        ESP_LOGI(TAG, "Setting LUT extra");
+        // This sets the settings to the values in the lut array from position 70 (HINK_LUT_SIZE)
+        hink_set_gate_driving_voltage(device, device->lut_extra[0]);
+        hink_set_source_driving_voltage(device, device->lut_extra[1], device->lut_extra[2], device->lut_extra[3]);
+        hink_set_dummy_line_period(device, device->lut_extra[4]);
+        hink_set_gate_line_width(device, device->lut_extra[5]);
+    } else {
+        // Default values
+        ESP_LOGI(TAG, "Setting default extra");
+        hink_set_gate_driving_voltage(device, 0x21);
+        hink_set_source_driving_voltage(device, 0x81, 0x81, 0x32);
+        hink_set_dummy_line_period(device, 0x2C);
+        hink_set_gate_line_width(device, 0x0A);
     }
 
-    uint16_t screen_width  = 18;
-    uint16_t screen_height = 152;
-
-    hink_send_command(device, HINK_CMD_DISPLAY_UPDATE_CONTROL_2);
-    hink_send_u8(
-        device,
-        HINK_DISPLAY_UPDATE_CONTROL_2_CLOCK_ON | HINK_DISPLAY_UPDATE_CONTROL_2_LATCH_TEMPERATURE_VAL |
-            HINK_DISPLAY_UPDATE_CONTROL_2_LOAD_LUT | HINK_DISPLAY_UPDATE_CONTROL_2_CLOCK_OFF
-    );
-
-    hink_send_command(device, HINK_CMD_MASTER_ACTIVATION);
-    hink_wait(device);
-
-    ESP_LOGI(TAG, "Writing RED buffer");
-
-    hink_send_command(device, HINK_CMD_SET_RAM_X_ADDRESS_COUNTER);
-    hink_send_u8(device, 0x00);
-
-    hink_send_command(device, HINK_CMD_SET_RAM_Y_ADDRESS_COUNTER);
-    hink_send_u8(device, (screen_height - 1) & 0xFF);
-    hink_send_u8(device, ((screen_height - 1) >> 8));
-
-    hink_send_command(device, HINK_CMD_WRITE_RAM_RED);
-
-    for (int y = 0; y < 152; y++) {
-        for (int x = 18; x >= 0; x--) {
-            uint16_t pixels = buffer[y * 38 + x * 2] | (buffer[y * 38 + x * 2 + 1] << 8);
-            uint8_t  out    = 0;
-            for (int bit = 0; bit < 8; bit++) {
-                out      = (out >> 1) | ((pixels & 1) << 7);
-                pixels >>= 2;
-            }
-            hink_send_u8(device, out);
-        }
-    }
-
-    ESP_LOGI(TAG, "Writing BLACK buffer");
-
-    hink_send_command(device, HINK_CMD_SET_RAM_X_ADDRESS_COUNTER);
-    hink_send_u8(device, 0x00);
-
-    hink_send_command(device, HINK_CMD_SET_RAM_Y_ADDRESS_COUNTER);
-    hink_send_u8(device, (screen_height - 1) & 0xFF);
-    hink_send_u8(device, ((screen_height - 1) >> 8));
-
-    hink_send_command(device, HINK_CMD_WRITE_RAM_BLACK);
-
-    for (int y = 0; y < 152; y++) {
-        for (int x = 18; x >= 0; x--) {
-            uint16_t pixels   = buffer[y * 38 + x * 2] | (buffer[y * 38 + x * 2 + 1] << 8);
-            uint8_t  out      = 0;
-            pixels          >>= 1;
-            for (int bit = 0; bit < 8; bit++) {
-                out      = (out >> 1) | ((pixels & 1) << 7);
-                pixels >>= 2;
-            }
-            hink_send_u8(device, out);
-        }
-    }
-
-    ESP_LOGI(TAG, "Setting LUT");
-
-    hink_write_lut(device, device->lut);
-    // hink_set_gate_driving_voltage(device, 0x07);
-    // hink_set_source_driving_voltage(device, 0x01, 0x07, 0x2A);
-    // hink_set_dummy_line_period(device, 0x04);
-    // hink_set_gate_line_width(device, 0x04);
-
-    // Default values
-    hink_set_gate_driving_voltage(device, 0x19);
-    hink_set_source_driving_voltage(device, 0x41, 0xA8, 0x32);
-    hink_set_dummy_line_period(device, 0x2C);
-    hink_set_gate_line_width(device, 0x0A);
 
     ESP_LOGI(TAG, "Update");
 
@@ -569,60 +490,13 @@ esp_err_t hink_sleep(hink_t *device) {
 // Set the active LUT.
 // Does not create a copy of the LUT.
 esp_err_t hink_set_lut(hink_t *device, uint8_t const lut[HINK_LUT_SIZE]) {
-    device->lut = lut;
+    device->lut       = lut;
+    device->lut_extra = NULL;
     return ESP_OK;
 }
 
-// Workaround for reading from the display
-
-static void bitbang_tx(int tx_pin, int clk_pin, uint8_t byte) {
-    gpio_set_direction(tx_pin, GPIO_MODE_OUTPUT);
-    for (int i = 0; i < 8; i++) {
-        gpio_set_level(tx_pin, byte & 0x80);
-        byte <<= 1;
-        esp_rom_delay_us(1);
-        gpio_set_level(clk_pin, 1);
-        esp_rom_delay_us(1);
-        gpio_set_level(clk_pin, 0);
-    }
-}
-
-static uint8_t bitbang_rx(int rx_pin, int clk_pin) {
-    gpio_set_direction(rx_pin, GPIO_MODE_INPUT);
-    uint8_t byte = 0;
-    for (int i = 0; i < 8; i++) {
-        esp_rom_delay_us(1);
-        gpio_set_level(clk_pin, 1);
-        byte <<= 1;
-        byte  |= !!gpio_get_level(rx_pin);
-        esp_rom_delay_us(1);
-        gpio_set_level(clk_pin, 0);
-    }
-    return byte;
-}
-
-void hink_read_lut(hink_t *device) {
-    spi_bus_remove_device(device->spi_device);
-    spi_bus_free(SPI2_HOST);
-
-    gpio_set_direction(21, GPIO_MODE_OUTPUT);
-    gpio_set_level(21, 0);
-    gpio_set_direction(5, GPIO_MODE_OUTPUT);
-    gpio_set_level(5, 0);
-    gpio_set_direction(8, GPIO_MODE_OUTPUT);
-    gpio_set_level(8, 1);
-    vTaskDelay(1);
-    gpio_set_level(8, 0);
-
-    bitbang_tx(19, 21, HINK_CMD_READ_LUT_REGISTER);
-    gpio_set_level(5, 1);
-
-    uint8_t lut[128] = {0};
-
-    for (int i = 0; i < sizeof(lut); i++) {
-        lut[i] = bitbang_rx(19, 21);
-    }
-
-    hexdump_vaddr("LUT:", lut, sizeof(lut), 0);
-    return;
+esp_err_t hink_set_lut_ext(hink_t *device, uint8_t const lut[HINK_LUT_SIZE]) {
+    device->lut       = lut;
+    device->lut_extra = &lut[HINK_LUT_SIZE];
+    return ESP_OK;
 }

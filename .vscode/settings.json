@@ -33,7 +33,13 @@
         "__memory": "c",
         "limits": "c",
         "locale": "c",
-        "vector": "c"
+        "vector": "c",
+        "string": "c",
+        "string_view": "c",
+        "cstddef": "c",
+        "istream": "c",
+        "ostream": "c",
+        "regex": "c"
     },
     "idf.port": "/dev/ttyACM0",
     "editor.formatOnType": false
