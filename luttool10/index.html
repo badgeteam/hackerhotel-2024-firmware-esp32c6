@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script type="text/javascript" src="http://livejs.com/live.js#css,js,html"></script>
+    <script type="text/javascript" src="index.js"></script>
+    <link rel="stylesheet" href="index.css" />
+    <title>SSD1619 LUT tool</title>
+</head>
+
+<body onload="">
+    <div class="content" id="content">
+        <h1>SSD1619 LUT tool</h1>
+        <h2>Editor</h2>
+        <div id="editor">
+            <table id="wftable">
+                <tr class="header">
+                    <td><p>Group</p></td>
+                    <td>
+                        <table><tr>
+                            <td><p>Phase</p></td>
+                            <td><p>Length</p></td>
+                            <td class="b"><p>Black</p></td>
+                            <td class="w"><p>White</p></td>
+                            <td class="r"><p>Red</p></td>
+                            <td class="c"><p>VCOM</p></td>
+                        </tr></table>
+                    </td>
+                </tr>
+            </table>
+            <!-- <table style="margin-top: -1px;">
+                <tr><td><p>Gate level:</p></td><td><input type="number" id="gate_level" /></td></tr>
+                <tr><td><p>VSH1 level:</p></td><td><input type="number" id="vsh1_level" /></td></tr>
+                <tr><td><p>VSH2 level:</p></td><td><input type="number" id="vsh2_level" /></td></tr>
+                <tr><td><p>VSL level:</p></td><td><input type="number" id="vsl_level" /></td></tr>
+                <tr><td><p>Frame 1:</p></td><td><input type="number" id="frame1" /></td></tr>
+                <tr><td><p>Frame 2:</p></td><td><input type="number" id="frame2" /></td></tr>
+            </table> -->
+        </div>
+        <h2>Raw bytes</h2>
+        <textarea id="bytes"></textarea>
+    </div>
+</body>
+
+</html>

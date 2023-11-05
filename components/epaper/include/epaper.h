@@ -19,7 +19,7 @@ extern "C" {
 #include <freertos/semphr.h>
 #include <freertos/task.h>
 
-#define HINK_LUT_SIZE 70
+#define HINK_LUT_SIZE 100
 
 typedef struct _hink {
     // Configuration
@@ -103,8 +103,7 @@ typedef struct _hink {
 esp_err_t hink_init(hink_t *device);
 esp_err_t hink_deinit(hink_t *device);
 // Write data to the display.
-esp_err_t hink_write(hink_t *device, uint8_t const *data);
-esp_err_t hink_write_2(hink_t *device, uint8_t const *buffer);
+esp_err_t hink_write(hink_t *device, uint8_t const *data, bool skip_red);
 // Set the active LUT.
 // Does not create a copy of the LUT.
 esp_err_t hink_set_lut(hink_t *device, uint8_t const lut[HINK_LUT_SIZE]);
