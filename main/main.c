@@ -35,6 +35,8 @@
 #include <sdmmc_cmd.h>
 #include <string.h>
 #include <time.h>
+#include "mma8452q.h"
+#include "esp_adc/adc_oneshot.h"
 
 #define I2C_BUS     0
 #define I2C_SPEED   400000  // 400 kHz
@@ -46,6 +48,7 @@
 static char const *TAG = "main";
 
 i2s_chan_handle_t i2s_handle = NULL;
+adc_oneshot_unit_handle_t adc1_handle = NULL;
 
 pax_buf_t gfx;
 pax_col_t palette[] = {0xffffffff, 0xffff0000, 0xff000000};
@@ -65,6 +68,11 @@ drv2605_t drv2605_device = {
     .i2c_address = DRV2605_ADDR,
 };
 
+mma8452q_t mma8452q_device = {
+    .i2c_bus     = I2C_BUS,
+    .i2c_address = MMA8452Q_ADDR,
+};
+
 sdmmc_card_t *card = NULL;
 
 static esp_err_t initialize_nvs(void) {
@@ -76,6 +84,39 @@ static esp_err_t initialize_nvs(void) {
         res = nvs_flash_init();
     }
     return res;
+}
+
+static esp_err_t initialize_adc() {
+    adc_oneshot_unit_init_cfg_t init_config1 = {
+        .unit_id = ADC_UNIT_1,
+        .ulp_mode = ADC_ULP_MODE_DISABLE,
+    };
+    esp_err_t res = adc_oneshot_new_unit(&init_config1, &adc1_handle);
+    if (res != ESP_OK) {
+        ESP_LOGE(TAG, "Initializing ADC failed");
+        return res;
+    }
+    adc_oneshot_chan_cfg_t config = {
+        .bitwidth = ADC_BITWIDTH_12,
+        .atten = ADC_ATTEN_DB_11,
+    };
+    res = adc_oneshot_config_channel(adc1_handle, ADC_CHANNEL_2, &config);
+    if (res != ESP_OK) {
+        ESP_LOGE(TAG, "Initializing ADC channel 2 failed");
+        return res;
+    }
+    return res;
+}
+
+float get_battery_voltage() {
+    int raw;
+    esp_err_t res = adc_oneshot_read(adc1_handle, ADC_CHANNEL_2, &raw);
+    if (res != ESP_OK) {
+        ESP_LOGE(TAG, "Reading battery voltage failed");
+        return 0;
+    }
+
+    return (raw * 3.3 * 2) / 4096;
 }
 
 static esp_err_t initialize_system() {
@@ -197,6 +238,12 @@ static esp_err_t initialize_system() {
         return res;
     }
 
+    res = mma8452q_init(&mma8452q_device);
+    if (res != ESP_OK) {
+        ESP_LOGE(TAG, "Initializing MMA8452Q failed");
+        return res;
+    }
+
     // Graphics stack
     ESP_LOGI(TAG, "Creating graphics...");
     pax_buf_init(&gfx, NULL, 152, 152, PAX_BUF_2_PAL);
@@ -230,6 +277,12 @@ static esp_err_t initialize_system() {
 #else
     res = ESP_OK;
 #endif
+
+    res = initialize_adc();
+    if (res != ESP_OK) {
+        ESP_LOGE(TAG, "Initializing ADC failed");
+        return res;
+    }
 
     return res;
 }
@@ -365,5 +418,7 @@ void app_main(void) {
         time       = b - a;
         counter++;
         // vTaskDelay(500 / portTICK_PERIOD_MS);
+
+        ESP_LOGI(TAG, "Battery: %f\n", get_battery_voltage());
     }
 }
