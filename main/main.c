@@ -398,31 +398,12 @@ void app_main(void) {
         sdmmc_card_print_info(stdout, card);
     }
 
-    pax_background(&gfx, 0);
-    pax_set_pixel(&gfx, 1, 5, 5);
-    pax_set_pixel(&gfx, 2, 5, 10);
-
-    pax_draw_rect(&gfx, 1, 0, 0, 50, 20);
-    pax_draw_text(&gfx, 0, pax_font_sky, 18, 1, 1, "Test");
-    pax_draw_rect(&gfx, 2, 50, 0, 50, 20);
-    pax_draw_text(&gfx, 0, pax_font_sky, 18, 51, 1, "Test");
-
-    pax_draw_rect(&gfx, 0, 0, 20, 50, 20);
-    pax_draw_text(&gfx, 1, pax_font_sky, 18, 1, 21, "Test");
-    pax_draw_rect(&gfx, 2, 50, 20, 50, 20);
-    pax_draw_text(&gfx, 1, pax_font_sky, 18, 51, 21, "Test");
-
-    pax_draw_rect(&gfx, 0, 0, 40, 50, 20);
-    pax_draw_text(&gfx, 2, pax_font_sky, 18, 1, 41, "Test");
-    pax_draw_rect(&gfx, 1, 50, 40, 50, 20);
-    pax_draw_text(&gfx, 2, pax_font_sky, 18, 51, 41, "Test");
-
-
-    hink_set_lut_ext(&epaper, lut_experiment21);
-    hink_write(&epaper, gfx.buf, false);
-
     // Clear screen
     pax_background(&gfx, 0);
+    pax_draw_text(&gfx, 1, pax_font_sky, 18, 1, 21, "Tanoshi");
+    pax_draw_text(&gfx, 1, pax_font_sky, 12, 1, 41, "1. Sleep");
+    pax_draw_text(&gfx, 1, pax_font_sky, 12, 1, 41, "2. Quick");
+    pax_draw_text(&gfx, 1, pax_font_sky, 12, 1, 41, "3. Slow");
     hink_write(&epaper, gfx.buf, false);
 
     gpio_reset_pin(9);
@@ -439,33 +420,49 @@ void app_main(void) {
 
     uint32_t counter = 0;
     uint32_t time    = 0;
+    uint32_t sleep_counter = 0;
     while (1) {
         vTaskDelay(10 / portTICK_PERIOD_MS);
         uint8_t btn_a = !gpio_get_level(9);
         uint8_t btn_b = !gpio_get_level(4);
         uint8_t btn_c = !gpio_get_level(15);
+        float battery = get_battery_voltage();
         if (btn_a) {
             ESP_LOGI(TAG, "A");
             pax_background(&gfx, 0);
             char counter_string[64];
-            sprintf(counter_string, "%" PRIu32, counter);
-            pax_draw_text(&gfx, 1, pax_font_sky, 18, 1, 21, counter_string);
-            pax_draw_text(&gfx, 2, pax_font_sky, 18, 1, 41, counter_string);
-            pax_draw_text(&gfx, 1, pax_font_sky, 18, 1, 61, strings[counter % 4]);
-            pax_draw_text(&gfx, 2, pax_font_sky, 18, 1, 81, strings[counter % 4]);
-            sprintf(counter_string, "%" PRIu32 "  %u %u %u", time, btn_a, btn_b, btn_c);
-            pax_draw_text(&gfx, 1, pax_font_sky, 18, 1, 101, counter_string);
-            pax_draw_text(&gfx, 2, pax_font_sky, 18, 1, 121, counter_string);
+            sprintf(counter_string, "vbatt: %.2fv", battery);
+            pax_draw_text(&gfx, 1, pax_font_sky, 18, 1, 71, counter_string);
+            pax_draw_text(&gfx, 2, pax_font_sky, 18, 1, 91, counter_string);
+            pax_set_pixel(&gfx, 1, 5, 5);
+            pax_set_pixel(&gfx, 2, 5, 10);
+
+            pax_draw_rect(&gfx, 1, 0, 0, 50, 20);
+            pax_draw_text(&gfx, 0, pax_font_sky, 18, 1, 1, "Test");
+            pax_draw_rect(&gfx, 2, 50, 0, 50, 20);
+            pax_draw_text(&gfx, 0, pax_font_sky, 18, 51, 1, "Test");
+
+            pax_draw_rect(&gfx, 0, 0, 20, 50, 20);
+            pax_draw_text(&gfx, 1, pax_font_sky, 18, 1, 21, "Test");
+            pax_draw_rect(&gfx, 2, 50, 20, 50, 20);
+            pax_draw_text(&gfx, 1, pax_font_sky, 18, 51, 21, "Test");
+
+            pax_draw_rect(&gfx, 0, 0, 40, 50, 20);
+            pax_draw_text(&gfx, 2, pax_font_sky, 18, 1, 41, "Test");
+            pax_draw_rect(&gfx, 1, 50, 40, 50, 20);
+            pax_draw_text(&gfx, 2, pax_font_sky, 18, 51, 41, "Test");
             uint32_t a = esp_timer_get_time() / 1000;
+            hink_set_lut_ext(&epaper, lut_normal_20deg);
             hink_write(&epaper, gfx.buf, false);
             uint32_t b = esp_timer_get_time() / 1000;
             time       = b - a;
             counter++;
+        sleep_counter = 0;
         } else if (btn_b) {
             ESP_LOGI(TAG, "B");
             pax_background(&gfx, 0);
             char counter_string[64];
-            sprintf(counter_string, "%" PRIu32, counter);
+            sprintf(counter_string, "vbatt: %.2fv", battery);
             pax_draw_text(&gfx, 1, pax_font_sky, 18, 1, 21, counter_string);
             pax_draw_text(&gfx, 2, pax_font_sky, 18, 1, 41, counter_string);
             pax_draw_text(&gfx, 1, pax_font_sky, 18, 1, 61, strings[counter % 4]);
@@ -474,11 +471,13 @@ void app_main(void) {
             pax_draw_text(&gfx, 1, pax_font_sky, 18, 1, 101, counter_string);
             pax_draw_text(&gfx, 2, pax_font_sky, 18, 1, 121, counter_string);
             uint32_t a = esp_timer_get_time() / 1000;
+            hink_set_lut_ext(&epaper, lut_fast);
             hink_write(&epaper, gfx.buf, false);
             uint32_t b = esp_timer_get_time() / 1000;
             time       = b - a;
             counter++;
-        } else if (btn_c) {
+            sleep_counter = 0;
+        } else if (btn_c || sleep_counter > 1000) {
             ESP_LOGI(TAG, "C");
             esp_err_t res = esp_deep_sleep_enable_gpio_wakeup(1 << 4, ESP_GPIO_WAKEUP_GPIO_LOW);
 
@@ -491,16 +490,16 @@ void app_main(void) {
 
             pax_background(&gfx, 0);
             pax_draw_text(&gfx, 1, pax_font_sky, 18, 0, 0, "Sleeping...");
+            hink_set_lut_ext(&epaper, lut_fast);
             hink_write(&epaper, gfx.buf, false);
             hink_sleep(&epaper);
             drv2605_sleep(&drv2605_device);
             gpio_set_level(1, false);
             vTaskDelay(50 / portTICK_PERIOD_MS);
             esp_deep_sleep_start();
+        } else {
+            ESP_LOGI(TAG, "Waiting for button... %" PRIu32 " (vbatt = %02.fv)", sleep_counter, battery);
+            sleep_counter++;
         }
-        if (btn_a || btn_b || btn_c) {
-            ESP_LOGI(TAG, "Waiting for button...");
-        }
-        ESP_LOGI(TAG, "Battery: %f\n", get_battery_voltage());
     }
 }
