@@ -114,6 +114,8 @@ esp_err_t hink_set_source_driving_voltage(hink_t *device, uint8_t vsh1, uint8_t 
 esp_err_t hink_set_dummy_line_period(hink_t *device, uint8_t period);
 esp_err_t hink_set_gate_line_width(hink_t *device, uint8_t width);
 
+esp_err_t hink_sleep(hink_t *device);
+
 void hink_read_lut(int pin_data, int pin_clk, int pin_cs, int pin_dc, int pin_reset, int pin_busy);
 
 #ifdef __cplusplus

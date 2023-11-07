@@ -70,6 +70,7 @@ typedef struct DRV2605 {
 } drv2605_t;
 
 esp_err_t drv2605_init(drv2605_t *device);
+esp_err_t drv2605_sleep(drv2605_t *device);
 
 #ifdef __cplusplus
 }

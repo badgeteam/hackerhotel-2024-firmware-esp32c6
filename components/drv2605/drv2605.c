@@ -43,3 +43,7 @@ esp_err_t drv2605_init(drv2605_t *device) {
     res = i2c_write_reg(device->i2c_bus, device->i2c_address, DRV2605_REG_FEEDBACK, 0x7F);
     return res;
 }
+
+esp_err_t drv2605_sleep(drv2605_t *device) {
+    return i2c_write_reg(device->i2c_bus, device->i2c_address, DRV2605_REG_MODE, 1 << 6);
+}

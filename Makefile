@@ -5,6 +5,7 @@ IDF_PATH ?= $(shell pwd)/esp-idf
 IDF_TOOLS_PATH ?= $(shell pwd)/esp-idf-tools
 IDF_BRANCH ?= release/v5.1
 IDF_EXPORT_QUIET ?= 1
+IDF_GITHUB_ASSETS ?= dl.espressif.com/github_assets
 
 SHELL := /usr/bin/env bash
 

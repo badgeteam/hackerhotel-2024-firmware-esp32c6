@@ -1,9 +1,11 @@
+#include "driver/gpio.h"
 #include "driver/i2c.h"
 #include "driver/i2s_std.h"
 #include "drv2605.h"
 #include "epaper.h"
 #include "esp_err.h"
 #include "esp_log.h"
+#include "esp_sleep.h"
 #include "esp_system.h"
 #include "esp_timer.h"
 #include "esp_vfs_fat.h"
@@ -161,7 +163,7 @@ static esp_err_t initialize_system() {
     // GPIO for controlling power to the audio amplifier
     gpio_config_t pin_amp_enable_cfg = {
         .pin_bit_mask = 1 << 1,
-        .mode         = GPIO_MODE_INPUT_OUTPUT,
+        .mode         = GPIO_MODE_OUTPUT,
         .pull_up_en   = false,
         .pull_down_en = false,
         .intr_type    = GPIO_INTR_DISABLE};
@@ -303,6 +305,35 @@ uint8_t lut_shorter_only_black_2[] = {
     0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
 };
 
+uint8_t lut_fast[] = {
+    // 2.2 seconds
+    0x82, 0x66, 0x96, 0x51, 0x40, 0x04, 0x00, 0x00, 0x00, 0x00, 0x11, 0x66, 0x96, 0xa8, 0x20, 0x20, 0x00, 0x00, 0x00,
+    0x00, 0x8a, 0x66, 0x96, 0x91, 0x2b, 0x2f, 0x00, 0x00, 0x00, 0x00, 0x8a, 0x66, 0x96, 0x91, 0x2b, 0x2f, 0x00, 0x00,
+    0x00, 0x00, 0x01, 0x00, 0x5a, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x09, 0x01, 0x00, 0x04, 0x0a, 0x06, 0x08, 0x00, 0x06, 0x04, 0x02, 0x01, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0x3c, 0xc1, 0x2e, 0x50, 0x11, 0x0d, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+};
+
+uint8_t lut_experiment21[] = {
+    0x82, 0x66, 0x96, 0x51, 0x40, 0x04, 0x00, 0x00, 0x00, 0x00, 0x11, 0x66, 0x96, 0xa8, 0x20, 0x20, 0x00, 0x00, 0x00,
+    0x00, 0x8a, 0x66, 0x96, 0x91, 0x2b, 0x2f, 0x00, 0x00, 0x00, 0x00, 0x8a, 0x66, 0x96, 0x91, 0x2b, 0x2f, 0x00, 0x00,
+    0x00, 0x00, 0x01, 0x00, 0x5a, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x04, 0x0a, 0x06, 0x08, 0x00, 0x06, 0x04, 0x02, 0x01, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0x3c, 0xc1, 0x2e, 0x50, 0x11, 0x0d, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01};
+
+uint8_t lut_experiment[] = {
+    0x82, 0x66, 0x96, 0x51, 0x40, 0x04, 0x00, 0x00, 0x00, 0x00, 0x11, 0x66, 0x96, 0xa8, 0x20, 0x20, 0x00, 0x00, 0x00,
+    0x00, 0x8a, 0x66, 0x96, 0x91, 0x2b, 0x2f, 0x00, 0x00, 0x00, 0x00, 0x8a, 0x66, 0x96, 0x91, 0x2b, 0x2f, 0x00, 0x00,
+    0x00, 0x00, 0x01, 0x00, 0x5a, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x04, 0x0a, 0x06, 0x08, 0x00, 0x06, 0x04, 0x02, 0x01, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0x3c, 0xc1, 0x2e, 0x50, 0x11, 0x0d, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01};
+
 void app_main(void) {
     esp_err_t res = initialize_system();
     if (res != ESP_OK) {
@@ -334,36 +365,88 @@ void app_main(void) {
     pax_draw_text(&gfx, 2, pax_font_sky, 18, 51, 41, "Test");
 
 
-    hink_set_lut_ext(&epaper, lut_shorter_only_black_2);
+    hink_set_lut_ext(&epaper, lut_experiment21);
     hink_write(&epaper, gfx.buf, false);
 
     // Clear screen
     pax_background(&gfx, 0);
     hink_write(&epaper, gfx.buf, false);
 
-    // hink_read_lut_old(&epaper);
-    // hink_read_lut(19, 21, epaper.pin_cs, epaper.pin_dcx, epaper.pin_reset, epaper.pin_busy);
+    gpio_reset_pin(9);
+    gpio_reset_pin(4);
+    gpio_reset_pin(15);
+    gpio_set_direction(9, GPIO_MODE_INPUT);
+    gpio_set_direction(4, GPIO_MODE_INPUT);
+    gpio_set_direction(15, GPIO_MODE_INPUT);
+    gpio_set_pull_mode(9, GPIO_PULLUP_ONLY);
+    gpio_set_pull_mode(4, GPIO_PULLUP_ONLY);
+    gpio_set_pull_mode(15, GPIO_PULLUP_ONLY);
 
     char *strings[] = {"Quick", "updates", "are", "nice"};
 
     uint32_t counter = 0;
     uint32_t time    = 0;
     while (1) {
-        pax_background(&gfx, 0);
-        char counter_string[64];
-        sprintf(counter_string, "%" PRIu32, counter);
-        pax_draw_text(&gfx, 1, pax_font_sky, 18, 1, 21, counter_string);
-        pax_draw_text(&gfx, 2, pax_font_sky, 18, 1, 41, counter_string);
-        pax_draw_text(&gfx, 1, pax_font_sky, 18, 1, 61, strings[counter % 4]);
-        pax_draw_text(&gfx, 2, pax_font_sky, 18, 1, 81, strings[counter % 4]);
-        sprintf(counter_string, "%" PRIu32, time);
-        pax_draw_text(&gfx, 1, pax_font_sky, 18, 1, 101, counter_string);
-        pax_draw_text(&gfx, 2, pax_font_sky, 18, 1, 121, counter_string);
-        uint32_t a = esp_timer_get_time() / 1000;
-        hink_write(&epaper, gfx.buf, true);
-        uint32_t b = esp_timer_get_time() / 1000;
-        time       = b - a;
-        counter++;
-        // vTaskDelay(500 / portTICK_PERIOD_MS);
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+        uint8_t btn_a = !gpio_get_level(9);
+        uint8_t btn_b = !gpio_get_level(4);
+        uint8_t btn_c = !gpio_get_level(15);
+        if (btn_a) {
+            ESP_LOGI(TAG, "A");
+            pax_background(&gfx, 0);
+            char counter_string[64];
+            sprintf(counter_string, "%" PRIu32, counter);
+            pax_draw_text(&gfx, 1, pax_font_sky, 18, 1, 21, counter_string);
+            pax_draw_text(&gfx, 2, pax_font_sky, 18, 1, 41, counter_string);
+            pax_draw_text(&gfx, 1, pax_font_sky, 18, 1, 61, strings[counter % 4]);
+            pax_draw_text(&gfx, 2, pax_font_sky, 18, 1, 81, strings[counter % 4]);
+            sprintf(counter_string, "%" PRIu32 "  %u %u %u", time, btn_a, btn_b, btn_c);
+            pax_draw_text(&gfx, 1, pax_font_sky, 18, 1, 101, counter_string);
+            pax_draw_text(&gfx, 2, pax_font_sky, 18, 1, 121, counter_string);
+            uint32_t a = esp_timer_get_time() / 1000;
+            hink_write(&epaper, gfx.buf, false);
+            uint32_t b = esp_timer_get_time() / 1000;
+            time       = b - a;
+            counter++;
+        } else if (btn_b) {
+            ESP_LOGI(TAG, "B");
+            pax_background(&gfx, 0);
+            char counter_string[64];
+            sprintf(counter_string, "%" PRIu32, counter);
+            pax_draw_text(&gfx, 1, pax_font_sky, 18, 1, 21, counter_string);
+            pax_draw_text(&gfx, 2, pax_font_sky, 18, 1, 41, counter_string);
+            pax_draw_text(&gfx, 1, pax_font_sky, 18, 1, 61, strings[counter % 4]);
+            pax_draw_text(&gfx, 2, pax_font_sky, 18, 1, 81, strings[counter % 4]);
+            sprintf(counter_string, "%" PRIu32 "  %u %u %u", time, btn_a, btn_b, btn_c);
+            pax_draw_text(&gfx, 1, pax_font_sky, 18, 1, 101, counter_string);
+            pax_draw_text(&gfx, 2, pax_font_sky, 18, 1, 121, counter_string);
+            uint32_t a = esp_timer_get_time() / 1000;
+            hink_write(&epaper, gfx.buf, false);
+            uint32_t b = esp_timer_get_time() / 1000;
+            time       = b - a;
+            counter++;
+        } else if (btn_c) {
+            ESP_LOGI(TAG, "C");
+            esp_err_t res = esp_deep_sleep_enable_gpio_wakeup(1 << 4, ESP_GPIO_WAKEUP_GPIO_LOW);
+
+            if (res != ESP_OK) {
+                pax_background(&gfx, 0);
+                pax_draw_text(&gfx, 1, pax_font_sky, 18, 0, 0, "GPIO failed!");
+                hink_write(&epaper, gfx.buf, false);
+                continue;
+            }
+
+            pax_background(&gfx, 0);
+            pax_draw_text(&gfx, 1, pax_font_sky, 18, 0, 0, "Sleeping...");
+            hink_write(&epaper, gfx.buf, false);
+            hink_sleep(&epaper);
+            drv2605_sleep(&drv2605_device);
+            gpio_set_level(1, false);
+            vTaskDelay(50 / portTICK_PERIOD_MS);
+            esp_deep_sleep_start();
+        }
+        if (btn_a || btn_b || btn_c) {
+            ESP_LOGI(TAG, "Waiting for button...");
+        }
     }
 }

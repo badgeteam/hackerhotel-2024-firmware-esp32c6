@@ -39,7 +39,8 @@
         "cstddef": "c",
         "istream": "c",
         "ostream": "c",
-        "regex": "c"
+        "regex": "c",
+        "random": "c"
     },
     "idf.port": "/dev/ttyACM0",
     "editor.formatOnType": false
