@@ -503,6 +503,8 @@ void app_main(void) {
             hink_set_lut_ext(&epaper, lut_short);*/
 
             pax_insert_png_buf(&gfx, renze_png_start, renze_png_end - renze_png_start, 0, 0, 0);
+            ESP_LOGI("lolol", "%ld %ld %ld", pax_get_pixel_raw(&gfx, 0, 0), pax_get_pixel_raw(&gfx, 1, 0), pax_get_pixel_raw(&gfx, 2, 0));
+            ESP_LOGI("lolol", "%ld %ld %ld", pax_get_pixel(&gfx, 0, 0), pax_get_pixel(&gfx, 1, 0), pax_get_pixel(&gfx, 2, 0));
             hink_set_lut_ext(&epaper, lut_normal_20deg);
 
             hink_write(&epaper, gfx.buf, false);
