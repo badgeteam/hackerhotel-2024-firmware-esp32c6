@@ -40,12 +40,17 @@
 #include <string.h>
 #include <time.h>
 
+#include "pax_codecs.h"
+
 #define I2C_BUS     0
 #define I2C_SPEED   400000  // 400 kHz
 #define I2C_TIMEOUT 250     // us
 
 #define GPIO_I2C_SCL 7
 #define GPIO_I2C_SDA 6
+
+extern const uint8_t renze_png_start[] asm("_binary_renze_png_start");
+extern const uint8_t renze_png_end[] asm("_binary_renze_png_end");
 
 static char const *TAG = "main";
 
@@ -131,7 +136,20 @@ static esp_err_t initialize_system() {
         return res;
     }
 
-    // hink_read_lut(19, 21, epaper.pin_cs, epaper.pin_dcx, epaper.pin_reset, epaper.pin_busy);
+    // Buttons
+    gpio_reset_pin(9);
+    gpio_reset_pin(4);
+    gpio_reset_pin(15);
+    gpio_set_direction(9, GPIO_MODE_INPUT);
+    gpio_set_direction(4, GPIO_MODE_INPUT);
+    gpio_set_direction(15, GPIO_MODE_INPUT);
+    gpio_set_pull_mode(9, GPIO_PULLUP_ONLY);
+    gpio_set_pull_mode(4, GPIO_PULLUP_ONLY);
+    gpio_set_pull_mode(15, GPIO_PULLUP_ONLY);
+
+    if (!gpio_get_level(9)) {
+        hink_read_lut(19, 21, epaper.pin_cs, epaper.pin_dcx, epaper.pin_reset, epaper.pin_busy);
+    }
 
     // I2C bus
     i2c_config_t i2c_config = {
@@ -208,7 +226,7 @@ static esp_err_t initialize_system() {
         .pull_up_en   = false,
         .pull_down_en = false,
         .intr_type    = GPIO_INTR_DISABLE};
-    gpio_set_level(1, true);
+    gpio_set_level(1, false);
     gpio_config(&pin_amp_enable_cfg);
 
     // SPI bus
@@ -269,16 +287,17 @@ static esp_err_t initialize_system() {
         card = NULL;
     }
 
-// SID emulator
-#if 0
-    res = sid_init(i2s_handle);
-    if (res != ESP_OK) {
-        ESP_LOGE(TAG, "Initializing SID emulator failed");
-        return res;
+    // SID emulator
+    if (!gpio_get_level(15)) {
+        res = sid_init(i2s_handle);
+        if (res != ESP_OK) {
+            ESP_LOGE(TAG, "Initializing SID emulator failed");
+            return res;
+        }
+        gpio_set_level(1, true); // Enable amplifier
+    } else {
+        res = ESP_OK;
     }
-#else
-    res = ESP_OK;
-#endif
 
     res = initialize_adc();
     if (res != ESP_OK) {
@@ -400,21 +419,12 @@ void app_main(void) {
 
     // Clear screen
     pax_background(&gfx, 0);
-    pax_draw_text(&gfx, 1, pax_font_sky, 18, 1, 21, "Tanoshi");
-    pax_draw_text(&gfx, 1, pax_font_sky, 12, 1, 41, "1. Sleep");
-    pax_draw_text(&gfx, 1, pax_font_sky, 12, 1, 41, "2. Quick");
-    pax_draw_text(&gfx, 1, pax_font_sky, 12, 1, 41, "3. Slow");
+    pax_draw_text(&gfx, 1, pax_font_marker, 18, 1, 0, "Tanoshi");
+    pax_draw_text(&gfx, 1, pax_font_sky, 12, 1, 50, "1. Sleep");
+    pax_draw_text(&gfx, 1, pax_font_sky, 12, 1, 65, "2. Quick");
+    pax_draw_text(&gfx, 1, pax_font_sky, 12, 1, 80, "3. Slow");
+    hink_set_lut_ext(&epaper, lut_fast);
     hink_write(&epaper, gfx.buf, false);
-
-    gpio_reset_pin(9);
-    gpio_reset_pin(4);
-    gpio_reset_pin(15);
-    gpio_set_direction(9, GPIO_MODE_INPUT);
-    gpio_set_direction(4, GPIO_MODE_INPUT);
-    gpio_set_direction(15, GPIO_MODE_INPUT);
-    gpio_set_pull_mode(9, GPIO_PULLUP_ONLY);
-    gpio_set_pull_mode(4, GPIO_PULLUP_ONLY);
-    gpio_set_pull_mode(15, GPIO_PULLUP_ONLY);
 
     char *strings[] = {"Quick", "updates", "are", "nice"};
 
@@ -422,7 +432,6 @@ void app_main(void) {
     uint32_t time    = 0;
     uint32_t sleep_counter = 0;
     while (1) {
-        vTaskDelay(10 / portTICK_PERIOD_MS);
         uint8_t btn_a = !gpio_get_level(9);
         uint8_t btn_b = !gpio_get_level(4);
         uint8_t btn_c = !gpio_get_level(15);
@@ -489,17 +498,23 @@ void app_main(void) {
             }
 
             pax_background(&gfx, 0);
-            pax_draw_text(&gfx, 1, pax_font_sky, 18, 0, 0, "Sleeping...");
-            hink_set_lut_ext(&epaper, lut_fast);
+            /*pax_draw_text(&gfx, 1, pax_font_marker, 18, 0, 0, "Sleeping...");
+            pax_draw_text(&gfx, 1, pax_font_sky, 12, 0, 30, "Press button 2");
+            hink_set_lut_ext(&epaper, lut_short);*/
+
+            pax_insert_png_buf(&gfx, renze_png_start, renze_png_end - renze_png_start, 0, 0, 0);
+            hink_set_lut_ext(&epaper, lut_normal_20deg);
+
             hink_write(&epaper, gfx.buf, false);
+            vTaskDelay(5000 / portTICK_PERIOD_MS);
             hink_sleep(&epaper);
             drv2605_sleep(&drv2605_device);
             gpio_set_level(1, false);
-            vTaskDelay(50 / portTICK_PERIOD_MS);
             esp_deep_sleep_start();
         } else {
             ESP_LOGI(TAG, "Waiting for button... %" PRIu32 " (vbatt = %02.fv)", sleep_counter, battery);
             sleep_counter++;
         }
+        vTaskDelay(20 / portTICK_PERIOD_MS);
     }
 }
