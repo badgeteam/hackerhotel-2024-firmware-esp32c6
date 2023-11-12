@@ -42,6 +42,12 @@
 
 #include "pax_codecs.h"
 
+#define AUTOMATIC_SLEEP 0
+
+#ifndef AUTOMATIC_SLEEP
+#define AUTOMATIC_SLEEP 1
+#endif
+
 #define I2C_BUS     0
 #define I2C_SPEED   400000  // 400 kHz
 #define I2C_TIMEOUT 250     // us
@@ -58,7 +64,7 @@ i2s_chan_handle_t         i2s_handle  = NULL;
 adc_oneshot_unit_handle_t adc1_handle = NULL;
 
 pax_buf_t gfx;
-pax_col_t palette[] = {0xffffffff, 0xffff0000, 0xff000000};
+pax_col_t palette[] = {0xffffffff, 0xff000000, 0xffff0000}; // white, black, red
 
 hink_t epaper = {
     .spi_bus               = SPI2_HOST,
@@ -486,7 +492,11 @@ void app_main(void) {
             time       = b - a;
             counter++;
             sleep_counter = 0;
+        #if AUTOMATIC_SLEEP == 1
         } else if (btn_c || sleep_counter > 1000) {
+        #else
+        } else if (btn_c) {
+        #endif
             ESP_LOGI(TAG, "C");
             esp_err_t res = esp_deep_sleep_enable_gpio_wakeup(1 << 4, ESP_GPIO_WAKEUP_GPIO_LOW);
 

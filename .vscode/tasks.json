@@ -2,7 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Build",
+            "label": "build",
             "type": "shell",
             "command": "make",
             "args": [
@@ -10,11 +10,11 @@
             ],
             "group": {
                 "kind": "build",
-                "isDefault": false
+                "isDefault": true
             }
         },
         {
-            "label": "Clean",
+            "label": "clean",
             "type": "shell",
             "command": "make",
             "args": [
@@ -26,7 +26,7 @@
             }
         },
         {
-            "label": "Prepare",
+            "label": "prepare",
             "type": "shell",
             "command": "make",
             "args": [
@@ -38,7 +38,7 @@
             }
         },
         {
-            "label": "Flash",
+            "label": "flash",
             "type": "shell",
             "command": "make",
             "args": [
@@ -50,13 +50,15 @@
             }
         },
         {
-            "label": "Build and flash",
+            "label": "build & flash",
             "dependsOn": [
-                "Build",
-                "Flash"
+                "build",
+                "flash"
             ],
-            "group": "build",
-            "problemMatcher": []
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
         }
     ]
 }
