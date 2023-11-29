@@ -327,9 +327,6 @@ esp_err_t hink_write(hink_t *device, uint8_t const *buffer, bool skip_red) {
         return ESP_FAIL;
     }
 
-    uint16_t screen_width  = 18;
-    uint16_t screen_height = 152;
-
     ESP_LOGI(TAG, "Reset");
     hink_reset(device);
     hink_send_command(device, HINK_CMD_SW_RESET);
@@ -354,8 +351,8 @@ esp_err_t hink_write(hink_t *device, uint8_t const *buffer, bool skip_red) {
     hink_send_u8(device, 0x3F);
 
     hink_send_command(device, HINK_CMD_DRIVER_OUTPUT_CONTROL);
-    hink_send_u8(device, ((screen_height - 1) & 0xFF));
-    hink_send_u8(device, ((screen_height - 1) >> 8) && 0x01);
+    hink_send_u8(device, ((device->screen_height - 1) & 0xFF));
+    hink_send_u8(device, ((device->screen_height - 1) >> 8) && 0x01);
     hink_send_u8(device, 0x00);
 
     hink_send_command(device, HINK_CMD_DATA_ENTRY_MODE_SETTING);
@@ -363,11 +360,11 @@ esp_err_t hink_write(hink_t *device, uint8_t const *buffer, bool skip_red) {
 
     hink_send_command(device, HINK_CMD_SET_RAM_X_ADDRESS_LIMITS);
     hink_send_u8(device, 0x00);
-    hink_send_u8(device, screen_width);
+    hink_send_u8(device, (device->screen_width / 8) - 1);
 
     hink_send_command(device, HINK_CMD_SET_RAM_Y_ADDRESS_LIMITS);
-    hink_send_u8(device, (screen_height - 1) & 0xFF);
-    hink_send_u8(device, ((screen_height - 1) >> 8));
+    hink_send_u8(device, (device->screen_height - 1) & 0xFF);
+    hink_send_u8(device, ((device->screen_height - 1) >> 8));
     hink_send_u8(device, 0x00);
     hink_send_u8(device, 0x00);
 
@@ -397,14 +394,14 @@ esp_err_t hink_write(hink_t *device, uint8_t const *buffer, bool skip_red) {
         hink_send_u8(device, 0x00);
 
         hink_send_command(device, HINK_CMD_SET_RAM_Y_ADDRESS_COUNTER);
-        hink_send_u8(device, (screen_height - 1) & 0xFF);
-        hink_send_u8(device, ((screen_height - 1) >> 8));
+        hink_send_u8(device, (device->screen_height - 1) & 0xFF);
+        hink_send_u8(device, ((device->screen_height - 1) >> 8));
 
         hink_send_command(device, HINK_CMD_WRITE_RAM_RED);
 
-        for (int y = 0; y < 152; y++) {
-            for (int x = 18; x >= 0; x--) {
-                uint16_t pixels = buffer[y * 38 + x * 2] | (buffer[y * 38 + x * 2 + 1] << 8);
+        for (int y = 0; y < device->screen_height; y++) {
+            for (int x = ((device->screen_width / 8) - 1); x >= 0; x--) {
+                uint16_t pixels = buffer[y * (device->screen_height / 4) + x * 2] | (buffer[y * (device->screen_height / 4) + x * 2 + 1] << 8);
                 uint8_t  out    = 0;
                 for (int bit = 0; bit < 8; bit++) {
                     out      = (out >> 1) | ((pixels & 1) << 7);
@@ -421,14 +418,14 @@ esp_err_t hink_write(hink_t *device, uint8_t const *buffer, bool skip_red) {
     hink_send_u8(device, 0x00);
 
     hink_send_command(device, HINK_CMD_SET_RAM_Y_ADDRESS_COUNTER);
-    hink_send_u8(device, (screen_height - 1) & 0xFF);
-    hink_send_u8(device, ((screen_height - 1) >> 8));
+    hink_send_u8(device, (device->screen_height - 1) & 0xFF);
+    hink_send_u8(device, ((device->screen_height - 1) >> 8));
 
     hink_send_command(device, HINK_CMD_WRITE_RAM_BLACK);
 
-    for (int y = 0; y < 152; y++) {
-        for (int x = 18; x >= 0; x--) {
-            uint16_t pixels   = buffer[y * 38 + x * 2] | (buffer[y * 38 + x * 2 + 1] << 8);
+        for (int y = 0; y < device->screen_height; y++) {
+            for (int x = ((device->screen_width / 8) - 1); x >= 0; x--) {
+            uint16_t pixels   = buffer[y * (device->screen_height / 4) + x * 2] | (buffer[y * (device->screen_height / 4) + x * 2 + 1] << 8);
             uint8_t  out      = 0;
             pixels          >>= 1;
             for (int bit = 0; bit < 8; bit++) {

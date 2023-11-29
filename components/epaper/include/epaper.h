@@ -30,6 +30,8 @@ typedef struct _hink {
     int                 pin_busy;
     uint32_t            spi_speed;
     uint32_t            spi_max_transfer_size;
+    uint16_t            screen_width;
+    uint16_t            screen_height;
     // Internal state
     spi_device_handle_t spi_device;
     bool                dc_level;
