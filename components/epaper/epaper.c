@@ -400,9 +400,11 @@ esp_err_t hink_write(hink_t *device, uint8_t const *buffer, bool skip_red) {
         hink_send_command(device, HINK_CMD_WRITE_RAM_RED);
 
         for (int y = 0; y < device->screen_height; y++) {
-            for (int x = ((device->screen_width / 8) - 1); x >= 0; x--) {
-                uint16_t pixels = buffer[y * (device->screen_height / 4) + x * 2] | (buffer[y * (device->screen_height / 4) + x * 2 + 1] << 8);
-                uint8_t  out    = 0;
+            for (int x = (device->screen_width / 8) - 1; x >= 0; x--) {
+                uint32_t position = y * ((device->screen_width / 8) * 2) + x * 2;
+                uint16_t pixels = buffer[position] | (buffer[position + 1] << 8);
+                uint8_t  out = 0;
+                pixels >>= 1;
                 for (int bit = 0; bit < 8; bit++) {
                     out      = (out >> 1) | ((pixels & 1) << 7);
                     pixels >>= 2;
@@ -423,11 +425,11 @@ esp_err_t hink_write(hink_t *device, uint8_t const *buffer, bool skip_red) {
 
     hink_send_command(device, HINK_CMD_WRITE_RAM_BLACK);
 
-        for (int y = 0; y < device->screen_height; y++) {
-            for (int x = ((device->screen_width / 8) - 1); x >= 0; x--) {
-            uint16_t pixels   = buffer[y * (device->screen_height / 4) + x * 2] | (buffer[y * (device->screen_height / 4) + x * 2 + 1] << 8);
-            uint8_t  out      = 0;
-            pixels          >>= 1;
+    for (int y = 0; y < device->screen_height; y++) {
+        for (int x = (device->screen_width / 8) - 1; x >= 0; x--) {
+            uint32_t position = y * ((device->screen_width / 8) * 2) + x * 2;
+            uint16_t pixels = buffer[position] | (buffer[position + 1] << 8);
+            uint8_t  out = 0;
             for (int bit = 0; bit < 8; bit++) {
                 out      = (out >> 1) | ((pixels & 1) << 7);
                 pixels >>= 2;

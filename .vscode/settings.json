@@ -30,7 +30,8 @@
         "istream": "c",
         "ostream": "c",
         "regex": "c",
-        "random": "c"
+        "random": "c",
+        "compare": "c"
     },
     "idf.port": "/dev/ttyACM0",
     "editor.formatOnType": false,
