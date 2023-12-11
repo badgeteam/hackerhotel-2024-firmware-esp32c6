@@ -29,16 +29,6 @@
 
 static char const *TAG = "epaper";
 
-static uint8_t const default_lut[] = {
-    0x82, 0x66, 0x96, 0x51, 0x40, 0x04, 0x00, 0x00, 0x00, 0x00, 0x11, 0x66, 0x96, 0xa8, 0x20, 0x20, 0x00, 0x00, 0x00,
-    0x00, 0x8a, 0x66, 0x96, 0x91, 0x2b, 0x2f, 0x00, 0x00, 0x00, 0x00, 0x8a, 0x66, 0x96, 0x91, 0x2b, 0x2f, 0x00, 0x00,
-    0x00, 0x00, 0x01, 0x00, 0x5a, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x7a, 0x75, 0x0c, 0x00, 0x02, 0x03,
-    0x01, 0x02, 0x0e, 0x12, 0x01, 0x12, 0x01, 0x04, 0x04, 0x0a, 0x06, 0x08, 0x02, 0x06, 0x04, 0x02, 0x2e, 0x04, 0x14,
-    0x06, 0x02, 0x2a, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x2a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0x3c, 0xc1, 0x2e, 0x50, 0x11, 0x0d, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-};
-
 static void IRAM_ATTR hink_spi_pre_transfer_callback(spi_transaction_t *t) {
     hink_t *device = ((hink_t *)t->user);
     gpio_set_level(device->pin_dcx, device->dc_level);
@@ -138,9 +128,13 @@ static esp_err_t hink_reset(hink_t *device) {
     return ESP_OK;
 }
 
-static esp_err_t hink_wait(hink_t *device) {
-    while (gpio_get_level(device->pin_busy)) {
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+bool hink_busy(hink_t *device) {
+    return gpio_get_level(device->pin_busy);
+}
+
+esp_err_t hink_wait(hink_t *device) {
+    while (hink_busy(device)) {
+        vTaskDelay(10 / portTICK_PERIOD_MS);
     }
     return ESP_OK;
 }
@@ -152,8 +146,11 @@ static esp_err_t hink_select(hink_t *device, bool const state) {
     return gpio_set_level(device->pin_cs, !state);
 }
 
-static esp_err_t hink_write_lut(hink_t *device, uint8_t const lut[HINK_LUT_SIZE]) {
+static esp_err_t hink_write_lut(hink_t *device) {
     esp_err_t res;
+    if (device->lut == NULL) {
+        return ESP_FAIL;
+    }
     if (device->spi_device == NULL) {
         return ESP_FAIL;
     }
@@ -161,7 +158,23 @@ static esp_err_t hink_write_lut(hink_t *device, uint8_t const lut[HINK_LUT_SIZE]
     if (res != ESP_OK) {
         return res;
     }
-    res = hink_send_data(device, lut, HINK_LUT_SIZE);
+    res = hink_send_data(device, device->lut, 70);
+    if (res != ESP_OK) {
+        return res;
+    }
+    res = hink_set_gate_driving_voltage(device, device->lut[70]);
+    if (res != ESP_OK) {
+        return res;
+    }
+    res = hink_set_source_driving_voltage(device, device->lut[71], device->lut[72], device->lut[73]);
+    if (res != ESP_OK) {
+        return res;
+    }
+    res = hink_set_dummy_line_period(device, device->lut[74]);
+    if (res != ESP_OK) {
+        return res;
+    }
+    res = hink_set_gate_line_width(device, device->lut[75]);
     return res;
 }
 
@@ -245,8 +258,7 @@ esp_err_t hink_init(hink_t *device) {
     if (device->pin_cs < 0)
         return ESP_FAIL;
 
-    device->lut       = default_lut;
-    device->lut_extra = &default_lut[HINK_LUT_SIZE];
+    device->lut = NULL;
 
     res = gpio_reset_pin(device->pin_dcx);
     if (res != ESP_OK)
@@ -322,7 +334,7 @@ esp_err_t hink_deinit(hink_t *device) {
     return res;
 }
 
-esp_err_t hink_write(hink_t *device, uint8_t const *buffer, bool skip_red) {
+esp_err_t hink_write(hink_t *device, uint8_t const *buffer) {
     if (device->spi_device == NULL) {
         return ESP_FAIL;
     }
@@ -387,34 +399,32 @@ esp_err_t hink_write(hink_t *device, uint8_t const *buffer, bool skip_red) {
     hink_send_command(device, HINK_CMD_MASTER_ACTIVATION);
     hink_wait(device);
 
-    if (!skip_red) {
-        ESP_LOGI(TAG, "Writing RED buffer");
+    // Red framebuffer
 
-        hink_send_command(device, HINK_CMD_SET_RAM_X_ADDRESS_COUNTER);
-        hink_send_u8(device, 0x00);
+    hink_send_command(device, HINK_CMD_SET_RAM_X_ADDRESS_COUNTER);
+    hink_send_u8(device, 0x00);
 
-        hink_send_command(device, HINK_CMD_SET_RAM_Y_ADDRESS_COUNTER);
-        hink_send_u8(device, (device->screen_height - 1) & 0xFF);
-        hink_send_u8(device, ((device->screen_height - 1) >> 8));
+    hink_send_command(device, HINK_CMD_SET_RAM_Y_ADDRESS_COUNTER);
+    hink_send_u8(device, (device->screen_height - 1) & 0xFF);
+    hink_send_u8(device, ((device->screen_height - 1) >> 8));
 
-        hink_send_command(device, HINK_CMD_WRITE_RAM_RED);
+    hink_send_command(device, HINK_CMD_WRITE_RAM_RED);
 
-        for (int y = 0; y < device->screen_height; y++) {
-            for (int x = (device->screen_width / 8) - 1; x >= 0; x--) {
-                uint32_t position = y * ((device->screen_width / 8) * 2) + x * 2;
-                uint16_t pixels = buffer[position] | (buffer[position + 1] << 8);
-                uint8_t  out = 0;
-                pixels >>= 1;
-                for (int bit = 0; bit < 8; bit++) {
-                    out      = (out >> 1) | ((pixels & 1) << 7);
-                    pixels >>= 2;
-                }
-                hink_send_u8(device, out);
+    for (int y = 0; y < device->screen_height; y++) {
+        for (int x = (device->screen_width / 8) - 1; x >= 0; x--) {
+            uint32_t position   = y * ((device->screen_width / 8) * 2) + x * 2;
+            uint16_t pixels     = buffer[position] | (buffer[position + 1] << 8);
+            uint8_t  out        = 0;
+            pixels            >>= 1;
+            for (int bit = 0; bit < 8; bit++) {
+                out      = (out >> 1) | ((pixels & 1) << 7);
+                pixels >>= 2;
             }
+            hink_send_u8(device, out);
         }
     }
 
-    ESP_LOGI(TAG, "Writing BLACK buffer");
+    // Black framebuffer
 
     hink_send_command(device, HINK_CMD_SET_RAM_X_ADDRESS_COUNTER);
     hink_send_u8(device, 0x00);
@@ -428,8 +438,8 @@ esp_err_t hink_write(hink_t *device, uint8_t const *buffer, bool skip_red) {
     for (int y = 0; y < device->screen_height; y++) {
         for (int x = (device->screen_width / 8) - 1; x >= 0; x--) {
             uint32_t position = y * ((device->screen_width / 8) * 2) + x * 2;
-            uint16_t pixels = buffer[position] | (buffer[position + 1] << 8);
-            uint8_t  out = 0;
+            uint16_t pixels   = buffer[position] | (buffer[position + 1] << 8);
+            uint8_t  out      = 0;
             for (int bit = 0; bit < 8; bit++) {
                 out      = (out >> 1) | ((pixels & 1) << 7);
                 pixels >>= 2;
@@ -438,29 +448,9 @@ esp_err_t hink_write(hink_t *device, uint8_t const *buffer, bool skip_red) {
         }
     }
 
-    ESP_LOGI(TAG, "Setting LUT");
-
-    hink_write_lut(device, device->lut);
-
-    /*if (device->lut_extra != NULL) {
-        ESP_LOGI(TAG, "Setting LUT extra");
-        // This sets the settings to the values in the lut array from position 70 (HINK_LUT_SIZE)
-        hink_set_gate_driving_voltage(device, device->lut_extra[0]);
-        hink_set_source_driving_voltage(device, device->lut_extra[1], device->lut_extra[2], device->lut_extra[3]);
-        hink_set_dummy_line_period(device, device->lut_extra[4]);
-        hink_set_gate_line_width(device, device->lut_extra[5]);
-    }*/
-    /* else {
-        // Default values
-        ESP_LOGI(TAG, "Setting default extra");
-        hink_set_gate_driving_voltage(device, 0x21);
-        hink_set_source_driving_voltage(device, 0x81, 0x81, 0x32);
-        hink_set_dummy_line_period(device, 0x2C);
-        hink_set_gate_line_width(device, 0x0A);
-    }*/
-
-
-    ESP_LOGI(TAG, "Update");
+    if (device->lut) {
+        hink_write_lut(device);
+    }
 
     hink_send_command(device, HINK_CMD_DISPLAY_UPDATE_CONTROL_2);
     hink_send_u8(
@@ -471,10 +461,6 @@ esp_err_t hink_write(hink_t *device, uint8_t const *buffer, bool skip_red) {
     );
 
     hink_send_command(device, HINK_CMD_MASTER_ACTIVATION);
-    hink_wait(device);
-
-    ESP_LOGI(TAG, "Done");
-
     return ESP_OK;
 }
 
@@ -491,14 +477,7 @@ esp_err_t hink_sleep(hink_t *device) {
 
 // Set the active LUT.
 // Does not create a copy of the LUT.
-esp_err_t hink_set_lut(hink_t *device, uint8_t const lut[HINK_LUT_SIZE]) {
-    device->lut       = lut;
-    device->lut_extra = NULL;
-    return ESP_OK;
-}
-
-esp_err_t hink_set_lut_ext(hink_t *device, uint8_t const lut[HINK_LUT_SIZE]) {
-    device->lut       = lut;
-    device->lut_extra = &lut[HINK_LUT_SIZE];
+esp_err_t hink_set_lut(hink_t *device, uint8_t const *lut) {
+    device->lut = lut;
     return ESP_OK;
 }
