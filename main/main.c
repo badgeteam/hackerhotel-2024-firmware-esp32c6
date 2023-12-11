@@ -201,14 +201,6 @@ uint8_t lut_normal_20deg[] = {
     0x02, 0x2b, 0x04, 0x14, 0x04, 0x23, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0x3c, 0xc0, 0x2e, 0x30, 0x0a,
 };
 
-uint8_t lut_test[] = {
-    0x08, 0x99, 0x21, 0x44, 0x40, 0x01, 0x00, 0x10, 0x99, 0x21, 0xa0, 0x20, 0x20, 0x00, 0x88, 0x99, 0x21, 0x44, 0x2b,
-    0x2f, 0x00, 0x88, 0x99, 0x21, 0x44, 0x2b, 0x2f, 0x00, 0x00, 0x00, 0x12, 0x40, 0x00, 0x00, 0x00, 0x36, 0x30, 0x33,
-    0x00, 0x01, 0x02, 0x02, 0x02, 0x02, 0x01, 0x01, 0x16, 0x01, 0x16, 0x04, 0x02, 0x0b, 0x10, 0x00, 0x03, 0x06, 0x04,
-    0x02, 0x2b, 0x04, 0x14, 0x04, 0x23, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0x3c, 0xc0, 0x2e, 0x30, 0x0a,
-};
-
-
 // All LUTs
 
 // 0  = -20 degrees
@@ -406,7 +398,63 @@ uint8_t luts[24][128] = {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x15, 0x41, 0xa8, 0x32, 0x24, 0x04,
     }};
 
-int lut = 23;
+uint8_t lut_test[] = {
+    0x08, // 0
+    0x99, // 1
+    0x21, // 2
+    0x44, // 3
+    0x40, // 4
+    0x01, // 5
+    0x00, // 6
+    0x10, // 7
+    0x99, // 8
+    0x21, // 9
+    0xa0, // 10
+    0x20, // 11
+    0x20, // 12
+    0x00, // 13
+    0x88, // 14
+    0x99, // 15
+    0x21, // 16
+    0x44, // 17
+    0x2b, // 18
+    0x2f, // 19
+    0x00, // 20
+    0x88, // 21
+    0x99, // 22
+    0x21, // 23
+    0x44, // 24
+    0x2b, // 25
+    0x2f, // 26
+    0x00, // 27
+    0x00, // 28
+    0x00, // 29
+    0x12, // 30
+    0x40, // 31
+    0x00, // 32
+    0x00, // 33
+    0x00, // 34
+
+//  TPxA  TPxB  TPxC  TPxD  RPx
+    0x36, 0x30, 0x33, 0x00, 0x01,
+    0x02, 0x02, 0x02, 0x02, 0x13,
+    0x01, 0x16, 0x01, 0x16, 0x04,
+    0x02, 0x0b, 0x10, 0x00, 0x03,
+    0x06, 0x04, 0x02, 0x2b, 0x04,
+    0x14, 0x04, 0x23, 0x02, 0x03,
+    0x00, 0x00, 0x00, 0x00, 0x00,
+
+    0x13, // VGH
+    0x3c, // VSH1
+    0xc0, // VSH2
+    0x2e, // VSL
+    0x30, // Frame 1
+    0x0a, // Frame 2
+};
+
+unsigned long millis() {
+    return (unsigned long) (esp_timer_get_time() / 1000ULL);
+}
 
 void app_main(void) {
     esp_err_t res = initialize_system();
@@ -422,32 +470,52 @@ void app_main(void) {
         ESP_LOGI(TAG, "No SD card found");
     }
 
-    pax_background(&gfx, 0);
-    pax_draw_text(&gfx, 1, pax_font_marker, 18, 1, 0, "Hackerhotel 2024");
-    pax_draw_text(&gfx, 1, pax_font_sky_mono, 12, 1, 50, "This text is black");
-    pax_draw_text(&gfx, 2, pax_font_sky_mono, 12, 2, 65, "This text is red");
+    lut7_t* lut = (lut7_t*) lut_test;
 
-    pax_draw_rect(&gfx, 0, 0, 95, 100, 32);   // White
-    pax_draw_rect(&gfx, 1, 100, 95, 98, 32);  // Black
-    pax_draw_rect(&gfx, 2, 198, 95, 98, 32);  // Red
+    lut->groups[0].repeat = 0;
+    lut->groups[1].repeat = 0;
+    lut->groups[2].repeat = 0;
+    lut->groups[3].repeat = 0;
+    lut->groups[4].repeat = 0;
+    //lut->groups[5].repeat = 0;
+    //lut->groups[6].repeat = 0;
 
-    hink_set_lut(&epaper, lut_normal_20deg);
-    hink_write(&epaper, gfx.buf);
+    lut->groups[0].tp[0] = 0;
+    lut->groups[0].tp[1] = 0;
+    lut->groups[0].tp[2] = 0;
+    lut->groups[0].tp[3] = 0;
+
+    lut->groups[1].tp[0] = 0;
+    lut->groups[1].tp[1] = 0;
+    lut->groups[1].tp[2] = 0;
+    lut->groups[1].tp[3] = 0;
+
+    lut->groups[2].tp[0] = 0;
+    lut->groups[2].tp[1] = 0;
+    lut->groups[2].tp[2] = 0;
+    lut->groups[2].tp[3] = 0;
+
+    lut->groups[5].tp[0] = 0;
+    lut->groups[5].tp[1] = 0;
+    lut->groups[5].tp[2] = 0;
+    lut->groups[5].tp[3] = 0;
+
+    hink_set_lut(&epaper, (uint8_t*) lut);
+    //hink_write(&epaper, gfx.buf);
 
     uint32_t led        = 1;
-    bool     needs_rest = true;
+    bool     state = false;
+    unsigned long previous_millis = 0;
     while (1) {
         bool busy = hink_busy(&epaper);
-        printf("Epaper: %s\n", busy ? "busy" : "idle");
-
-        bool wait = true;
+        //printf("Epaper: %s\n", busy ? "busy" : "idle");
 
         uint8_t buttons[5];
         res = i2c_read_reg(I2C_BUS, 0x42, 5, buttons, 5);
         if (res == ESP_OK) {
-            printf("BUTTONS %x %x %x %x %x\n", buttons[0], buttons[1], buttons[2], buttons[3], buttons[4]);
-
-            wait = !(buttons[0] & 1);
+            if (buttons[0] | buttons[1] | buttons[2] | buttons[3] | buttons[4]) {
+                printf("BUTTONS %x %x %x %x %x\n", buttons[0], buttons[1], buttons[2], buttons[3], buttons[4]);
+            }
         }
 
         gpio_set_level(
@@ -455,18 +523,35 @@ void app_main(void) {
             buttons[0] | buttons[1] | buttons[2] | buttons[3] | buttons[4]
         );  // Turn on relay if one of the buttons is activated
 
-        if (busy) {
-            led = led << 1;
-            if (led == 0) {
-                led = 1;
+        if (!busy) {
+            unsigned long current_millis = millis();
+            unsigned long time_passed = current_millis - previous_millis;
+            if (previous_millis) {
+                printf("Updating took %lu ms\n", time_passed);
             }
-            needs_rest = true;
-        } else {
-            if (needs_rest) {
-                led        = 0;
-                needs_rest = false;
-            }
+            previous_millis = millis();
             led++;
+            state = !state;
+            if (state) {
+                pax_background(&gfx, 0);
+                pax_draw_text(&gfx, 1, pax_font_marker, 18, 1, 0, "Hackerhotel 2024");
+                pax_draw_text(&gfx, 1, pax_font_sky_mono, 12, 1, 50, "This text is black");
+                pax_draw_text(&gfx, 2, pax_font_sky_mono, 12, 1, 65, "This text is red");
+                pax_draw_rect(&gfx, 0, 0, 95, 100, 32);   // White
+                pax_draw_rect(&gfx, 1, 100, 95, 98, 32);  // Black
+                pax_draw_rect(&gfx, 2, 198, 95, 98, 32);  // Red
+            } else {
+                pax_background(&gfx, 0);
+                pax_draw_text(&gfx, 1, pax_font_marker, 18, 1, 0, "Blah blah blah blah blah blah blah blah");
+                pax_draw_text(&gfx, 2, pax_font_sky_mono, 12, 2, 50, "This text is red");
+                pax_draw_text(&gfx, 1, pax_font_sky_mono, 12, 1, 65, "This text is black");
+                pax_draw_rect(&gfx, 2, 0, 95, 100, 32);   // Red
+                pax_draw_rect(&gfx, 0, 100, 95, 98, 32);  // White
+                pax_draw_rect(&gfx, 1, 198, 95, 98, 32);  // Black
+            }
+
+            hink_write(&epaper, gfx.buf);
+
         }
 
         res = i2c_write_reg_n(I2C_BUS, 0x42, 0, (uint8_t *)&led, sizeof(uint32_t));
@@ -474,10 +559,6 @@ void app_main(void) {
             printf("FAILED %d\n", res);
         }
 
-        if (wait) {
-            vTaskDelay(pdMS_TO_TICKS(100));
-        } else {
-            vTaskDelay(pdMS_TO_TICKS(10));
-        }
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
