@@ -31,7 +31,10 @@
         "ostream": "c",
         "regex": "c",
         "random": "c",
-        "compare": "c"
+        "compare": "c",
+        "epaper.h": "c",
+        "rv_utils.h": "c",
+        "inttypes.h": "c"
     },
     "idf.port": "/dev/ttyACM0",
     "editor.formatOnType": false,
