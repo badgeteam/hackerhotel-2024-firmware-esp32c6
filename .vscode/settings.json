@@ -34,7 +34,10 @@
         "compare": "c",
         "epaper.h": "c",
         "rv_utils.h": "c",
-        "inttypes.h": "c"
+        "inttypes.h": "c",
+        "portmacro.h": "c",
+        "gpio_struct.h": "c",
+        "argtable3.h": "c"
     },
     "idf.port": "/dev/ttyACM0",
     "editor.formatOnType": false,

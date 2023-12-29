@@ -48,12 +48,13 @@ void ch32_sdi_write_bypass(uint32_t value);
 void ch32_sdi_reset();
 
 // High level functions
-void ch32_init_debug();
-void ch32_stop_cpu();
-void ch32_reset_cpu();
-void ch32_start_cpu();
-void ch32_read_dmstatus();
-void ch32_read_cpbr();
+void ch32_enable_slave_output();
+bool ch32_check_link();
+bool ch32_halt_microprocessor();
+bool ch32_resume_microprocessor();
+bool ch32_reset_microprocessor(bool resume);
+bool ch32_reset_debug_module();
+void ch32_programmer();
 
 #ifdef __cplusplus
 }
