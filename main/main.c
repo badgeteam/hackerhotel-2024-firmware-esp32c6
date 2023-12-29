@@ -477,16 +477,19 @@ void app_main(void) {
 
     ch32_init();
     ch32_sdi_reset();
+    ch32_init_debug();
 
     while (1) {
-        ch32_init_debug();
+        ch32_read_cpbr();
         vTaskDelay(pdMS_TO_TICKS(10));
-        /*ch32_stop_cpu();
-        ch32_read_dmstatus();
-        vTaskDelay(pdMS_TO_TICKS(100));
-        ch32_start_cpu();
-        ch32_read_dmstatus();
-        vTaskDelay(pdMS_TO_TICKS(100));*/
+        //ch32_read_dmstatus();
+        //vTaskDelay(pdMS_TO_TICKS(10));
+        //ch32_stop_cpu();
+        //ch32_read_dmstatus();
+        //vTaskDelay(pdMS_TO_TICKS(100));
+        //ch32_start_cpu();
+        //ch32_read_dmstatus();
+        //vTaskDelay(pdMS_TO_TICKS(100));
     }
 
     //return;

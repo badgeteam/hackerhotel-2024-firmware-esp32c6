@@ -20,10 +20,18 @@
 #include "freertos/task.h"
 
 void ch32_init_debug() {
-    uint32_t value = CH32_CFGR_KEY | CH32_CFGR_OUTEN; // Enable output from slave
+    /*uint32_t value = CH32_CFGR_KEY | CH32_CFGR_OUTEN; // Enable output from slave
     ch32_sdi_write(CH32_REG_DEBUG_SHDWCFGR, value); // First write the shadow register
     ch32_sdi_write(CH32_REG_DEBUG_CFGR, value); // Then the configuration register
     ch32_sdi_write(CH32_REG_DEBUG_CFGR, value); // Then the configuration register (again)
+    */
+    ch32_sdi_write(0x7E, 0x5aa50400);
+    ch32_sdi_write(0x7D, 0x5aa50400);
+    ch32_sdi_write(0x7D, 0x5aa50400);
+}
+
+void ch32_read_cpbr() {
+    uint32_t value;
     ch32_sdi_read(CH32_REG_DEBUG_CPBR, &value);
     printf("CPBR: %08lx\n", value);
 }

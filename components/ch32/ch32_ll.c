@@ -19,7 +19,7 @@
 #include "freertos/task.h"
 
 #define GPIO_CH32 17
-#define CH32T 1
+#define CH32T 2
 
 dedic_gpio_bundle_handle_t ch32_dedic_gpio_handle = NULL;
 
@@ -82,21 +82,21 @@ static inline bool ch32_rx() {
 }
 
 static inline uint32_t ch32_rx32() {
-    dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x02, 0x00);
     uint32_t word = 0;
     for (uint8_t bit = 0; bit < 32; bit++) {
-        // Drive low, then float high really fast
-        dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x01, 0x00);
-        dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x01, 0x01);
+        dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x01, 0x00); // Drive low
         ch32_delay(2 * CH32T);
+        dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x01, 0x01); // Float high
+        ch32_delay(8 * CH32T);
 
         // Read input to see if CH32 is holding low
         word <<= 1;
+        dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x02, 0x00);
         word |= dedic_gpio_bundle_read_in(ch32_dedic_gpio_handle) & 0x01;
+        dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x02, 0x02);
         //ch32_delay(4 * CH32T);
         ch32_delay(2 * CH32T);
     }
-    dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x02, 0x02);
     return word;
 }
 

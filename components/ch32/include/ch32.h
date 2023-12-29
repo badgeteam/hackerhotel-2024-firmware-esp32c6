@@ -53,6 +53,7 @@ void ch32_stop_cpu();
 void ch32_reset_cpu();
 void ch32_start_cpu();
 void ch32_read_dmstatus();
+void ch32_read_cpbr();
 
 #ifdef __cplusplus
 }
