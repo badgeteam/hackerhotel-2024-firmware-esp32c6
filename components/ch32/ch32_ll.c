@@ -87,15 +87,15 @@ static inline uint32_t ch32_rx32() {
         dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x01, 0x00); // Drive low
         ch32_delay(2 * CH32T);
         dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x01, 0x01); // Float high
-        ch32_delay(8 * CH32T);
+        ch32_delay(10 * CH32T);
 
         // Read input to see if CH32 is holding low
         word <<= 1;
-        dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x02, 0x00);
+        //dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x02, 0x00);
         word |= dedic_gpio_bundle_read_in(ch32_dedic_gpio_handle) & 0x01;
-        dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x02, 0x02);
+        //dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x02, 0x02);
         //ch32_delay(4 * CH32T);
-        ch32_delay(2 * CH32T);
+        ch32_delay(4 * CH32T);
     }
     return word;
 }
