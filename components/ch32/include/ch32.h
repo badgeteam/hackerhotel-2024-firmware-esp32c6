@@ -41,7 +41,7 @@ extern "C" {
 #define CH32_CFGR_OUTEN (1 << 10)
 
 // Low level functions
-esp_err_t ch32_init();
+esp_err_t ch32_init(uint8_t pin);
 void ch32_sdi_read(uint8_t address, uint32_t* value);
 void ch32_sdi_write(uint8_t address, uint32_t value);
 void ch32_sdi_write_bypass(uint32_t value);
@@ -52,7 +52,8 @@ void ch32_enable_slave_output();
 bool ch32_check_link();
 bool ch32_halt_microprocessor();
 bool ch32_resume_microprocessor();
-bool ch32_reset_microprocessor(bool resume);
+bool ch32_reset_microprocessor_and_run();
+bool ch32_reset_microprocessor_and_halt();
 bool ch32_reset_debug_module();
 void ch32_programmer();
 

@@ -475,56 +475,19 @@ void app_main(void) {
     }
 
 
-    ch32_init();
+    ch32_init(17);
     ch32_sdi_reset();
     ch32_enable_slave_output();
-
-    //ch32_programmer();
-
-    bool ch32res;
-
-    ch32res = ch32_check_link();
+    bool ch32res = ch32_check_link();
     if (!ch32res) {
+        printf("Failed to initialize debug interface of CH32V003\n");
         return;
     }
-    ch32res = ch32_halt_microprocessor();
+    ch32res = ch32_reset_microprocessor_and_run();
     if (!ch32res) {
+        printf("CH32V003 reset failed\n");
         return;
     }
-    printf("CH32 halted\n");
-    vTaskDelay(pdMS_TO_TICKS(1000));
-    ch32res = ch32_resume_microprocessor();
-    if (!ch32res) {
-        return;
-    }
-    printf("CH32 resumed\n");
-    vTaskDelay(pdMS_TO_TICKS(1000));
-    ch32res = ch32_reset_microprocessor(false);
-    if (!ch32res) {
-        return;
-    }
-    printf("CH32 reset\n");
-    vTaskDelay(pdMS_TO_TICKS(1000));
-    ch32res = ch32_reset_debug_module();
-    if (!ch32res) {
-        return;
-    }
-    printf("CH32 debug module reset\n");
-
-    while (1) {
-        vTaskDelay(pdMS_TO_TICKS(500));
-        //ch32_check_link();
-        //ch32_read_dmstatus();
-        //vTaskDelay(pdMS_TO_TICKS(10));
-        //ch32_stop_cpu();
-        //ch32_read_dmstatus();
-        //vTaskDelay(pdMS_TO_TICKS(100));
-        //ch32_start_cpu();
-        //ch32_read_dmstatus();
-        //vTaskDelay(pdMS_TO_TICKS(100));
-    }
-
-    //return;
 
     lut7_t* lut = (lut7_t*) lut_test;
 

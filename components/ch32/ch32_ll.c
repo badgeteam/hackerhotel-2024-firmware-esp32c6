@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2023 Nicolai Electronics
+ * Copyright (c) 2024 Nicolai Electronics
  *
  * SPDX-License-Identifier: MIT
  */
@@ -18,8 +18,7 @@
 #include "freertos/queue.h"
 #include "freertos/task.h"
 
-#define GPIO_CH32 17
-#define CH32T 2
+#define CH32T 4
 
 dedic_gpio_bundle_handle_t ch32_dedic_gpio_handle = NULL;
 
@@ -87,15 +86,11 @@ static inline uint32_t ch32_rx32() {
         dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x01, 0x00); // Drive low
         ch32_delay(2 * CH32T);
         dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x01, 0x01); // Float high
-        ch32_delay(10 * CH32T);
-
+        ch32_delay(8 * CH32T);
         // Read input to see if CH32 is holding low
         word <<= 1;
-        //dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x02, 0x00);
         word |= dedic_gpio_bundle_read_in(ch32_dedic_gpio_handle) & 0x01;
-        //dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x02, 0x02);
-        //ch32_delay(4 * CH32T);
-        ch32_delay(4 * CH32T);
+        ch32_delay(10 * CH32T);
     }
     return word;
 }
@@ -107,11 +102,13 @@ void ch32_sdi_reset() {
     vTaskDelay(pdMS_TO_TICKS(1));
 }
 
-esp_err_t ch32_init() {
+esp_err_t ch32_init(uint8_t pin) {
     esp_err_t res;
 
+    gpio_reset_pin(pin);
+
     gpio_config_t cfg = {
-        .pin_bit_mask = BIT64(GPIO_CH32),
+        .pin_bit_mask = BIT64(pin),
         .mode         = GPIO_MODE_INPUT_OUTPUT_OD,
         .pull_up_en   = false,
         .pull_down_en = false,
@@ -123,30 +120,13 @@ esp_err_t ch32_init() {
         return res;
     }
 
-    res = gpio_set_level(GPIO_CH32, true);
+    res = gpio_set_level(pin, true);
     if (res != ESP_OK) {
         return res;
     }
 
-    gpio_config_t cfg2 = {
-        .pin_bit_mask = BIT64(9),
-        .mode         = GPIO_MODE_OUTPUT,
-        .pull_up_en   = false,
-        .pull_down_en = false,
-        .intr_type    = GPIO_INTR_DISABLE,
-    };
-
-    res = gpio_config(&cfg2);
-    if (res != ESP_OK) {
-        return res;
-    }
-
-    res = gpio_set_level(9, true);
-    if (res != ESP_OK) {
-        return res;
-    }
-
-    int gpios[] = {GPIO_CH32, 9};
+    int gpios[1];
+    gpios[0] = pin;
 
     dedic_gpio_bundle_config_t dedic_gpio_config = {
         .gpio_array = gpios,

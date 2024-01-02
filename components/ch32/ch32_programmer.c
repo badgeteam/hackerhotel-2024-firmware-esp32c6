@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2023 Nicolai Electronics
+ * Copyright (c) 2024 Nicolai Electronics
  *
  * SPDX-License-Identifier: MIT
  */
