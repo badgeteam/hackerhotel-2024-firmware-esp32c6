@@ -18,13 +18,11 @@
 #include "pax_gfx.h"
 #include "sdkconfig.h"
 #include "sdmmc_cmd.h"
+#include "ch32.h"
 
 #include <inttypes.h>
 #include <stdio.h>
 
-#include <esp_err.h>
-#include <esp_log.h>
-#include <esp_system.h>
 #include <esp_vfs_fat.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
@@ -35,11 +33,6 @@
 #include <sdmmc_cmd.h>
 #include <string.h>
 #include <time.h>
-
-#include "soc/gpio_struct.h"
-#include "freertos/portmacro.h"
-#include "riscv/rv_utils.h"
-#include "driver/dedic_gpio.h"
 
 #define AUTOMATIC_SLEEP 0
 
@@ -55,7 +48,6 @@
 #define GPIO_I2C_SDA 6
 
 #define GPIO_RELAY 15
-#define GPIO_CH32 17
 
 #define A 1
 #define B 2
@@ -2279,204 +2271,8 @@ uint8_t lut_test[] = {
     0x0a, // Frame 2
 };
 
-#define CH32T 1
-
-dedic_gpio_bundle_handle_t ch32_dedic_gpio_handle = NULL;
-
-__attribute__((always_inline)) static inline void ch32_delay(int delay)
-{
-    asm volatile(
-        "1:	addi %[delay], %[delay], -1\n"
-        "	bgt %[delay], zero, 1b\n" : [delay] "+r"(delay));
-}
-
-extern gpio_dev_t GPIO;
-
-__attribute__((always_inline)) static inline void ch32_tx1()
-{
-    dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x01, 0x00);
-    ch32_delay(2 * CH32T);
-    dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x01, 0x01);
-    ch32_delay(8 * CH32T);
-}
-
-__attribute__((always_inline)) static inline void ch32_tx0()
-{
-    dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x01, 0x00);
-    ch32_delay(35 * CH32T);
-    dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x01, 0x01);
-    ch32_delay(8 * CH32T);
-}
-
-static inline void ch32_tx_stop()
-{
-    dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x01, 0x01);
-    ch32_delay(128 * CH32T);
-}
-
-static inline void ch32_tx32(uint32_t word)
-{
-    for (uint8_t bit = 0; bit < 32; bit++)
-    {
-        if (word & 0x80000000)
-        {
-            ch32_tx1();
-        }
-        else
-        {
-            ch32_tx0();
-        }
-        word <<= 1;
-    }
-}
-
-static inline void ch32_tx7(uint8_t word)
-{
-    for (uint8_t bit = 0; bit < 7; bit++)
-    {
-        if (word & 0x40)
-        {
-            ch32_tx1();
-        }
-        else
-        {
-            ch32_tx0();
-        }
-        word <<= 1;
-    }
-}
-
-__attribute__((always_inline)) static inline bool ch32_rx()
-{
-    return dedic_gpio_bundle_read_in(ch32_dedic_gpio_handle) & 0x01;
-}
-
-static inline uint32_t ch32_rx32()
-{
-    uint32_t word = 0;
-    for (uint8_t bit = 0; bit < 32; bit++)
-    {
-        word <<= 1;
-        word |= dedic_gpio_bundle_read_in(ch32_dedic_gpio_handle) & 1;
-        ch32_delay(2 * CH32T);
-    }
-    return word;
-}
-
-static inline void ch32_sdi_reset()
-{
-    dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x01, 0x00);
-    vTaskDelay(pdMS_TO_TICKS(1));
-    dedic_gpio_bundle_write(ch32_dedic_gpio_handle, 0x01, 0x01);
-    vTaskDelay(pdMS_TO_TICKS(1));
-}
-
-esp_err_t ch32_init()
-{
-    esp_err_t res;
-
-    gpio_config_t cfg = {
-        .pin_bit_mask = BIT64(GPIO_CH32),
-        .mode = GPIO_MODE_INPUT_OUTPUT_OD,
-        .pull_up_en = true,
-        .pull_down_en = false,
-        .intr_type = GPIO_INTR_DISABLE,
-    };
-
-    res = gpio_config(&cfg);
-    if (res != ESP_OK)
-    {
-        return res;
-    }
-
-    res = gpio_set_level(GPIO_CH32, true);
-    if (res != ESP_OK)
-    {
-        return res;
-    }
-
-    int gpios[] = {GPIO_CH32};
-
-    dedic_gpio_bundle_config_t dedic_gpio_config = {
-        .gpio_array = gpios,
-        .array_size = sizeof(gpios) / sizeof(gpios[0]),
-        .flags = {
-            .out_en = 1,
-            .in_en = 1,
-        },
-    };
-
-    dedic_gpio_new_bundle(&dedic_gpio_config, &ch32_dedic_gpio_handle);
-
-    return ESP_OK;
-}
-
-void ch32_sdi_read(uint8_t address, uint32_t *value)
-{
-    portDISABLE_INTERRUPTS();
-    rv_utils_intr_global_disable();
-    ch32_tx1();           // start bit (always 1)
-    ch32_tx7(address);    // 7 bit address
-    ch32_tx0();           // tead/write control bit (0 for host read)
-    *value = ch32_rx32(); // 32 bit data
-    ch32_tx_stop();
-    rv_utils_intr_global_enable();
-    portENABLE_INTERRUPTS();
-}
-
-void ch32_sdi_write(uint8_t address, uint32_t value)
-{
-    portDISABLE_INTERRUPTS();
-    rv_utils_intr_global_disable();
-    ch32_tx1();        // start bit (always 1)
-    ch32_tx7(address); // 7 bit address
-    ch32_tx1();        // tead/write control bit (1 for host write)
-    ch32_tx32(value);
-    ch32_tx_stop();
-    rv_utils_intr_global_enable();
-    portENABLE_INTERRUPTS();
-}
-
-void ch32_sdi_write_bypass(uint32_t value)
-{
-    portDISABLE_INTERRUPTS();
-    rv_utils_intr_global_disable();
-    ch32_tx0(); // start bit (always 0)
-    ch32_tx32(value);
-    ch32_tx_stop();
-    rv_utils_intr_global_enable();
-    portENABLE_INTERRUPTS();
-}
-
-unsigned long millis()
-{
-    return (unsigned long)(esp_timer_get_time() / 1000ULL);
-}
-
-void ch32_stop_cpu() IRAM_ATTR __attribute__((optimize("O2")));
-void ch32_stop_cpu()
-{
-    ch32_sdi_write(0x10, 0x80000001); // Make the debug module work properly
-    ch32_sdi_write(0x10, 0x80000001); // Initiate a halt request
-    vTaskDelay(pdMS_TO_TICKS(100));
-    ch32_sdi_write(0x10, 0x00000001); // Clear the halt request bit
-}
-
-void ch32_start_cpu() IRAM_ATTR __attribute__((optimize("O2")));
-void ch32_start_cpu()
-{
-    ch32_sdi_write(0x10, 0x80000001); // Make the debug module work properly
-    ch32_sdi_write(0x10, 0x80000001); // Initiate a halt request
-    ch32_sdi_write(0x10, 0x00000001); // Clear the halt request bit
-    ch32_sdi_write(0x10, 0x40000001); // Initiate a resume request
-}
-
-void ch32_read_dmstatus() IRAM_ATTR __attribute__((optimize("O2")));
-void ch32_read_dmstatus()
-{
-    uint32_t value = 0;
-    ch32_sdi_read(0x10, &value);
-    printf("Dmstatus: %08lx\n", value);
+unsigned long millis() {
+    return (unsigned long) (esp_timer_get_time() / 1000ULL);
 }
 
 uint32_t led = 1;
@@ -2524,31 +2320,27 @@ void app_main(void)
         ESP_LOGI(TAG, "No SD card found");
     }
 
-    ch32_init();
-    // ch32_sdi_reset();
-    // vTaskDelay(pdMS_TO_TICKS(100));
-    // ch32_stop_cpu();
-    // printf("CPU stopped\n");
-    // vTaskDelay(pdMS_TO_TICKS(1000));
-    // ch32_start_cpu();
-    // printf("CPU started\n");
-    // while (1) {
-    //     ch32_read_dmstatus();
-    //     vTaskDelay(pdMS_TO_TICKS(100));
-    // }
+    uint32_t xxx = 0xFFFFFFFF;
+    res = i2c_write_reg_n(I2C_BUS, 0x42, 0, (uint8_t *)&xxx, sizeof(uint32_t));
+    if (res != ESP_OK) {
+        printf("FAILED %d\n", res);
+    }
 
-    // return;
+    ch32_init(17);
+    ch32_sdi_reset();
+    ch32_enable_slave_output();
+    bool ch32res = ch32_check_link();
+    if (!ch32res) {
+        printf("Failed to initialize debug interface of CH32V003\n");
+        return;
+    }
+    ch32res = ch32_reset_microprocessor_and_run();
+    if (!ch32res) {
+        printf("CH32V003 reset failed\n");
+        return;
+    }
 
-    // //  TPxA  TPxB  TPxC  TPxD  RPx
-    // 0x36, 0x30, 0x33, 0x00, 0x01,
-    // 0x02, 0x02, 0x02, 0x02, 0x13,
-    // 0x01, 0x16, 0x01, 0x16, 0x04,
-    // 0x02, 0x0b, 0x10, 0x00, 0x03,
-    // 0x06, 0x04, 0x02, 0x2b, 0x04,
-    // 0x14, 0x04, 0x23, 0x02, 0x03,
-    // 0x00, 0x00, 0x00, 0x00, 0x00,
-
-    lut7_t *lut = (lut7_t *)lut_test;
+    lut7_t* lut = (lut7_t*) lut_test;
 
     lut->groups[0].repeat = 0;
     lut->groups[1].repeat = 0;
