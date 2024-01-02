@@ -25,14 +25,14 @@ typedef struct _lut_group {
 } __attribute__((packed, aligned(1))) lut_group_t;
 
 typedef struct _lut7 {
-    uint8_t vs[35];        // Register 0x32
-    lut_group_t groups[7]; // Register 0x32
-    uint8_t vgh;           // Gate level (0x03)
-    uint8_t vsh1;          // Source level (0x04)
-    uint8_t vsh2;          // Source level (0x04)
-    uint8_t vsl;           // Source level (0x04)
-    uint8_t frame1;        // Dummy line (0x3A)
-    uint8_t frame2;        // Gate line width (0x3B)
+    uint8_t     vs[35];     // Register 0x32
+    lut_group_t groups[7];  // Register 0x32
+    uint8_t     vgh;        // Gate level (0x03)
+    uint8_t     vsh1;       // Source level (0x04)
+    uint8_t     vsh2;       // Source level (0x04)
+    uint8_t     vsl;        // Source level (0x04)
+    uint8_t     frame1;     // Dummy line (0x3A)
+    uint8_t     frame2;     // Gate line width (0x3B)
 } __attribute__((packed, aligned(1))) lut7_t;
 
 typedef struct _hink {
