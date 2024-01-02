@@ -31,7 +31,10 @@
         "ostream": "c",
         "regex": "c",
         "random": "c",
-        "compare": "c"
+        "compare": "c",
+        "esp_vfs_fat.h": "c",
+        "string.h": "c",
+        "ch32.h": "c"
     },
     "idf.port": "/dev/ttyACM0",
     "editor.formatOnType": false,
