@@ -42,6 +42,12 @@
 #include <string.h>
 #include <time.h>
 
+#include "ch32.h"
+
+#define I2C_REG_FW_VERSION 0
+#define I2C_REG_LED        4
+#define I2C_REG_BTN        8
+
 static char const *TAG = "main";
 
 extern pax_buf_t     gfx;
@@ -132,24 +138,11 @@ uint8_t lut_test[] = {
 };
 
 uint8_t buttons[5];
-int     delaySM      = 1;
-int     delaySMflag  = 0;
-int     statemachine = 0;
 
 void frame1(void) {
     pax_background(&gfx, 0);
     pax_draw_text(&gfx, 1, pax_font_marker, 18, 60, 0, "Welcome to Hackerhotel");
     hink_write(&epaper, gfx.buf);
-}
-
-void testaa(void) {
-    while (1) {
-        vTaskDelay(pdMS_TO_TICKS(10));
-        if (delaySMflag == 1) {
-            vTaskDelay(pdMS_TO_TICKS(delaySM));
-            delaySMflag = 0;
-        }
-    }
 }
 
 void app_main(void) {
@@ -221,7 +214,7 @@ void app_main(void) {
     while (1) {
         bool busy = hink_busy(&epaper);
 
-        res = i2c_read_reg(I2C_BUS, 0x42, 5, buttons, 5);
+        res = i2c_read_reg(I2C_BUS, 0x42, I2C_REG_BTN, buttons, 5);
         if (res == ESP_OK) {
             if (buttons[0] | buttons[1] | buttons[2] | buttons[3] | buttons[4]) {
                 printf("BUTTONS %x %x %x %x %x\n", buttons[0], buttons[1], buttons[2], buttons[3], buttons[4]);
@@ -293,7 +286,7 @@ void app_main(void) {
             default: break;
         }
 
-        res = i2c_write_reg_n(I2C_BUS, 0x42, 0, (uint8_t *)&led, sizeof(uint32_t));
+        res = i2c_write_reg_n(I2C_BUS, 0x42, I2C_REG_LED, (uint8_t *)&led, sizeof(uint32_t));
         if (res != ESP_OK) {
             ESP_LOGE(TAG, "Failed to write to CH32 coprocessor (%d)\n", res);
         }

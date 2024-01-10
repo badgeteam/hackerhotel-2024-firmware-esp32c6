@@ -46,6 +46,13 @@
 
 static char const *TAG = "board";
 
+#define I2C_REG_FW_VERSION 0
+#define I2C_REG_LED        4
+#define I2C_REG_BTN        8
+
+extern const uint8_t ch32_firmware_start[] asm("_binary_ch32_firmware_bin_start");
+extern const uint8_t ch32_firmware_end[] asm("_binary_ch32_firmware_bin_end");
+
 pax_buf_t gfx;
 pax_col_t palette[] = {0xffffffff, 0xff000000, 0xffff0000};  // white, black, red
 
@@ -72,6 +79,42 @@ static esp_err_t initialize_nvs(void) {
         res = nvs_flash_init();
     }
     return res;
+}
+
+bool program_ch32() {
+    bool res;
+
+    ch32_init(GPIO_CH32);
+    ch32_sdi_reset();
+    ch32_enable_slave_output();
+
+    res = ch32_check_link();
+    if (!res) {
+        ESP_LOGE(TAG, "CH32V003 link check failed");
+        return false;
+    }
+
+    res = ch32_halt_microprocessor();
+    if (!res) {
+        ESP_LOGE(TAG, "CH32V003 failed to halt microcontroller");
+        return false;
+    }
+
+    ch32_unlock_flash();
+    ch32_set_nrst_mode(false); // Use NRST as GPIO
+
+    res = ch32_write_flash(0x08000000, ch32_firmware_start, ch32_firmware_end - ch32_firmware_start);
+    if (!res) {
+        return false;
+    }
+
+    res = ch32_reset_microprocessor_and_run();
+    if (!res) {
+        ESP_LOGE(TAG, "CH32V003 failed to reset and run");
+        return false;
+    }
+
+    return true;
 }
 
 esp_err_t initialize_system() {
@@ -181,13 +224,35 @@ esp_err_t initialize_system() {
     }
     res = ESP_OK;  // Continue starting without SD card
 
-    ch32_init(GPIO_CH32);
-    ch32_sdi_reset();
-    ch32_enable_slave_output();
-    bool ch32res = ch32_check_link();
-    if (!ch32res) {
-        ESP_LOGE(TAG, "Failed to initialize debug interface of CH32V003");
-        return ESP_FAIL;
+    // CH32V003 firmware check & updater
+
+    uint16_t ch32_version = 0;
+    res = i2c_read_reg(I2C_BUS, 0x42, I2C_REG_FW_VERSION, (uint8_t*) &ch32_version, sizeof(uint16_t));
+    if (res != ESP_OK) {
+        ch32_version = 0;
+        ESP_LOGW(TAG, "Failed to read from CH32V003 via I2C");
+    }
+
+    if (ch32_version != 1) {
+        ESP_LOGW(TAG, "Programming CH32V003 firmware, previous version was %u", ch32_version);
+        bool ch32_result = program_ch32();
+
+        if (!ch32_result) {
+            ESP_LOGE(TAG, "Failed to program the CH32V003 co-processor");
+        } else {
+            ESP_LOGW(TAG, "Succesfully programmed the CH32V003 co-processor");
+        }
+
+        res = i2c_read_reg(I2C_BUS, 0x42, I2C_REG_FW_VERSION, (uint8_t*) &ch32_version, sizeof(uint16_t));
+        if (res != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to read from CH32V003 via I2C after flashing");
+            return ESP_FAIL;
+        }
+
+        if (ch32_version != 1) {
+            ESP_LOGE(TAG, "CH32V003 reports invalid version %u via I2C after flashing", ch32_version);
+            return ESP_FAIL;
+        }
     }
 
     return res;

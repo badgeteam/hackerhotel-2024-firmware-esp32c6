@@ -3,4 +3,5 @@ idf_component_register(
          "board.c"
     INCLUDE_DIRS "."
     EMBED_FILES ${project_dir}/resources/renze.png
+                ${project_dir}/resources/ch32_firmware.bin
 )
