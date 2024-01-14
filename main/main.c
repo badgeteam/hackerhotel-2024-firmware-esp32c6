@@ -556,9 +556,6 @@ void app_main(void) {
 
     LUTset(Lut4s);
 
-    bool          state           = false;
-    unsigned long previous_millis = 0;
-
     xTaskCreate(testaa, "testaa", 1024, NULL, 1, NULL);
 
     while (1) {
@@ -566,21 +563,12 @@ void app_main(void) {
         bool busy = hink_busy(bsp_get_epaper());
 
         res = i2c_read_reg(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_BTN, buttons, 5);
-        if (res == ESP_OK) {
-            if (buttons[0] | buttons[1] | buttons[2] | buttons[3] | buttons[4]) {
-                printf("BUTTONS %x %x %x %x %x\n", buttons[0], buttons[1], buttons[2], buttons[3], buttons[4]);
-            }
+        if (res != ESP_OK) {
+            memset(buttons, 0, sizeof(buttons));
+            ESP_LOGE(TAG, "Failed to read button states");
         }
 
         if (!busy) {
-             unsigned long current_millis = millis();
-             unsigned long time_passed = current_millis - previous_millis;
-             if (previous_millis) {
-                 printf("Updating took %lu ms\n", time_passed);
-             }
-             previous_millis = millis();
-             state = !state;
-
              switch (MainMenustatemachine) {
                 case MainMenuhub:
 
