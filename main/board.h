@@ -10,6 +10,9 @@
 
 #define SPI_BUS SPI2_HOST
 
+#define EPAPER_WHITE  0
+#define EPAPER_BLACK  1
+#define EPAPER_RED    2
 
 #define EPAPER_SPEED  10000000
 #define EPAPER_WIDTH  128
