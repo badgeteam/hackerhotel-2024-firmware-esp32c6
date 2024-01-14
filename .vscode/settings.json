@@ -34,7 +34,15 @@
         "compare": "c",
         "esp_vfs_fat.h": "c",
         "string.h": "c",
-        "ch32.h": "c"
+        "ch32.h": "c",
+        "dedic_gpio.h": "c",
+        "resources.h": "c",
+        "sdkconfig.h": "c",
+        "rv_utils.h": "c",
+        "gpio_struct.h": "c",
+        "gpio.h": "c",
+        "sdmmc_cmd.h": "c",
+        "sdspi_host.h": "c"
     },
     "idf.port": "/dev/ttyACM0",
     "editor.formatOnType": false,
