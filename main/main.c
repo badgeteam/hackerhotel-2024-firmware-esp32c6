@@ -1,4 +1,3 @@
-#include "board.h"
 #include "driver/dedic_gpio.h"
 #include "driver/gpio.h"
 #include "driver/i2c.h"
@@ -42,11 +41,7 @@
 #include <string.h>
 #include <time.h>
 
-#include "ch32.h"
-
-#define I2C_REG_FW_VERSION 0
-#define I2C_REG_LED        4
-#define I2C_REG_BTN        8
+#include "bsp.h"
 
 #define LutFull 0
 #define Lut8s 1
@@ -64,11 +59,6 @@
 #define MainMenuCredits 4
 
 static char const *TAG = "main";
-
-extern pax_buf_t     gfx;
-extern sdmmc_card_t *card;
-extern hink_t        epaper;
-
 
 uint8_t lut_test[] = {
     0x08,  // 0
@@ -176,76 +166,80 @@ int DisplaySelectedLetter(int _selectedletter)
 
 void DisplayDebugCenterlines(void) // in black
 {
-    pax_draw_line(&gfx, 1, 147, 0, 147, 127);
-    pax_draw_line(&gfx, 1, 148, 0, 148, 127);
-    pax_draw_line(&gfx, 1, 0, 63, 295, 63);
-    pax_draw_line(&gfx, 1, 0, 64, 295, 64);
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_draw_line(gfx, 1, 147, 0, 147, 127);
+    pax_draw_line(gfx, 1, 148, 0, 148, 127);
+    pax_draw_line(gfx, 1, 0, 63, 295, 63);
+    pax_draw_line(gfx, 1, 0, 64, 295, 64);
 }
 
 void DisplayDebugSwitchesBoxes(void) // in black
 {
-    pax_outline_rect(&gfx, 1, 0, 114, 52, 14); // Switch 1
-    // pax_draw_rect(&gfx, 0, 1, 115, 50, 12);
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_outline_rect(gfx, 1, 0, 114, 52, 14); // Switch 1
+    // pax_draw_rect(gfx, 0, 1, 115, 50, 12);
 
-    pax_outline_rect(&gfx, 1, 61, 114, 52, 14); // Switch 2
-    // pax_draw_rect(&gfx, 0, 62, 115, 50, 12);
+    pax_outline_rect(gfx, 1, 61, 114, 52, 14); // Switch 2
+    // pax_draw_rect(gfx, 0, 62, 115, 50, 12);
 
-    pax_outline_rect(&gfx, 1, 61 * 2, 114, 52, 14); // Switch 3
-    // pax_draw_rect(&gfx, 0, 1 + 61 * 2, 115, 50, 12);
+    pax_outline_rect(gfx, 1, 61 * 2, 114, 52, 14); // Switch 3
+    // pax_draw_rect(gfx, 0, 1 + 61 * 2, 115, 50, 12);
 
-    pax_outline_rect(&gfx, 1, 61 * 3, 114, 52, 14); // Switch 4
-    // pax_draw_rect(&gfx, 0, 1 + 61 * 3, 115, 50, 12);
+    pax_outline_rect(gfx, 1, 61 * 3, 114, 52, 14); // Switch 4
+    // pax_draw_rect(gfx, 0, 1 + 61 * 3, 115, 50, 12);
 
-    pax_outline_rect(&gfx, 1, 61 * 4, 114, 52, 14); // Switch 5
-    // pax_draw_rect(&gfx, 0, 1 + 61 * 4, 115, 50, 12);
+    pax_outline_rect(gfx, 1, 61 * 4, 114, 52, 14); // Switch 5
+    // pax_draw_rect(gfx, 0, 1 + 61 * 4, 115, 50, 12);
 }
 
 void DisplaySwitchesBox(int _switch) // in black
 {
-    pax_outline_rect(&gfx, 1, 61 * _switch, 114, 50, 12);
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_outline_rect(gfx, 1, 61 * _switch, 114, 50, 12);
 }
 
 // Position is the X coordinate of the center/left (since it's even) pixel
 void DisplayTelegraph(int _colour, int _position)
 {
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
     if (_position < 36)
         _position = 36; // prevent to draw outside of buffer
 
     // Diamond
-    pax_draw_line(&gfx, _colour, _position - 36, 64, _position - 3, 127); // Left to top
-    pax_draw_line(&gfx, _colour, _position - 36, 63, _position - 3, 0);   // Left to bottom
-    pax_draw_line(&gfx, _colour, _position + 37, 64, _position + 4, 127); // Right to top
-    pax_draw_line(&gfx, _colour, _position + 37, 63, _position + 4, 0);   // Right to bottom
+    pax_draw_line(gfx, _colour, _position - 36, 64, _position - 3, 127); // Left to top
+    pax_draw_line(gfx, _colour, _position - 36, 63, _position - 3, 0);   // Left to bottom
+    pax_draw_line(gfx, _colour, _position + 37, 64, _position + 4, 127); // Right to top
+    pax_draw_line(gfx, _colour, _position + 37, 63, _position + 4, 0);   // Right to bottom
 
     // Letter circles
 
-    pax_outline_circle(&gfx, _colour, _position, 12, 6);
+    pax_outline_circle(gfx, _colour, _position, 12, 6);
 
-    pax_outline_circle(&gfx, _colour, _position - 8, 27, 6);
-    pax_outline_circle(&gfx, _colour, _position + 8, 27, 6);
+    pax_outline_circle(gfx, _colour, _position - 8, 27, 6);
+    pax_outline_circle(gfx, _colour, _position + 8, 27, 6);
 
-    pax_outline_circle(&gfx, _colour, _position - 16, 42, 6);
-    pax_outline_circle(&gfx, _colour, _position, 42, 6);
-    pax_outline_circle(&gfx, _colour, _position + 16, 42, 6);
+    pax_outline_circle(gfx, _colour, _position - 16, 42, 6);
+    pax_outline_circle(gfx, _colour, _position, 42, 6);
+    pax_outline_circle(gfx, _colour, _position + 16, 42, 6);
 
-    pax_outline_circle(&gfx, _colour, _position - 24, 57, 6);
-    pax_outline_circle(&gfx, _colour, _position - 8, 57, 6);
-    pax_outline_circle(&gfx, _colour, _position + 8, 57, 6);
-    pax_outline_circle(&gfx, _colour, _position + 24, 57, 6);
+    pax_outline_circle(gfx, _colour, _position - 24, 57, 6);
+    pax_outline_circle(gfx, _colour, _position - 8, 57, 6);
+    pax_outline_circle(gfx, _colour, _position + 8, 57, 6);
+    pax_outline_circle(gfx, _colour, _position + 24, 57, 6);
 
-    pax_outline_circle(&gfx, _colour, _position - 24, 71, 6);
-    pax_outline_circle(&gfx, _colour, _position - 8, 71, 6);
-    pax_outline_circle(&gfx, _colour, _position + 8, 71, 6);
-    pax_outline_circle(&gfx, _colour, _position + 24, 71, 6);
+    pax_outline_circle(gfx, _colour, _position - 24, 71, 6);
+    pax_outline_circle(gfx, _colour, _position - 8, 71, 6);
+    pax_outline_circle(gfx, _colour, _position + 8, 71, 6);
+    pax_outline_circle(gfx, _colour, _position + 24, 71, 6);
 
-    pax_outline_circle(&gfx, _colour, _position - 16, 86, 6);
-    pax_outline_circle(&gfx, _colour, _position, 86, 6);
-    pax_outline_circle(&gfx, _colour, _position + 16, 86, 6);
+    pax_outline_circle(gfx, _colour, _position - 16, 86, 6);
+    pax_outline_circle(gfx, _colour, _position, 86, 6);
+    pax_outline_circle(gfx, _colour, _position + 16, 86, 6);
 
-    pax_outline_circle(&gfx, _colour, _position - 8, 101, 6);
-    pax_outline_circle(&gfx, _colour, _position + 8, 101, 6);
+    pax_outline_circle(gfx, _colour, _position - 8, 101, 6);
+    pax_outline_circle(gfx, _colour, _position + 8, 101, 6);
 
-    pax_outline_circle(&gfx, _colour, _position, 116, 6);
+    pax_outline_circle(gfx, _colour, _position, 116, 6);
 }
 
 void testaa(void)
@@ -471,283 +465,264 @@ void LUTset(int LUTconfiguration)
         lut->groups[5].tp[3] = 0;
         break;
     }
-    hink_set_lut(&epaper, (uint8_t *)lut);
+    hink_set_lut(bsp_get_epaper(), (uint8_t *)lut);
 }
 
 void framenametag(void)
 {
     LUTset(Lut1s);
-    pax_background(&gfx, 0);
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_background(gfx, 0);
     if (specialcharacterselect == 0 || specialcharacterselect == 1)
-        pax_draw_text(&gfx, 1, pax_font_saira_regular, 30, 80, 50, playername);
+        pax_draw_text(gfx, 1, pax_font_saira_regular, 30, 80, 50, playername);
     DisplaySwitchesBox(SWITCH_1);
-    pax_draw_text(&gfx, 1, pax_font_sky_mono, 10, 8, 116, "Exit");
+    pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 8, 116, "Exit");
     DisplaySwitchesBox(SWITCH_3);
-    pax_draw_text(&gfx, 1, pax_font_sky_mono, 10, 133, 116, specialcharactersicon[specialcharacterselect]);
+    pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 133, 116, specialcharactersicon[specialcharacterselect]);
     DisplaySwitchesBox(SWITCH_5);
-    pax_draw_text(&gfx, 1, pax_font_sky_mono, 10, 247, 116, "delete");
+    pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 247, 116, "delete");
     if (specialcharacterselect == 2)
     {
         int _position = 90;
-        DisplayTelegraph(EPAPER_BLACK, _position);
+        DisplayTelegraph(BLACK, _position);
         int _offsetX = 5;
         int _offsetY = 5;
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - _offsetX, 12 - _offsetY, "@");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - 8 - _offsetX, 27 - _offsetY, "#");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position + 8 - _offsetX, 27 - _offsetY, "$");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - 16 - _offsetX, 42 - _offsetY, "_");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - _offsetX, 42 - _offsetY, "&");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position + 16 - _offsetX, 42 - _offsetY, "-");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - 24 - _offsetX, 57 - _offsetY, "+");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - 8 - _offsetX, 57 - _offsetY, "(");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position + 8 - _offsetX, 57 - _offsetY, ")");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position + 24 - _offsetX, 57 - _offsetY, "/");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - _offsetX, 12 - _offsetY, "@");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - 8 - _offsetX, 27 - _offsetY, "#");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position + 8 - _offsetX, 27 - _offsetY, "$");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - 16 - _offsetX, 42 - _offsetY, "_");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - _offsetX, 42 - _offsetY, "&");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position + 16 - _offsetX, 42 - _offsetY, "-");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - 24 - _offsetX, 57 - _offsetY, "+");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - 8 - _offsetX, 57 - _offsetY, "(");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position + 8 - _offsetX, 57 - _offsetY, ")");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position + 24 - _offsetX, 57 - _offsetY, "/");
 
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - _offsetX, 116 - _offsetY, "|");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - 8 - _offsetX, 101 - _offsetY, "~");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position + 8 - _offsetX, 101 - _offsetY, "`");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - 16 - _offsetX, 86 - _offsetY, ";");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - _offsetX, 86 - _offsetY, "!");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position + 16 - _offsetX, 86 - _offsetY, "?");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - 24 - _offsetX, 71 - _offsetY, "*");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - 8 - _offsetX, 71 - _offsetY, "\"");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position + 8 - _offsetX, 71 - _offsetY, "'");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position + 24 - _offsetX, 71 - _offsetY, ":");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - _offsetX, 116 - _offsetY, "|");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - 8 - _offsetX, 101 - _offsetY, "~");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position + 8 - _offsetX, 101 - _offsetY, "`");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - 16 - _offsetX, 86 - _offsetY, ";");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - _offsetX, 86 - _offsetY, "!");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position + 16 - _offsetX, 86 - _offsetY, "?");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - 24 - _offsetX, 71 - _offsetY, "*");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - 8 - _offsetX, 71 - _offsetY, "\"");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position + 8 - _offsetX, 71 - _offsetY, "'");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position + 24 - _offsetX, 71 - _offsetY, ":");
     }
 
     if (specialcharacterselect == 3)
     {
         int _position = 90;
-        DisplayTelegraph(EPAPER_BLACK, _position);
+        DisplayTelegraph(BLACK, _position);
         int _offsetX = 5;
         int _offsetY = 5;
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - _offsetX, 12 - _offsetY, "=");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - 8 - _offsetX, 27 - _offsetY, "[");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position + 8 - _offsetX, 27 - _offsetY, "]");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - 16 - _offsetX, 42 - _offsetY, "\\");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - _offsetX, 42 - _offsetY, "{");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position + 16 - _offsetX, 42 - _offsetY, "}");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - 24 - _offsetX, 57 - _offsetY, "<");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - 8 - _offsetX, 57 - _offsetY, ">");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position + 8 - _offsetX, 57 - _offsetY, "");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position + 24 - _offsetX, 57 - _offsetY, "");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - _offsetX, 12 - _offsetY, "=");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - 8 - _offsetX, 27 - _offsetY, "[");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position + 8 - _offsetX, 27 - _offsetY, "]");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - 16 - _offsetX, 42 - _offsetY, "\\");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - _offsetX, 42 - _offsetY, "{");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position + 16 - _offsetX, 42 - _offsetY, "}");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - 24 - _offsetX, 57 - _offsetY, "<");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - 8 - _offsetX, 57 - _offsetY, ">");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position + 8 - _offsetX, 57 - _offsetY, "");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position + 24 - _offsetX, 57 - _offsetY, "");
 
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - _offsetX, 116 - _offsetY, "");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - 8 - _offsetX, 101 - _offsetY, "");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position + 8 - _offsetX, 101 - _offsetY, "");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - 16 - _offsetX, 86 - _offsetY, "");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - _offsetX, 86 - _offsetY, "");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position + 16 - _offsetX, 86 - _offsetY, "");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - 24 - _offsetX, 71 - _offsetY, "");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position - 8 - _offsetX, 71 - _offsetY, "");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position + 8 - _offsetX, 71 - _offsetY, "");
-        pax_draw_text(&gfx, EPAPER_BLACK, pax_font_sky_mono, 10, _position + 24 - _offsetX, 71 - _offsetY, "");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - _offsetX, 116 - _offsetY, "");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - 8 - _offsetX, 101 - _offsetY, "");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position + 8 - _offsetX, 101 - _offsetY, "");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - 16 - _offsetX, 86 - _offsetY, "");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - _offsetX, 86 - _offsetY, "");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position + 16 - _offsetX, 86 - _offsetY, "");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - 24 - _offsetX, 71 - _offsetY, "");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position - 8 - _offsetX, 71 - _offsetY, "");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position + 8 - _offsetX, 71 - _offsetY, "");
+        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 10, _position + 24 - _offsetX, 71 - _offsetY, "");
     }
-    hink_write(&epaper, gfx.buf);
+    hink_write(bsp_get_epaper(), gfx->buf);
+}
+
+unsigned long millis() {
+    return (unsigned long)(esp_timer_get_time() / 1000ULL);
 }
 
 void app_main(void) {
-    esp_err_t res = initialize_system();
+    esp_err_t res = bsp_init();
     if (res != ESP_OK) {
         // Device init failed, stop.
-        ESP_LOGE(TAG, "System init failed, bailing out.");
-        return;
-    }
-
-    if (card) {
-        sdmmc_card_print_info(stdout, card);
-    } else {
-        ESP_LOGI(TAG, "No SD card found");
+        ESP_LOGE(TAG, "Hardware initialization failed, bailing out.");
+        vTaskDelay(pdMS_TO_TICKS(2000));
+        bsp_restart();
     }
 
     LUTset(Lut4s);
 
-    bool          state           = false;
-    unsigned long previous_millis = 0;
-
     xTaskCreate(testaa, "testaa", 1024, NULL, 1, NULL);
 
     while (1) {
-        bool busy = hink_busy(&epaper);
+        pax_buf_t* gfx = bsp_get_gfx_buffer();
+        bool busy = hink_busy(bsp_get_epaper());
 
-        res = i2c_read_reg(I2C_BUS, 0x42, I2C_REG_BTN, buttons, 5);
-        if (res == ESP_OK) {
-            if (buttons[0] | buttons[1] | buttons[2] | buttons[3] | buttons[4]) {
-                printf("BUTTONS %x %x %x %x %x\n", buttons[0], buttons[1], buttons[2], buttons[3], buttons[4]);
-            }
+        res = i2c_read_reg(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_BTN, buttons, 5);
+        if (res != ESP_OK) {
+            memset(buttons, 0, sizeof(buttons));
+            ESP_LOGE(TAG, "Failed to read button states");
         }
 
-        // if (!busy)
-        // {
-        //     unsigned long current_millis = millis();
-        //     unsigned long time_passed = current_millis - previous_millis;
-        //     if (previous_millis)
-        //     {
-        //         printf("Updating took %lu ms\n", time_passed);
-        //     }
-        //     previous_millis = millis();
-        //     state = !state;
+        if (!busy) {
+             switch (MainMenustatemachine) {
+                case MainMenuhub:
 
-        //     switch (MainMenustatemachine)
-        //     {
-        //     case MainMenuhub:
+                 if (buttons[SWITCH_2] == SWITCH_PRESS) {
+                     MainMenustatemachine = MainMenuBadgetag;
+                     MainMenuchangeflag = 1;
+                     break;
+                 }
 
-        //         if (buttons[SWITCH_2] == SWITCH_PRESS)
-        //         {
-        //             MainMenustatemachine = MainMenuBadgetag;
-        //             MainMenuchangeflag = 1;
-        //             break;
-        //         }
+                 if (buttons[SWITCH_3] == SWITCH_PRESS) {
+                     MainMenustatemachine = MainMenuCredits;
+                     MainMenuchangeflag = 1;
+                     break;
+                 }
 
-        //         if (buttons[SWITCH_3] == SWITCH_PRESS)
-        //         {
-        //             MainMenustatemachine = MainMenuCredits;
-        //             MainMenuchangeflag = 1;
-        //             break;
-        //         }
+                 if (buttons[SWITCH_4] == SWITCH_PRESS) {
+                     MainMenustatemachine = MainMenuSettings;
+                     MainMenuchangeflag = 1;
+                     break;
+                 }
 
-        //         if (buttons[SWITCH_4] == SWITCH_PRESS)
-        //         {
-        //             MainMenustatemachine = MainMenuSettings;
-        //             MainMenuchangeflag = 1;
-        //             break;
-        //         }
+                 if (buttons[SWITCH_5] == SWITCH_PRESS) {
+                     MainMenustatemachine = MainMenubattleship;
+                     MainMenuchangeflag = 1;
+                     break;
+                 }
+                 if (MainMenuchangeflag == 1) {
+                     LUTset(Lut4s);
+                     pax_background(gfx, 0);
+                     pax_draw_text(gfx, 1, pax_font_sky_mono, 12, 50, 50, "Main hub");
+                     DisplaySwitchesBox(SWITCH_1);
+                     pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 8, 116, " ");
+                     DisplaySwitchesBox(SWITCH_2);
+                     pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 65, 116, "Nametag");
+                     DisplaySwitchesBox(SWITCH_3);
+                     pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 125, 116, "Credits");
+                     DisplaySwitchesBox(SWITCH_4);
+                     pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 187, 116, "Settings");
+                     DisplaySwitchesBox(SWITCH_5);
+                     pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 247, 116, "battle");
+                     hink_write(bsp_get_epaper(), gfx->buf);
+                     MainMenuchangeflag = 0;
+                 }
+                 break;
 
-        //         if (buttons[SWITCH_5] == SWITCH_PRESS)
-        //         {
-        //             MainMenustatemachine = MainMenubattleship;
-        //             MainMenuchangeflag = 1;
-        //             break;
-        //         }
-        //         if (MainMenuchangeflag == 1)
-        //         {
-        //             LUTset(Lut4s);
-        //             pax_background(&gfx, 0);
-        //             pax_draw_text(&gfx, 1, pax_font_sky_mono, 12, 50, 50, "Main hub");
-        //             DisplaySwitchesBox(SWITCH_1);
-        //             pax_draw_text(&gfx, 1, pax_font_sky_mono, 10, 8, 116, " ");
-        //             DisplaySwitchesBox(SWITCH_2);
-        //             pax_draw_text(&gfx, 1, pax_font_sky_mono, 10, 65, 116, "Nametag");
-        //             DisplaySwitchesBox(SWITCH_3);
-        //             pax_draw_text(&gfx, 1, pax_font_sky_mono, 10, 125, 116, "Credits");
-        //             DisplaySwitchesBox(SWITCH_4);
-        //             pax_draw_text(&gfx, 1, pax_font_sky_mono, 10, 187, 116, "Settings");
-        //             DisplaySwitchesBox(SWITCH_5);
-        //             pax_draw_text(&gfx, 1, pax_font_sky_mono, 10, 247, 116, "battle");
-        //             hink_write(&epaper, gfx.buf);
-        //             MainMenuchangeflag = 0;
-        //         }
-        //         break;
+             case MainMenuBadgetag:
 
-        //     case MainMenuBadgetag:
+                 if (buttons[SWITCH_1] == SWITCH_PRESS)
+                 {
+                     MainMenustatemachine = MainMenuhub;
+                     MainMenuchangeflag = 1;
+                     break;
+                 }
+                 if (buttons[SWITCH_3] == SWITCH_PRESS)
+                 {
+                     specialcharacterselect++;
+                     if (specialcharacterselect > 3)
+                         specialcharacterselect = 0;
+                     framenametag();
+                 }
+                  //specialcharacterselect
 
-        //         if (buttons[SWITCH_1] == SWITCH_PRESS)
-        //         {
-        //             MainMenustatemachine = MainMenuhub;
-        //             MainMenuchangeflag = 1;
-        //             break;
-        //         }
-        //         if (buttons[SWITCH_3] == SWITCH_PRESS)
-        //         {
-        //             specialcharacterselect++;
-        //             if (specialcharacterselect > 3)
-        //                 specialcharacterselect = 0;
-        //             framenametag();
-        //         }
-        //         // specialcharacterselect
+                 if (buttons[SWITCH_5] == SWITCH_PRESS)
+                 {
+                     playername[strlen(playername) - 1] = '\0';
+                     framenametag();
+                 }
 
-        //         if (buttons[SWITCH_5] == SWITCH_PRESS)
-        //         {
-        //             playername[strlen(playername) - 1] = '\0';
-        //             framenametag();
-        //         }
+                 if (MainMenuchangeflag == 1)
+                 {
+                     inputletter = NULL;
+                     framenametag();
+                     MainMenuchangeflag = 0;
+                 }
 
-        //         if (MainMenuchangeflag == 1)
-        //         {
-        //             inputletter = NULL;
-        //             framenametag();
-        //             MainMenuchangeflag = 0;
-        //         }
+                 if (inputletter != NULL)
+                 {
+                     strncat(playername, &inputletter, 1);
+                     specialcharacterselect = 0;
+                     framenametag();
+                     inputletter = NULL;
+                 }
 
-        //         if (inputletter != NULL)
-        //         {
-        //             strncat(playername, &inputletter, 1);
-        //             specialcharacterselect = 0;
-        //             framenametag();
-        //             inputletter = NULL;
-        //         }
+             case MainMenuSettings:
+                 if (buttons[SWITCH_1] == SWITCH_PRESS)
+                 {
+                     MainMenustatemachine = MainMenuhub;
+                     MainMenuchangeflag = 1;
+                     break;
+                 }
+                 if (MainMenuchangeflag == 1)
+                 {
+                     LUTset(Lut4s);
+                     pax_background(gfx, 0);
+                     pax_draw_text(gfx, 1, pax_font_marker, 18, 1, 0, "Settings placeholder");
+                     DisplaySwitchesBox(SWITCH_1);
+                     pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 8, 116, "Exit");
+                     // DisplaySwitchesBox(SWITCH_3);
+                     // pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 125, 116, "Online");
+                     // DisplaySwitchesBox(SWITCH_5);
+                     // pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 247, 116, "Offline");
+                     hink_write(bsp_get_epaper(), gfx->buf);
+                     MainMenuchangeflag = 0;
+                 }
+                 break;
 
-        //     case MainMenuSettings:
-        //         if (buttons[SWITCH_1] == SWITCH_PRESS)
-        //         {
-        //             MainMenustatemachine = MainMenuhub;
-        //             MainMenuchangeflag = 1;
-        //             break;
-        //         }
-        //         if (MainMenuchangeflag == 1)
-        //         {
-        //             LUTset(Lut4s);
-        //             pax_background(&gfx, 0);
-        //             pax_draw_text(&gfx, 1, pax_font_marker, 18, 1, 0, "Settings placeholder");
-        //             DisplaySwitchesBox(SWITCH_1);
-        //             pax_draw_text(&gfx, 1, pax_font_sky_mono, 10, 8, 116, "Exit");
-        //             // DisplaySwitchesBox(SWITCH_3);
-        //             // pax_draw_text(&gfx, 1, pax_font_sky_mono, 10, 125, 116, "Online");
-        //             // DisplaySwitchesBox(SWITCH_5);
-        //             // pax_draw_text(&gfx, 1, pax_font_sky_mono, 10, 247, 116, "Offline");
-        //             hink_write(&epaper, gfx.buf);
-        //             MainMenuchangeflag = 0;
-        //         }
-        //         break;
+             case MainMenuCredits:
+                 if (buttons[SWITCH_1] == SWITCH_PRESS)
+                 {
+                     MainMenustatemachine = MainMenuhub;
+                     MainMenuchangeflag = 1;
+                     break;
+                 }
+                 if (MainMenuchangeflag == 1)
+                 {
+                     LUTset(Lut4s);
+                     pax_background(gfx, 0);
+                     pax_draw_text(gfx, 1, pax_font_marker, 18, 1, 0, "Credits placeholder");
+                     DisplaySwitchesBox(SWITCH_1);
+                     pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 8, 116, "Exit");
+                     // DisplaySwitchesBox(SWITCH_3);
+                     // pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 125, 116, "Online");
+                     // DisplaySwitchesBox(SWITCH_5);
+                     // pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 247, 116, "Offline");
+                     hink_write(bsp_get_epaper(), gfx->buf);
+                     MainMenuchangeflag = 0;
+                 }
+                 break;
 
-        //     case MainMenuCredits:
-        //         if (buttons[SWITCH_1] == SWITCH_PRESS)
-        //         {
-        //             MainMenustatemachine = MainMenuhub;
-        //             MainMenuchangeflag = 1;
-        //             break;
-        //         }
-        //         if (MainMenuchangeflag == 1)
-        //         {
-        //             LUTset(Lut4s);
-        //             pax_background(&gfx, 0);
-        //             pax_draw_text(&gfx, 1, pax_font_marker, 18, 1, 0, "Credits placeholder");
-        //             DisplaySwitchesBox(SWITCH_1);
-        //             pax_draw_text(&gfx, 1, pax_font_sky_mono, 10, 8, 116, "Exit");
-        //             // DisplaySwitchesBox(SWITCH_3);
-        //             // pax_draw_text(&gfx, 1, pax_font_sky_mono, 10, 125, 116, "Online");
-        //             // DisplaySwitchesBox(SWITCH_5);
-        //             // pax_draw_text(&gfx, 1, pax_font_sky_mono, 10, 247, 116, "Offline");
-        //             hink_write(&epaper, gfx.buf);
-        //             MainMenuchangeflag = 0;
-        //         }
-        //         break;
+             case MainMenubattleship:
+                 if (buttons[SWITCH_1] == SWITCH_PRESS)
+                 {
+                     MainMenustatemachine = MainMenuhub;
+                     MainMenuchangeflag = 1;
+                     break;
+                 }
+                 if (MainMenuchangeflag == 1)
+                 {
+                     LUTset(Lut4s);
+                     pax_background(gfx, 0);
+                     pax_draw_text(gfx, 1, pax_font_marker, 18, 1, 0, "Battleship");
+                     DisplaySwitchesBox(SWITCH_1);
+                     pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 8, 116, "Exit");
+                     DisplaySwitchesBox(SWITCH_3);
+                     pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 125, 116, "Online");
+                     DisplaySwitchesBox(SWITCH_5);
+                     pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 247, 116, "Offline");
+                     hink_write(bsp_get_epaper(), gfx->buf);
+                     MainMenuchangeflag = 0;
+                 }
 
-        //     case MainMenubattleship:
-        //         if (buttons[SWITCH_1] == SWITCH_PRESS)
-        //         {
-        //             MainMenustatemachine = MainMenuhub;
-        //             MainMenuchangeflag = 1;
-        //             break;
-        //         }
-        //         if (MainMenuchangeflag == 1)
-        //         {
-        //             LUTset(Lut4s);
-        //             pax_background(&gfx, 0);
-        //             pax_draw_text(&gfx, 1, pax_font_marker, 18, 1, 0, "Battleship");
-        //             DisplaySwitchesBox(SWITCH_1);
-        //             pax_draw_text(&gfx, 1, pax_font_sky_mono, 10, 8, 116, "Exit");
-        //             DisplaySwitchesBox(SWITCH_3);
-        //             pax_draw_text(&gfx, 1, pax_font_sky_mono, 10, 125, 116, "Online");
-        //             DisplaySwitchesBox(SWITCH_5);
-        //             pax_draw_text(&gfx, 1, pax_font_sky_mono, 10, 247, 116, "Offline");
-        //             hink_write(&epaper, gfx.buf);
-        //             MainMenuchangeflag = 0;
-        //         }
-
-        //         break;
-        //     }
-        // }
+                 break;
+             }
+         }
 
         if (delayLEDflag == 0) res = TextInputTelegraph();
 
@@ -1318,7 +1293,7 @@ esp_err_t TextInputTelegraph(void)
         break;
     }
 
-    esp_err_t _res = i2c_write_reg_n(I2C_BUS, 0x42, 0, (uint8_t *)&led, sizeof(uint32_t));
+    esp_err_t _res = i2c_write_reg_n(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_LED, (uint8_t *)&led, sizeof(uint32_t));
     if (_res != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to write to CH23 coprocessor (%d)\n", _res);
