@@ -1,24 +1,25 @@
+#include "bsp.h"
+
 #include <string.h>
 
-#include "bsp.h"
+#include "ch32.h"
+#include "driver/gpio.h"
+#include "driver/i2c.h"
+#include "driver/sdmmc_defs.h"
+#include "driver/sdspi_host.h"
+#include "driver/spi_master.h"
+#include "esp_log.h"
+#include "esp_vfs_fat.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/portmacro.h"
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
-#include "driver/gpio.h"
-#include "driver/spi_master.h"
-#include "driver/i2c.h"
-#include "driver/sdspi_host.h"
-#include "driver/sdmmc_defs.h"
+#include "managed_i2c.h"
 #include "nvs.h"
 #include "nvs_flash.h"
-#include "esp_log.h"
-#include "sdmmc_cmd.h"
-#include "esp_vfs_fat.h"
-#include "managed_i2c.h"
 #include "pax_gfx.h"
-#include "ch32.h"
+#include "sdmmc_cmd.h"
 
 static const char* TAG = "bsp";
 
@@ -34,13 +35,13 @@ static hink_t epaper = {
     .screen_height         = EPAPER_HEIGHT,
 };
 
-static sdmmc_card_t *card = NULL;
+static sdmmc_card_t* card = NULL;
 
 static uint16_t coprocessor_fw_version = 0;
 
-static bool bsp_ready    = false;
+static bool bsp_ready      = false;
 static bool ch32v003_ready = false;
-static bool epaper_ready  = false;
+static bool epaper_ready   = false;
 
 static pax_buf_t pax_buffer;
 static pax_col_t palette[] = {0xffffffff, 0xff000000, 0xffff0000};  // white, black, red
@@ -70,7 +71,7 @@ static esp_err_t flash_coprocessor() {
     }
 
     ch32_unlock_flash();
-    ch32_set_nrst_mode(false); // Use NRST as GPIO
+    ch32_set_nrst_mode(false);  // Use NRST as GPIO
 
     res = ch32_write_flash(0x08000000, ch32_firmware_start, ch32_firmware_end - ch32_firmware_start);
     if (!res) {
@@ -90,8 +91,7 @@ static esp_err_t initialize_nvs() {
     esp_err_t res = nvs_flash_init();
     if (res == ESP_ERR_NVS_NO_FREE_PAGES || res == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         res = nvs_flash_erase();
-        if (res != ESP_OK)
-            return res;
+        if (res != ESP_OK) return res;
         res = nvs_flash_init();
     }
     return res;
@@ -151,7 +151,7 @@ static esp_err_t initialize_epaper_lut() {
     };
     memcpy(lut_buffer, temporary_lut_initializer, sizeof(lut_buffer));
 
-    lut7_t *lut = (lut7_t *)lut_buffer;
+    lut7_t* lut = (lut7_t*) lut_buffer;
 
     lut->groups[0].repeat = 0;
     lut->groups[1].repeat = 0;
@@ -199,9 +199,7 @@ static esp_err_t initialize_spi_bus() {
     return spi_bus_initialize(SPI2_HOST, &busConfiguration, SPI_DMA_CH_AUTO);
 }
 
-static esp_err_t initialize_epaper() {
-    return hink_init(&epaper);
-}
+static esp_err_t initialize_epaper() { return hink_init(&epaper); }
 
 static esp_err_t initialize_graphics() {
     pax_buf_init(&pax_buffer, NULL, epaper.screen_width, epaper.screen_height, PAX_BUF_2_PAL);
@@ -241,7 +239,7 @@ static esp_err_t initialize_i2c_bus() {
 
 esp_err_t initialize_coprocessor() {
     coprocessor_fw_version = 0;
-    esp_err_t res = i2c_read_reg(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_FW_VERSION, (uint8_t*) &coprocessor_fw_version, sizeof(uint16_t));
+    esp_err_t res          = i2c_read_reg(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_FW_VERSION, (uint8_t*) &coprocessor_fw_version, sizeof(uint16_t));
     if (res != ESP_OK) {
         coprocessor_fw_version = 0;
         ESP_LOGW(TAG, "Failed to read from CH32V003 via I2C");
@@ -280,10 +278,7 @@ static esp_err_t initialize_sdcard() {
     slot_config.gpio_cs               = GPIO_SDCARD_CS;
     slot_config.host_id               = SPI2_HOST;
 
-    esp_vfs_fat_sdmmc_mount_config_t mount_config = {
-        .format_if_mount_failed = false,
-        .max_files              = 5,
-        .allocation_unit_size   = 16 * 1024};
+    esp_vfs_fat_sdmmc_mount_config_t mount_config = {.format_if_mount_failed = false, .max_files = 5, .allocation_unit_size = 16 * 1024};
 
     esp_err_t res = esp_vfs_fat_sdspi_mount("/sdcard", &host, &slot_config, &mount_config, &card);
     if (res != ESP_OK) {

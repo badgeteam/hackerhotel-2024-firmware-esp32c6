@@ -1,12 +1,12 @@
 #pragma once
 
+#include "coprocessor.h"
 #include "driver/spi_master.h"
+#include "epaper.h"
 #include "esp_err.h"
-#include "sdkconfig.h"
 #include "hardware.h"
 #include "pax_gfx.h"
-#include "epaper.h"
-#include "coprocessor.h"
+#include "sdkconfig.h"
 
 /** \brief Initialize basic board support
  *
