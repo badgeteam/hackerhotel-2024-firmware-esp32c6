@@ -2,11 +2,13 @@
 
 #include "coprocessor.h"
 #include "driver/spi_master.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
+#include "sdkconfig.h"
 #include "epaper.h"
 #include "esp_err.h"
 #include "hardware.h"
 #include "pax_gfx.h"
-#include "sdkconfig.h"
 
 /** \brief Initialize basic board support
  *
@@ -74,6 +76,30 @@ esp_err_t bsp_display_flush();
  */
 
 pax_buf_t* bsp_get_gfx_buffer();
+
+
+/** \brief Fetch a handle for the button queue
+ *
+ * \details Fetch a handle for the button queue.
+ *
+ * \retval struct:QueueHandle_t queue
+ * \retval NULL                 queue not available
+ */
+
+QueueHandle_t bsp_get_button_queue();
+
+/** \brief Writes a new LED state to the coprocessor
+ *
+ * \details Writes a new LED state to the coprocessor.
+ *
+ * \retval ESP_OK   The function succesfully executed
+ * \retval ESP_FAIL The function failed, possibly indicating hardware failure
+ *
+ * Check the esp_err header file from the ESP-IDF for a complete list of error codes
+ * returned by SDK functions.
+ */
+
+esp_err_t bsp_set_leds(uint32_t led);
 
 /** \brief Restart the board
  *

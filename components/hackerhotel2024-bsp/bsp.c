@@ -21,6 +21,8 @@
 #include "pax_gfx.h"
 #include "sdmmc_cmd.h"
 
+const uint8_t target_coprocessor_fw_version = 3; // Must match the value in the ch32_firmware.bin resource
+
 static const char* TAG = "bsp";
 
 static hink_t epaper = {
@@ -48,8 +50,39 @@ static pax_col_t palette[] = {0xffffffff, 0xff000000, 0xffff0000};  // white, bl
 
 static uint8_t lut_buffer[76] = {0};
 
+typedef void (*coprocessor_intr_t)();
+
+static SemaphoreHandle_t coprocessor_intr_trigger = NULL;
+static TaskHandle_t coprocessor_intr_task_handle = NULL;
+static QueueHandle_t coprocessor_button_queue = NULL;
+static SemaphoreHandle_t coprocessor_semaphore = NULL;
+
 extern const uint8_t ch32_firmware_start[] asm("_binary_ch32_firmware_bin_start");
 extern const uint8_t ch32_firmware_end[] asm("_binary_ch32_firmware_bin_end");
+
+esp_err_t bsp_display_error(const char* error) {
+    ESP_LOGE(TAG, "%s", error);
+    if (epaper_ready) {
+        const pax_font_t* font = pax_font_sky_mono;
+        pax_background(&pax_buffer, WHITE);
+        pax_draw_text(&pax_buffer, RED, font, 18, 5, 5, "Error");
+        pax_draw_text(&pax_buffer, BLACK, font, 12, 5, 25, error);
+        bsp_display_flush();
+    }
+    return ESP_OK;
+}
+
+esp_err_t bsp_display_message(const char* title, const char* message) {
+    ESP_LOGI(TAG, "%s", message);
+    if (epaper_ready) {
+        const pax_font_t* font = pax_font_sky_mono;
+        pax_background(&pax_buffer, WHITE);
+        pax_draw_text(&pax_buffer, RED, font, 18, 5, 5, title);
+        pax_draw_text(&pax_buffer, BLACK, font, 12, 5, 25, message);
+        bsp_display_flush();
+    }
+    return ESP_OK;
+}
 
 static esp_err_t flash_coprocessor() {
     bool res;
@@ -85,6 +118,40 @@ static esp_err_t flash_coprocessor() {
     }
 
     return ESP_OK;
+}
+
+static void IRAM_ATTR coprocessor_intr_handler(void* arg) {
+    /* in interrupt handler context */
+    xSemaphoreGiveFromISR(coprocessor_intr_trigger, NULL);
+    portYIELD_FROM_ISR();
+}
+
+static void coprocessor_intr_task(void* arg) {
+    uint8_t prev_buttons[5] = {0};
+
+    while (1) {
+        if (xSemaphoreTake(coprocessor_intr_trigger, portMAX_DELAY)) {
+            if (xSemaphoreTake(coprocessor_semaphore, portMAX_DELAY)) {
+                uint8_t buttons[5];
+                esp_err_t res = i2c_read_reg(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_BTN, buttons, 5);
+                xSemaphoreGive(coprocessor_semaphore);
+                if (res != ESP_OK) {
+                    ESP_LOGE(TAG, "Coprocessor interrupt task failed to read button states");
+                    continue;
+                }
+                for (uint8_t index = 0; index < sizeof(buttons); index++) {
+                    if (prev_buttons[index] != buttons[index]) {
+                        prev_buttons[index] = buttons[index];
+                        //ESP_LOGD(TAG, "Button state changed: %u = %u", index, buttons[index]);
+                        coprocessor_input_message_t message;
+                        message.button = index;
+                        message.state = buttons[index];
+                        xQueueSend(coprocessor_button_queue, &message, 0);
+                    }
+                }
+            }
+        }
+    }
 }
 
 static esp_err_t initialize_nvs() {
@@ -239,17 +306,19 @@ static esp_err_t initialize_i2c_bus() {
 
 esp_err_t initialize_coprocessor() {
     coprocessor_fw_version = 0;
-    esp_err_t res          = i2c_read_reg(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_FW_VERSION, (uint8_t*) &coprocessor_fw_version, sizeof(uint16_t));
+    esp_err_t res = i2c_read_reg(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_FW_VERSION, (uint8_t*) &coprocessor_fw_version, sizeof(uint16_t));
     if (res != ESP_OK) {
         coprocessor_fw_version = 0;
         ESP_LOGW(TAG, "Failed to read from CH32V003 via I2C");
     }
 
-    if (coprocessor_fw_version != 1) {
+    if (coprocessor_fw_version != target_coprocessor_fw_version) {
         ESP_LOGW(TAG, "Programming CH32V003 firmware, previous version was %u", coprocessor_fw_version);
-        bool ch32_result = flash_coprocessor();
+        bsp_display_message("Please wait", "Updating coprocessor firmware...\n\nDo NOT power off the device");
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        esp_err_t ch32_result = flash_coprocessor();
 
-        if (!ch32_result) {
+        if (ch32_result != ESP_OK) {
             ESP_LOGE(TAG, "Failed to program the CH32V003 co-processor");
         } else {
             ESP_LOGW(TAG, "Succesfully programmed the CH32V003 co-processor");
@@ -261,13 +330,50 @@ esp_err_t initialize_coprocessor() {
             return ESP_FAIL;
         }
 
-        if (coprocessor_fw_version != 1) {
+        if (coprocessor_fw_version != target_coprocessor_fw_version) {
             ESP_LOGE(TAG, "CH32V003 reports invalid version %u via I2C after flashing", coprocessor_fw_version);
             return ESP_FAIL;
         }
     }
 
     ESP_LOGW(TAG, "CH32V003 firmware version %u", coprocessor_fw_version);
+
+    // Initialize interrupt handling
+
+    coprocessor_button_queue = xQueueCreate(8, sizeof(coprocessor_input_message_t));
+    if (coprocessor_button_queue == NULL) {
+        return ESP_ERR_NO_MEM;
+    }
+
+    coprocessor_intr_trigger = xSemaphoreCreateBinary();
+    if (coprocessor_intr_trigger == NULL) {
+        return ESP_ERR_NO_MEM;
+    }
+
+    coprocessor_semaphore = xSemaphoreCreateBinary();
+    if (coprocessor_semaphore == NULL) {
+        return ESP_ERR_NO_MEM;
+    }
+
+    res = gpio_isr_handler_add(GPIO_CH32_INT, coprocessor_intr_handler, NULL);
+    if (res != ESP_OK) return res;
+
+    gpio_config_t sao_cfg = {
+        .pin_bit_mask = BIT64(GPIO_CH32_INT),
+        .mode         = GPIO_MODE_INPUT,
+        .pull_up_en   = false,
+        .pull_down_en = false,
+        .intr_type    = GPIO_INTR_NEGEDGE,
+    };
+    res = gpio_config(&sao_cfg);
+    if (res != ESP_OK) {
+        return res;
+    }
+
+    xTaskCreate(&coprocessor_intr_task, "Coprocessor interrupt", 4096, NULL, 10, coprocessor_intr_task_handle);
+    xSemaphoreGive(coprocessor_intr_trigger);
+
+    xSemaphoreGive(coprocessor_semaphore);
 
     return ESP_OK;
 }
@@ -353,7 +459,7 @@ esp_err_t bsp_init() {
     // CH32V003 coprocessor
     res = initialize_coprocessor();
     if (res != ESP_OK) {
-        bsp_display_error("Initializing coprocessor failed");
+        bsp_display_error("Initializing coprocessor failed\n\nPlease contact support");
         return res;
     }
 
@@ -372,35 +478,36 @@ esp_err_t bsp_init() {
     return ESP_OK;
 }
 
-esp_err_t bsp_display_error(const char* error) {
-    ESP_LOGE(TAG, "%s", error);
-    if (epaper_ready) {
-        const pax_font_t* font = pax_font_saira_regular;
-        pax_background(&pax_buffer, WHITE);
-        pax_draw_text(&pax_buffer, BLACK, font, 18, 5, 5, error);
-        bsp_display_flush();
-    }
-    return ESP_OK;
-}
-
 hink_t* bsp_get_epaper() {
     if (!epaper_ready) return NULL;
     return &epaper;
 }
 
 esp_err_t bsp_display_flush() {
-    if (!bsp_ready) return ESP_FAIL;
     if (!epaper_ready) return ESP_FAIL;
-    if (!pax_is_dirty(&pax_buffer)) return ESP_OK;
+    //if (!pax_is_dirty(&pax_buffer)) return ESP_OK;
     hink_set_lut(&epaper, lut_buffer);
     hink_write(&epaper, pax_buffer.buf);
-    pax_mark_clean(&pax_buffer);
+    //pax_mark_clean(&pax_buffer);
     return ESP_OK;
 }
 
 pax_buf_t* bsp_get_gfx_buffer() {
     if (!bsp_ready) return NULL;
     return &pax_buffer;
+}
+
+QueueHandle_t bsp_get_button_queue() {
+    return coprocessor_button_queue;
+}
+
+esp_err_t bsp_set_leds(uint32_t led) {
+    if (xSemaphoreTake(coprocessor_semaphore, portMAX_DELAY)) {
+        esp_err_t res = i2c_write_reg_n(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_LED, (uint8_t *)&led, sizeof(uint32_t));
+        xSemaphoreGive(coprocessor_semaphore);
+        return res;
+    }
+    return ESP_FAIL;
 }
 
 void bsp_restart() {
