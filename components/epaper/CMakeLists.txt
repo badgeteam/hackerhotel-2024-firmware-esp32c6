@@ -3,6 +3,6 @@ idf_component_register(
            debug-tools
            nvs_flash
   SRCS "epaper.c"
-       "epaper_read_lut.c"
+       "epaper_lut.c"
   INCLUDE_DIRS include
 )

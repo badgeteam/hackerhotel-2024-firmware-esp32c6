@@ -5,32 +5,34 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "hextools.h"
-#include "include/epaper.h"
-
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
+#include "epaper.h"
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_system.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
+#include "hextools.h"
+#include "include/epaper.h"
+#include "nvs.h"
+#include "nvs_flash.h"
 #include "sdkconfig.h"
 #include "soc/gpio_reg.h"
 #include "soc/gpio_sig_map.h"
 #include "soc/gpio_struct.h"
 #include "soc/spi_reg.h"
-#include <string.h>
-#include "epaper.h"
-#include "nvs.h"
-#include "nvs_flash.h"
 
-static char const *TAG = "epaper LUT reader";
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+
+#include <string.h>
+
+static char const *TAG = "epaper";
+
+static uint8_t lut_buffer[HINK_LUT_SIZE];
 
 static void bitbang_tx(int pin_data, int pin_clk, uint8_t data) {
     gpio_set_direction(pin_data, GPIO_MODE_OUTPUT);
@@ -282,25 +284,23 @@ esp_err_t hink_read_lut(int pin_data, int pin_clk, int pin_cs, int pin_dc, int p
         bitbang_write_cmd(pin_data, pin_clk, pin_dc, HINK_CMD_READ_LUT_REGISTER);
         gpio_set_level(pin_dc, true);
 
-        uint8_t lut[HINK_LUT_SIZE] = {0};
-
-        for (int i = 0; i < sizeof(lut); i++) {
-            lut[i] = bitbang_rx(pin_data, pin_clk);
+        for (int i = 0; i < sizeof(lut_buffer); i++) {
+            lut_buffer[i] = bitbang_rx(pin_data, pin_clk);
         }
         gpio_set_level(pin_cs, true);
 
         char lutname[16];
         sprintf(lutname, "lut.%u", temperature);
 
-        res = nvs_set_blob(nvs_handle, lutname, lut, HINK_LUT_SIZE);
+        res = nvs_set_blob(nvs_handle, lutname, lut_buffer, HINK_LUT_SIZE);
         if (res != ESP_OK) {
             nvs_close(nvs_handle);
             return res;
         }
 
         printf("Epaper LUT for %d degrees:\n", temperature);
-        for (int i = 0; i < sizeof(lut); i++) {
-            printf("%02x ", lut[i]);
+        for (int i = 0; i < sizeof(lut_buffer); i++) {
+            printf("%02x ", lut_buffer[i]);
         }
         printf("\n");
     }
@@ -325,12 +325,12 @@ esp_err_t hink_reset_lut() {
 
 bool hink_get_lut_populated() {
     nvs_handle_t nvs_handle;
-    esp_err_t res = nvs_open("epaper", NVS_READWRITE, &nvs_handle);
+    esp_err_t    res = nvs_open("epaper", NVS_READWRITE, &nvs_handle);
     if (res != ESP_OK) {
         return 0;
     }
     uint8_t value = 0;
-    res = nvs_get_u8(nvs_handle, "lut_populated", &value);
+    res           = nvs_get_u8(nvs_handle, "lut_populated", &value);
     if (res != ESP_OK) {
         value = 0;
     }
@@ -338,7 +338,7 @@ bool hink_get_lut_populated() {
     return (value == 1);
 }
 
-esp_err_t hink_get_lut(uint8_t temperature, uint8_t* target_buffer) {
+esp_err_t hink_get_lut(uint8_t temperature, uint8_t *target_buffer) {
     nvs_handle_t nvs_handle;
 
     esp_err_t res = nvs_open("epaper", NVS_READWRITE, &nvs_handle);
@@ -351,12 +351,12 @@ esp_err_t hink_get_lut(uint8_t temperature, uint8_t* target_buffer) {
     sprintf(lutname, "lut.%u", temperature);
 
     size_t stored_length = 0;
-    res = nvs_get_blob(nvs_handle, lutname, NULL, &stored_length);
+    res                  = nvs_get_blob(nvs_handle, lutname, NULL, &stored_length);
     if (res != ESP_OK) {
         ESP_LOGE(TAG, "Failed to read length of %u degree LUT from NVS", temperature);
         return res;
     }
-    
+
     if (stored_length != HINK_LUT_SIZE) {
         ESP_LOGE(TAG, "Stored length for %u degree LUT is invalid", temperature);
         return ESP_FAIL;
@@ -370,4 +370,225 @@ esp_err_t hink_get_lut(uint8_t temperature, uint8_t* target_buffer) {
     nvs_close(nvs_handle);
 
     return res;
+}
+
+esp_err_t hink_apply_lut(hink_t *epaper, epaper_lut_t lut_type) {
+    esp_err_t res;
+
+    res = hink_get_lut(20, lut_buffer);
+    if (res != ESP_OK) {
+        return res;
+    }
+
+    lut7_t *lut = (lut7_t *)lut_buffer;
+
+    switch (lut_type) {
+        case lut_8s:
+            lut->groups[0].repeat = 0;
+            lut->groups[1].repeat = 0;
+            lut->groups[2].repeat = 0;
+            lut->groups[3].repeat = 0;
+            lut->groups[4].repeat = 0;
+            lut->groups[5].repeat = 0;
+            break;
+        case lut_4s:  // uses groups 3,4 and 5 without repeat
+            lut->groups[0].repeat = 0;
+            lut->groups[1].repeat = 0;
+            lut->groups[2].repeat = 0;
+            lut->groups[3].repeat = 0;
+            lut->groups[4].repeat = 0;
+            lut->groups[5].repeat = 0;
+
+            lut->groups[0].tp[0] = 0;
+            lut->groups[0].tp[1] = 0;
+            lut->groups[0].tp[2] = 0;
+            lut->groups[0].tp[3] = 0;
+
+            lut->groups[1].tp[0] = 0;
+            lut->groups[1].tp[1] = 0;
+            lut->groups[1].tp[2] = 0;
+            lut->groups[1].tp[3] = 0;
+
+            lut->groups[2].tp[0] = 0;
+            lut->groups[2].tp[1] = 0;
+            lut->groups[2].tp[2] = 0;
+            lut->groups[2].tp[3] = 0;
+            break;
+
+        case lut_1s:  // use group 3 and 4 without repeat, takes ~1400ms
+            lut->groups[0].repeat = 0;
+            lut->groups[1].repeat = 0;
+            lut->groups[2].repeat = 0;
+            lut->groups[3].repeat = 0;
+            lut->groups[4].repeat = 0;
+            lut->groups[5].repeat = 0;
+
+            lut->groups[0].tp[0] = 0;
+            lut->groups[0].tp[1] = 0;
+            lut->groups[0].tp[2] = 0;
+            lut->groups[0].tp[3] = 0;
+
+            lut->groups[1].tp[0] = 0;
+            lut->groups[1].tp[1] = 0;
+            lut->groups[1].tp[2] = 0;
+            lut->groups[1].tp[3] = 0;
+
+            lut->groups[2].tp[0] = 0;
+            lut->groups[2].tp[1] = 0;
+            lut->groups[2].tp[2] = 0;
+            lut->groups[2].tp[3] = 0;
+
+            lut->groups[4].tp[0] = 0;
+            lut->groups[4].tp[1] = 0;
+            lut->groups[4].tp[2] = 0;
+            lut->groups[4].tp[3] = 0;
+
+            lut->groups[5].tp[0] = 0;
+            lut->groups[5].tp[1] = 0;
+            lut->groups[5].tp[2] = 0;
+            lut->groups[5].tp[3] = 0;
+            break;
+
+        case lut_white:  // NOT WORKING ATM - uses groups 3,4 and 5 without repeat
+            lut->groups[0].repeat = 0;
+            lut->groups[1].repeat = 0;
+            lut->groups[2].repeat = 0;
+            lut->groups[3].repeat = 0;
+            lut->groups[4].repeat = 0;
+            lut->groups[5].repeat = 0;
+
+            lut->groups[0].tp[0] = 0;
+            lut->groups[0].tp[1] = 0;
+            lut->groups[0].tp[2] = 0;
+            lut->groups[0].tp[3] = 0;
+
+            lut->groups[1].tp[0] = 0;
+            lut->groups[1].tp[1] = 0;
+            lut->groups[1].tp[2] = 0;
+            lut->groups[1].tp[3] = 0;
+
+            lut->groups[2].tp[0] = 0;
+            lut->groups[2].tp[1] = 0;
+            lut->groups[2].tp[2] = 0;
+            lut->groups[2].tp[3] = 0;
+
+            lut->groups[3].tp[2] = 0;
+            lut->groups[3].tp[3] = 0;
+
+            lut->groups[4].tp[0] = 0;
+            lut->groups[4].tp[1] = 0;
+            lut->groups[4].tp[2] = 0;
+            lut->groups[4].tp[3] = 0;
+
+            lut->groups[5].tp[0] = 0;
+            lut->groups[5].tp[1] = 0;
+            lut->groups[5].tp[2] = 0;
+            lut->groups[5].tp[3] = 0;
+            break;
+
+        case lut_black:  // use the second half of group 3, takes ~2s
+            lut->groups[0].repeat = 0;
+            lut->groups[1].repeat = 0;
+            lut->groups[2].repeat = 0;
+            lut->groups[3].repeat = 0x03;
+            lut->groups[4].repeat = 0;
+            lut->groups[5].repeat = 0;
+
+            lut->groups[0].tp[0] = 0;
+            lut->groups[0].tp[1] = 0;
+            lut->groups[0].tp[2] = 0;
+            lut->groups[0].tp[3] = 0;
+
+            lut->groups[1].tp[0] = 0;
+            lut->groups[1].tp[1] = 0;
+            lut->groups[1].tp[2] = 0;
+            lut->groups[1].tp[3] = 0;
+
+            lut->groups[2].tp[0] = 0;
+            lut->groups[2].tp[1] = 0;
+            lut->groups[2].tp[2] = 0;
+            lut->groups[2].tp[3] = 0;
+
+            lut->groups[3].tp[0] = 0;
+            lut->groups[3].tp[1] = 0;
+
+            lut->groups[4].tp[0] = 0;
+            lut->groups[4].tp[1] = 0;
+            lut->groups[4].tp[2] = 0;
+            lut->groups[4].tp[3] = 0;
+
+            lut->groups[5].tp[0] = 0;
+            lut->groups[5].tp[1] = 0;
+            lut->groups[5].tp[2] = 0;
+            lut->groups[5].tp[3] = 0;
+            break;
+
+        case lut_red:  // use the second half of group 3, and full group 4 and 5, takes ~13s
+            lut->groups[0].repeat = 0;
+            lut->groups[1].repeat = 0;
+            lut->groups[2].repeat = 0;
+            lut->groups[3].repeat = 0x03;
+            lut->groups[4].repeat = 0x04;
+            lut->groups[5].repeat = 0x03;
+
+            lut->groups[0].tp[0] = 0;
+            lut->groups[0].tp[1] = 0;
+            lut->groups[0].tp[2] = 0;
+            lut->groups[0].tp[3] = 0;
+
+            lut->groups[1].tp[0] = 0;
+            lut->groups[1].tp[1] = 0;
+            lut->groups[1].tp[2] = 0;
+            lut->groups[1].tp[3] = 0;
+
+            lut->groups[2].tp[0] = 0;
+            lut->groups[2].tp[1] = 0;
+            lut->groups[2].tp[2] = 0;
+            lut->groups[2].tp[3] = 0;
+
+            lut->groups[3].tp[0] = 0;
+            lut->groups[3].tp[1] = 0;
+            break;
+
+        case lut_900ms:  // Fastest found, 900ms, but doesn't refresh the whole screen
+            lut->groups[0].repeat = 0;
+            lut->groups[1].repeat = 0;
+            lut->groups[2].repeat = 0;
+            lut->groups[3].repeat = 0;
+            lut->groups[4].repeat = 0;
+            lut->groups[5].repeat = 0;
+
+            lut->groups[0].tp[0] = 0;
+            lut->groups[0].tp[1] = 0;
+            lut->groups[0].tp[2] = 0;
+            lut->groups[0].tp[3] = 0;
+
+            lut->groups[1].tp[0] = 0;
+            lut->groups[1].tp[1] = 0;
+            lut->groups[1].tp[2] = 0;
+            lut->groups[1].tp[3] = 0;
+
+            lut->groups[2].tp[0] = 0;
+            lut->groups[2].tp[1] = 0;
+            lut->groups[2].tp[2] = 0;
+            lut->groups[2].tp[3] = 0;
+
+            lut->groups[4].tp[0] = 0;
+            lut->groups[4].tp[1] = 0;
+            lut->groups[4].tp[2] = 0;
+            lut->groups[4].tp[3] = 0;
+
+            lut->groups[5].tp[0] = 0;
+            lut->groups[5].tp[1] = 0;
+            lut->groups[5].tp[2] = 0;
+            lut->groups[5].tp[3] = 0;
+            break;
+        case lut_full: break;
+        default:
+            {
+                ESP_LOGW(TAG, "Unknown LUT type selected, using default");
+                break;
+            }
+    }
+    return hink_set_lut(epaper, (uint8_t *)lut);
 }

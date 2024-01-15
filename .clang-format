@@ -2,7 +2,11 @@
 BasedOnStyle: Google
 CommentPragmas: '(@copydoc)'
 
-# Basic indentation and spacing
+# Pointers
+DerivePointerAlignment: false
+PointerAlignment: Left
+
+# Indents
 IndentWidth: 4
 ContinuationIndentWidth: 4
 TabWidth: 4
@@ -10,21 +14,13 @@ UseCRLF: false
 UseTab: Never
 MaxEmptyLinesToKeep: 3
 IndentCaseLabels: true
-IndentCaseBlocks: false
+IndentCaseBlocks: true
 IndentGotoLabels: true
 IndentPPDirectives: None
 IndentExternBlock: AfterExternBlock
 IndentWrappedFunctionNames: true
 NamespaceIndentation: All
-
-# Pointers
-DerivePointerAlignment: false
-PointerAlignment: Left
-
-# Line breaks
-AlwaysBreakTemplateDeclarations: No
-AllowShortFunctionsOnASingleLine: None
-ColumnLimit: 120
+AlignConsecutiveMacros: true
 
 AlignConsecutiveAssignments:
   # The column at which the = starts is constant among a block of definitions.
@@ -46,6 +42,27 @@ AlignConsecutiveMacros:
   Enabled: true
   AcrossEmptyLines: false
   AcrossComments: true
+
+# Line breaks
+AlwaysBreakTemplateDeclarations: No
+AllowShortFunctionsOnASingleLine: None
+AllowShortEnumsOnASingleLine: false
+KeepEmptyLinesAtTheStartOfBlocks: true
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: false
+  AfterControlStatement: false
+  AfterEnum: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterStruct: false
+  AfterUnion: false
+  BeforeCatch: false
+  BeforeElse: false
+ColumnLimit: 120
+
+# Includes
+IncludeBlocks: Merge
 
 # configure braces and parens:
 BraceWrapping:
