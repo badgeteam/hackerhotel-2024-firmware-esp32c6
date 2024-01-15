@@ -575,7 +575,7 @@ void LUTset(int LUTconfiguration)
         // lut->groups[5].tp[3] = 0;
         // break;
     }
-    hink_set_lut(&epaper, (uint8_t *)lut);
+    hink_set_lut(bsp_get_epaper(), (uint8_t *)lut);
 }
 
 void framenametag(void)

@@ -12,22 +12,25 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <driver/gpio.h>
-#include <driver/spi_master.h>
-#include <esp_err.h>
-#include <esp_log.h>
-#include <esp_system.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/semphr.h>
-#include <freertos/task.h>
-#include <sdkconfig.h>
-#include <soc/gpio_reg.h>
-#include <soc/gpio_sig_map.h>
-#include <soc/gpio_struct.h>
-#include <soc/spi_reg.h>
+#include "driver/gpio.h"
+#include "driver/spi_master.h"
+#include "esp_err.h"
+#include "esp_log.h"
+#include "esp_system.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
+#include "freertos/task.h"
+#include "sdkconfig.h"
+#include "soc/gpio_reg.h"
+#include "soc/gpio_sig_map.h"
+#include "soc/gpio_struct.h"
+#include "soc/spi_reg.h"
 #include <string.h>
+#include "epaper.h"
+#include "nvs.h"
+#include "nvs_flash.h"
 
-static char const *TAG = "epaper read lut";
+static char const *TAG = "epaper LUT reader";
 
 static void bitbang_tx(int pin_data, int pin_clk, uint8_t data) {
     gpio_set_direction(pin_data, GPIO_MODE_OUTPUT);
@@ -65,39 +68,75 @@ static void bitbang_write_data(int pin_data, int pin_clk, int pin_dc, uint8_t da
     bitbang_tx(pin_data, pin_clk, data);
 }
 
-void hink_read_lut(int pin_data, int pin_clk, int pin_cs, int pin_dc, int pin_reset, int pin_busy) {
+esp_err_t hink_read_lut(int pin_data, int pin_clk, int pin_cs, int pin_dc, int pin_reset, int pin_busy) {
+    esp_err_t res;
+
     // Initialize pins
-    gpio_reset_pin(pin_reset);
-    gpio_set_direction(pin_reset, GPIO_MODE_OUTPUT);
-    gpio_set_level(pin_reset, false);
+    gpio_config_t output_cfg = {
+        .pin_bit_mask = BIT64(pin_reset) | BIT64(pin_cs) | BIT64(pin_dc) | BIT64(pin_clk),
+        .mode         = GPIO_MODE_OUTPUT,
+        .pull_up_en   = false,
+        .pull_down_en = false,
+        .intr_type    = GPIO_INTR_DISABLE,
+    };
+    res = gpio_config(&output_cfg);
+    if (res != ESP_OK) {
+        return res;
+    }
 
-    gpio_reset_pin(pin_cs);
-    gpio_set_direction(pin_cs, GPIO_MODE_OUTPUT);
-    gpio_set_level(pin_cs, true);
+    res = gpio_set_level(pin_reset, false);
+    if (res != ESP_OK) {
+        return res;
+    }
 
-    gpio_reset_pin(pin_dc);
-    gpio_set_direction(pin_dc, GPIO_MODE_OUTPUT);
-    gpio_set_level(pin_dc, false);
+    res = gpio_set_level(pin_cs, true);
+    if (res != ESP_OK) {
+        return res;
+    }
 
-    gpio_reset_pin(pin_clk);
-    gpio_set_direction(pin_clk, GPIO_MODE_OUTPUT);
-    gpio_set_level(pin_clk, false);
+    res = gpio_set_level(pin_dc, false);
+    if (res != ESP_OK) {
+        return res;
+    }
 
-    gpio_reset_pin(pin_data);
-    gpio_set_direction(pin_data, GPIO_MODE_INPUT);
+    res = gpio_set_level(pin_clk, false);
+    if (res != ESP_OK) {
+        return res;
+    }
+
+    gpio_config_t input_cfg = {
+        .pin_bit_mask = BIT64(pin_busy) | BIT64(pin_data),
+        .mode         = GPIO_MODE_INPUT,
+        .pull_up_en   = true,
+        .pull_down_en = false,
+        .intr_type    = GPIO_INTR_DISABLE,
+    };
+    res = gpio_config(&input_cfg);
+    if (res != ESP_OK) {
+        return res;
+    }
 
     // Reset display
     ESP_LOGI(TAG, "reset display");
     vTaskDelay(10 / portTICK_PERIOD_MS);
-    gpio_set_level(pin_reset, true);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    res = gpio_set_level(pin_reset, true);
+    if (res != ESP_OK) {
+        return res;
+    }
+    vTaskDelay(100 / portTICK_PERIOD_MS);
 
     gpio_set_level(pin_cs, false);
     bitbang_write_cmd(pin_data, pin_clk, pin_dc, HINK_CMD_SW_RESET);
     gpio_set_level(pin_cs, true);
+
+    uint16_t timeout = 100;
+
     while (gpio_get_level(pin_busy)) {
-        ESP_LOGI(TAG, "waiting for display");
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        timeout--;
+        if (timeout < 1) {
+            return ESP_ERR_TIMEOUT;
+        }
+        vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 
     // Configure
@@ -183,22 +222,29 @@ void hink_read_lut(int pin_data, int pin_clk, int pin_cs, int pin_dc, int pin_re
     gpio_set_level(pin_cs, false);
     bitbang_write_cmd(pin_data, pin_clk, pin_dc, HINK_CMD_MASTER_ACTIVATION);
     gpio_set_level(pin_cs, true);
+
+    timeout = 100;
     while (gpio_get_level(pin_busy)) {
-        ESP_LOGI(TAG, "waiting for display");
+        timeout--;
+        if (timeout < 1) {
+            return ESP_ERR_TIMEOUT;
+        }
         vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 
-
-
-    ESP_LOGI(TAG, "set temperature");
     gpio_set_level(pin_cs, false);
     bitbang_write_cmd(pin_data, pin_clk, pin_dc, HINK_CMD_TEMPERATURE_SENSOR_CONTROL);
     bitbang_write_data(pin_data, pin_clk, pin_dc, 0x48);
     gpio_set_level(pin_cs, true);
     vTaskDelay(10 / portTICK_PERIOD_MS);
 
-    int8_t temperatures[] = {-20, -10, 0,  2,  4,  6,  8,  10, 12, 14, 16, 18,
-                             20,  22,  24, 26, 28, 30, 40, 50, 60, 70, 80, 90};
+    nvs_handle_t nvs_handle;
+    res = nvs_open("epaper", NVS_READWRITE, &nvs_handle);
+    if (res != ESP_OK) {
+        return res;
+    }
+
+    int8_t temperatures[] = {0, 4, 8, 12, 16, 18, 20, 24, 26, 28, 30};
 
     for (int temperature_index = 0; temperature_index < sizeof(temperatures); temperature_index++) {
         int8_t temperature = temperatures[temperature_index];
@@ -220,8 +266,14 @@ void hink_read_lut(int pin_data, int pin_clk, int pin_cs, int pin_dc, int pin_re
         gpio_set_level(pin_cs, false);
         bitbang_write_cmd(pin_data, pin_clk, pin_dc, HINK_CMD_MASTER_ACTIVATION);
         gpio_set_level(pin_cs, true);
+
+        timeout = 100;
         while (gpio_get_level(pin_busy)) {
-            // ESP_LOGI(TAG, "waiting for display");
+            timeout--;
+            if (timeout < 1) {
+                nvs_close(nvs_handle);
+                return ESP_ERR_TIMEOUT;
+            }
             vTaskDelay(10 / portTICK_PERIOD_MS);
         }
 
@@ -230,17 +282,92 @@ void hink_read_lut(int pin_data, int pin_clk, int pin_cs, int pin_dc, int pin_re
         bitbang_write_cmd(pin_data, pin_clk, pin_dc, HINK_CMD_READ_LUT_REGISTER);
         gpio_set_level(pin_dc, true);
 
-        uint8_t lut[128] = {0};
+        uint8_t lut[HINK_LUT_SIZE] = {0};
 
         for (int i = 0; i < sizeof(lut); i++) {
             lut[i] = bitbang_rx(pin_data, pin_clk);
         }
         gpio_set_level(pin_cs, true);
 
-        printf("%05d: ", temperature);
+        char lutname[16];
+        sprintf(lutname, "lut.%u", temperature);
+
+        res = nvs_set_blob(nvs_handle, lutname, lut, HINK_LUT_SIZE);
+        if (res != ESP_OK) {
+            nvs_close(nvs_handle);
+            return res;
+        }
+
+        printf("Epaper LUT for %d degrees:\n", temperature);
         for (int i = 0; i < sizeof(lut); i++) {
             printf("%02x ", lut[i]);
         }
         printf("\n");
     }
+
+    res = nvs_set_u8(nvs_handle, "lut_populated", 1);
+    nvs_close(nvs_handle);
+    return res;
+}
+
+esp_err_t hink_reset_lut() {
+    nvs_handle_t nvs_handle;
+
+    esp_err_t res = nvs_open("epaper", NVS_READWRITE, &nvs_handle);
+    if (res != ESP_OK) {
+        return res;
+    }
+
+    res = nvs_set_u8(nvs_handle, "lut_populated", 0);
+    nvs_close(nvs_handle);
+    return res;
+}
+
+bool hink_get_lut_populated() {
+    nvs_handle_t nvs_handle;
+    esp_err_t res = nvs_open("epaper", NVS_READWRITE, &nvs_handle);
+    if (res != ESP_OK) {
+        return 0;
+    }
+    uint8_t value = 0;
+    res = nvs_get_u8(nvs_handle, "lut_populated", &value);
+    if (res != ESP_OK) {
+        value = 0;
+    }
+    nvs_close(nvs_handle);
+    return (value == 1);
+}
+
+esp_err_t hink_get_lut(uint8_t temperature, uint8_t* target_buffer) {
+    nvs_handle_t nvs_handle;
+
+    esp_err_t res = nvs_open("epaper", NVS_READWRITE, &nvs_handle);
+    if (res != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to open epaper NVS namespace");
+        return res;
+    }
+
+    char lutname[16];
+    sprintf(lutname, "lut.%u", temperature);
+
+    size_t stored_length = 0;
+    res = nvs_get_blob(nvs_handle, lutname, NULL, &stored_length);
+    if (res != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to read length of %u degree LUT from NVS", temperature);
+        return res;
+    }
+    
+    if (stored_length != HINK_LUT_SIZE) {
+        ESP_LOGE(TAG, "Stored length for %u degree LUT is invalid", temperature);
+        return ESP_FAIL;
+    }
+
+    res = nvs_get_blob(nvs_handle, lutname, target_buffer, &stored_length);
+    if (res != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to read %u degree LUT from NVS", temperature);
+    }
+
+    nvs_close(nvs_handle);
+
+    return res;
 }
