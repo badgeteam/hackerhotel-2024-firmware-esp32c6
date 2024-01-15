@@ -41,4 +41,10 @@
 #define SWITCH_4 3
 #define SWITCH_5 4
 
+// Types
+typedef struct _coprocessor_input_message {
+    uint8_t button;
+    uint8_t state;
+} coprocessor_input_message_t;
+
 // Functions

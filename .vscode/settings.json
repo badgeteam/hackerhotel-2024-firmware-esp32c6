@@ -42,7 +42,11 @@
         "gpio_struct.h": "c",
         "gpio.h": "c",
         "sdmmc_cmd.h": "c",
-        "sdspi_host.h": "c"
+        "sdspi_host.h": "c",
+        "semphr.h": "c",
+        "variant": "c",
+        "expected": "c",
+        "esp_err.h": "c"
     },
     "idf.port": "/dev/ttyACM0",
     "editor.formatOnType": false,

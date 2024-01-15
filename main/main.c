@@ -1,6 +1,5 @@
 #include "driver/dedic_gpio.h"
 #include "driver/gpio.h"
-#include "driver/i2c.h"
 #include "epaper.h"
 #include "esp_err.h"
 #include "esp_log.h"
@@ -13,7 +12,6 @@
 #include "freertos/queue.h"
 #include "freertos/task.h"
 #include "hextools.h"
-#include "managed_i2c.h"
 #include "nvs.h"
 #include "nvs_flash.h"
 #include "pax_codecs.h"
@@ -662,9 +660,22 @@ void app_main(void) {
     if (res != ESP_OK) {
         // Device init failed, stop.
         ESP_LOGE(TAG, "Hardware initialization failed, bailing out.");
-        vTaskDelay(pdMS_TO_TICKS(2000));
-        bsp_restart();
+        //vTaskDelay(pdMS_TO_TICKS(2000));
+        //bsp_restart();
+        return;
     }
+
+    QueueHandle_t queue = bsp_get_button_queue();
+
+    /*
+    // This example shows how to wait for button events
+    while(1) {
+        coprocessor_input_message_t buttonMessage = {0};
+        if (xQueueReceive(queue, &buttonMessage, portMAX_DELAY) == pdTRUE) {
+            printf("Button %u state changed to %u\n", buttonMessage.button, buttonMessage.state);
+        }
+    }
+    */
 
     LUTset(Lut4s);
 
@@ -674,10 +685,11 @@ void app_main(void) {
         pax_buf_t* gfx = bsp_get_gfx_buffer();
         bool busy = hink_busy(bsp_get_epaper());
 
-        res = i2c_read_reg(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_BTN, buttons, 5);
-        if (res != ESP_OK) {
-            memset(buttons, 0, sizeof(buttons));
-            ESP_LOGE(TAG, "Failed to read button states");
+        // Quick hack to convert the new button queue back into the old polling method
+        coprocessor_input_message_t buttonMessage = {0};
+        if (xQueueReceive(queue, &buttonMessage, 0) == pdTRUE) {
+            printf("Button %u state changed to %u\n", buttonMessage.button, buttonMessage.state);
+            buttons[buttonMessage.button] = buttonMessage.state;
         }
 
         if (!busy) {
@@ -1405,10 +1417,9 @@ esp_err_t TextInputTelegraph(void)
         break;
     }
 
-    esp_err_t _res = i2c_write_reg_n(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_LED, (uint8_t *)&led, sizeof(uint32_t));
-    if (_res != ESP_OK)
-    {
-        ESP_LOGE(TAG, "Failed to write to CH23 coprocessor (%d)\n", _res);
+    esp_err_t _res = bsp_set_leds(led);
+    if (_res != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to set LEDs (%d)\n", _res);
     }
     return _res;
 }
