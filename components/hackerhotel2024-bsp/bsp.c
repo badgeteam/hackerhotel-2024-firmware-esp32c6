@@ -457,7 +457,7 @@ hink_t* bsp_get_epaper() {
 
 esp_err_t bsp_display_flush() {
     if (!epaper_ready) return ESP_FAIL;
-    if (!pax_is_dirty(&pax_buffer)) return ESP_OK;
+    // if (!pax_is_dirty(&pax_buffer)) return ESP_OK;
     hink_write(&epaper, pax_buffer.buf);
     pax_mark_clean(&pax_buffer);
     return ESP_OK;
@@ -486,3 +486,20 @@ void bsp_restart() {
 }
 
 esp_err_t bsp_apply_lut(epaper_lut_t lut_type) { return hink_apply_lut(&epaper, lut_type); }
+
+bool bsp_wait_for_button() {
+    QueueHandle_t               queue         = bsp_get_button_queue();
+    coprocessor_input_message_t buttonMessage = {0};
+    bool                        result        = false;
+    while (1) {
+        if (xQueueReceive(queue, &buttonMessage, portMAX_DELAY) == pdTRUE) {
+            if (buttonMessage.state == SWITCH_PRESS) {
+                if (buttonMessage.button == SWITCH_5) {
+                    result = true;
+                }
+                break;
+            }
+        }
+    }
+    return result;
+}

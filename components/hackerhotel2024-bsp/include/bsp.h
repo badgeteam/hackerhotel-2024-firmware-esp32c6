@@ -40,6 +40,8 @@ esp_err_t bsp_init();
 
 esp_err_t bsp_display_error();
 
+esp_err_t bsp_display_message(const char* title, const char* message);
+
 /** \brief Fetch a handle for the epaper display
  *
  * \details Fetch a handle for the epaper display, returns NULL if the epaper display has not been
@@ -113,3 +115,10 @@ void bsp_restart();
  */
 
 esp_err_t bsp_apply_lut(epaper_lut_t lut_type);
+
+/** \brief Wait for a button to be pressed
+ *
+ * \details Wait for a button to be pressed
+ */
+
+bool bsp_wait_for_button();
