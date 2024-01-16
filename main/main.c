@@ -75,7 +75,7 @@ void app_main(void) {
         return;
     }
 
-    nvs_handle_t nvs_handle;
+    /*nvs_handle_t nvs_handle;
     nvs_open("system", NVS_READWRITE, &nvs_handle);
     nvs_set_str(nvs_handle, "wifi.ssid", "ssid");
     nvs_set_str(nvs_handle, "wifi.password", "password");
@@ -84,7 +84,7 @@ void app_main(void) {
 
     ota_update(false);
 
-    return;
+    return;*/
 
     app_thread_entry();
 }
