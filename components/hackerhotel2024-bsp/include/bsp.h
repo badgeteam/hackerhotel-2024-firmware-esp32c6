@@ -2,13 +2,13 @@
 
 #include "coprocessor.h"
 #include "driver/spi_master.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/queue.h"
-#include "sdkconfig.h"
 #include "epaper.h"
 #include "esp_err.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
 #include "hardware.h"
 #include "pax_gfx.h"
+#include "sdkconfig.h"
 
 /** \brief Initialize basic board support
  *
@@ -39,6 +39,8 @@ esp_err_t bsp_init();
  */
 
 esp_err_t bsp_display_error();
+
+esp_err_t bsp_display_message(const char* title, const char* message);
 
 /** \brief Fetch a handle for the epaper display
  *
@@ -77,7 +79,6 @@ esp_err_t bsp_display_flush();
 
 pax_buf_t* bsp_get_gfx_buffer();
 
-
 /** \brief Fetch a handle for the button queue
  *
  * \details Fetch a handle for the button queue.
@@ -107,3 +108,17 @@ esp_err_t bsp_set_leds(uint32_t led);
  */
 
 void bsp_restart();
+
+/** \brief Apply a LUT to the epaper screen
+ *
+ * \details Apply a LUT to the epaper screen
+ */
+
+esp_err_t bsp_apply_lut(epaper_lut_t lut_type);
+
+/** \brief Wait for a button to be pressed
+ *
+ * \details Wait for a button to be pressed
+ */
+
+bool bsp_wait_for_button();

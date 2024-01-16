@@ -53,6 +53,20 @@ typedef struct _hink {
     uint8_t const      *lut;
 } hink_t;
 
+typedef enum _epaper_lut {
+    lut_full = 0,
+    lut_8s,
+    lut_4s,
+    lut_1s,
+    lut_black,
+    lut_red,
+    lut_white,
+    lut_red_from_black,
+    lut_900ms
+} epaper_lut_t;
+
+#define HINK_LUT_SIZE 76
+
 #define HINK_CMD_DRIVER_OUTPUT_CONTROL          0x01
 #define HINK_CMD_GATE_DRIVING_VOLTAGE           0x03
 #define HINK_CMD_SOURCE_DRIVING_VOLTAGE_CONTROL 0x04
@@ -134,7 +148,12 @@ esp_err_t hink_set_gate_line_width(hink_t *device, uint8_t width);
 
 esp_err_t hink_sleep(hink_t *device);
 
-void hink_read_lut(int pin_data, int pin_clk, int pin_cs, int pin_dc, int pin_reset, int pin_busy);
+esp_err_t hink_read_lut(int pin_data, int pin_clk, int pin_cs, int pin_dc, int pin_reset, int pin_busy);
+esp_err_t hink_reset_lut();
+bool      hink_get_lut_populated();
+esp_err_t hink_get_lut(uint8_t temperature, uint8_t *target_buffer);
+
+esp_err_t hink_apply_lut(hink_t *epaper, epaper_lut_t lut_type);
 
 #ifdef __cplusplus
 }

@@ -46,7 +46,10 @@
         "semphr.h": "c",
         "variant": "c",
         "expected": "c",
-        "esp_err.h": "c"
+        "esp_err.h": "c",
+        "esp_wpa2.h": "c",
+        "esp_eap_client.h": "c",
+        "wifi_defaults.h": "c"
     },
     "idf.port": "/dev/ttyACM0",
     "editor.formatOnType": false,

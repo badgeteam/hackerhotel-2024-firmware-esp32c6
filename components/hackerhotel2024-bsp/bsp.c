@@ -21,7 +21,7 @@
 #include "pax_gfx.h"
 #include "sdmmc_cmd.h"
 
-const uint8_t target_coprocessor_fw_version = 3; // Must match the value in the ch32_firmware.bin resource
+const uint8_t target_coprocessor_fw_version = 3;  // Must match the value in the ch32_firmware.bin resource
 
 static const char* TAG = "bsp";
 
@@ -48,14 +48,12 @@ static bool epaper_ready   = false;
 static pax_buf_t pax_buffer;
 static pax_col_t palette[] = {0xffffffff, 0xff000000, 0xffff0000};  // white, black, red
 
-static uint8_t lut_buffer[76] = {0};
-
 typedef void (*coprocessor_intr_t)();
 
-static SemaphoreHandle_t coprocessor_intr_trigger = NULL;
-static TaskHandle_t coprocessor_intr_task_handle = NULL;
-static QueueHandle_t coprocessor_button_queue = NULL;
-static SemaphoreHandle_t coprocessor_semaphore = NULL;
+static SemaphoreHandle_t coprocessor_intr_trigger     = NULL;
+static TaskHandle_t      coprocessor_intr_task_handle = NULL;
+static QueueHandle_t     coprocessor_button_queue     = NULL;
+static SemaphoreHandle_t coprocessor_semaphore        = NULL;
 
 extern const uint8_t ch32_firmware_start[] asm("_binary_ch32_firmware_bin_start");
 extern const uint8_t ch32_firmware_end[] asm("_binary_ch32_firmware_bin_end");
@@ -132,7 +130,7 @@ static void coprocessor_intr_task(void* arg) {
     while (1) {
         if (xSemaphoreTake(coprocessor_intr_trigger, portMAX_DELAY)) {
             if (xSemaphoreTake(coprocessor_semaphore, portMAX_DELAY)) {
-                uint8_t buttons[5];
+                uint8_t   buttons[5];
                 esp_err_t res = i2c_read_reg(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_BTN, buttons, 5);
                 xSemaphoreGive(coprocessor_semaphore);
                 if (res != ESP_OK) {
@@ -142,10 +140,10 @@ static void coprocessor_intr_task(void* arg) {
                 for (uint8_t index = 0; index < sizeof(buttons); index++) {
                     if (prev_buttons[index] != buttons[index]) {
                         prev_buttons[index] = buttons[index];
-                        //ESP_LOGD(TAG, "Button state changed: %u = %u", index, buttons[index]);
+                        // ESP_LOGD(TAG, "Button state changed: %u = %u", index, buttons[index]);
                         coprocessor_input_message_t message;
                         message.button = index;
-                        message.state = buttons[index];
+                        message.state  = buttons[index];
                         xQueueSend(coprocessor_button_queue, &message, 0);
                     }
                 }
@@ -206,53 +204,17 @@ static esp_err_t initialize_gpio() {
 }
 
 static esp_err_t initialize_epaper_lut() {
-    if (0) {
-        hink_read_lut(GPIO_SPI_MOSI, GPIO_SPI_CLK, epaper.pin_cs, epaper.pin_dcx, epaper.pin_reset, epaper.pin_busy);
+    esp_err_t res = ESP_OK;
+
+    if (!hink_get_lut_populated()) {
+        ESP_LOGW(TAG, "Epaper LUT table not initialized");
+        res = hink_read_lut(GPIO_SPI_MOSI, GPIO_SPI_CLK, epaper.pin_cs, epaper.pin_dcx, epaper.pin_reset, epaper.pin_busy);
+        if (res != ESP_OK) {
+            return res;
+        }
     }
 
-    const uint8_t temporary_lut_initializer[76] = {
-        0x08, 0x99, 0x21, 0x44, 0x40, 0x01, 0x00, 0x10, 0x99, 0x21, 0xa0, 0x20, 0x20, 0x00, 0x88, 0x99, 0x21, 0x44, 0x2b,
-        0x2f, 0x00, 0x88, 0x99, 0x21, 0x44, 0x2b, 0x2f, 0x00, 0x00, 0x00, 0x12, 0x40, 0x00, 0x00, 0x00, 0x36, 0x30, 0x33,
-        0x00, 0x01, 0x02, 0x02, 0x02, 0x02, 0x13, 0x01, 0x16, 0x01, 0x16, 0x04, 0x02, 0x0b, 0x10, 0x00, 0x03, 0x06, 0x04,
-        0x02, 0x2b, 0x04, 0x14, 0x04, 0x23, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0x3c, 0xc0, 0x2e, 0x30, 0x0a,
-    };
-    memcpy(lut_buffer, temporary_lut_initializer, sizeof(lut_buffer));
-
-    lut7_t* lut = (lut7_t*) lut_buffer;
-
-    lut->groups[0].repeat = 0;
-    lut->groups[1].repeat = 0;
-    lut->groups[2].repeat = 0;
-    lut->groups[3].repeat = 0;
-    lut->groups[4].repeat = 0;
-    // lut->groups[5].repeat = 0;
-    // lut->groups[6].repeat = 0;
-
-    lut->groups[0].tp[0] = 0;
-    lut->groups[0].tp[1] = 0;
-    lut->groups[0].tp[2] = 0;
-    lut->groups[0].tp[3] = 0;
-
-    lut->groups[1].tp[0] = 0;
-    lut->groups[1].tp[1] = 0;
-    lut->groups[1].tp[2] = 0;
-    lut->groups[1].tp[3] = 0;
-
-    lut->groups[2].tp[0] = 0;
-    lut->groups[2].tp[1] = 0;
-    lut->groups[2].tp[2] = 0;
-    lut->groups[2].tp[3] = 0;
-
-    lut->groups[5].tp[0] = 0;
-    lut->groups[5].tp[1] = 0;
-    lut->groups[5].tp[2] = 0;
-    lut->groups[5].tp[3] = 0;
-
-    // lut->groups[6].tp[0] = 0x14;
-    // lut->groups[6].tp[1] = 0x04;
-    // lut->groups[6].tp[2] = 0x23;
-    // lut->groups[6].tp[3] = 0;
-    return ESP_OK;
+    return res;
 }
 
 static esp_err_t initialize_spi_bus() {
@@ -266,7 +228,17 @@ static esp_err_t initialize_spi_bus() {
     return spi_bus_initialize(SPI2_HOST, &busConfiguration, SPI_DMA_CH_AUTO);
 }
 
-static esp_err_t initialize_epaper() { return hink_init(&epaper); }
+static esp_err_t initialize_epaper() {
+    esp_err_t res = hink_init(&epaper);
+    if (res != ESP_OK) {
+        return res;
+    }
+    res = hink_apply_lut(&epaper, lut_1s);
+    if (res != ESP_OK) {
+        return res;
+    }
+    return res;
+}
 
 static esp_err_t initialize_graphics() {
     pax_buf_init(&pax_buffer, NULL, epaper.screen_width, epaper.screen_height, PAX_BUF_2_PAL);
@@ -306,7 +278,7 @@ static esp_err_t initialize_i2c_bus() {
 
 esp_err_t initialize_coprocessor() {
     coprocessor_fw_version = 0;
-    esp_err_t res = i2c_read_reg(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_FW_VERSION, (uint8_t*) &coprocessor_fw_version, sizeof(uint16_t));
+    esp_err_t res          = i2c_read_reg(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_FW_VERSION, (uint8_t*) &coprocessor_fw_version, sizeof(uint16_t));
     if (res != ESP_OK) {
         coprocessor_fw_version = 0;
         ESP_LOGW(TAG, "Failed to read from CH32V003 via I2C");
@@ -485,10 +457,9 @@ hink_t* bsp_get_epaper() {
 
 esp_err_t bsp_display_flush() {
     if (!epaper_ready) return ESP_FAIL;
-    //if (!pax_is_dirty(&pax_buffer)) return ESP_OK;
-    hink_set_lut(&epaper, lut_buffer);
+    // if (!pax_is_dirty(&pax_buffer)) return ESP_OK;
     hink_write(&epaper, pax_buffer.buf);
-    //pax_mark_clean(&pax_buffer);
+    pax_mark_clean(&pax_buffer);
     return ESP_OK;
 }
 
@@ -497,13 +468,11 @@ pax_buf_t* bsp_get_gfx_buffer() {
     return &pax_buffer;
 }
 
-QueueHandle_t bsp_get_button_queue() {
-    return coprocessor_button_queue;
-}
+QueueHandle_t bsp_get_button_queue() { return coprocessor_button_queue; }
 
 esp_err_t bsp_set_leds(uint32_t led) {
     if (xSemaphoreTake(coprocessor_semaphore, portMAX_DELAY)) {
-        esp_err_t res = i2c_write_reg_n(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_LED, (uint8_t *)&led, sizeof(uint32_t));
+        esp_err_t res = i2c_write_reg_n(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_LED, (uint8_t*) &led, sizeof(uint32_t));
         xSemaphoreGive(coprocessor_semaphore);
         return res;
     }
@@ -514,4 +483,23 @@ void bsp_restart() {
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     fflush(stdout);
     esp_restart();
+}
+
+esp_err_t bsp_apply_lut(epaper_lut_t lut_type) { return hink_apply_lut(&epaper, lut_type); }
+
+bool bsp_wait_for_button() {
+    QueueHandle_t               queue         = bsp_get_button_queue();
+    coprocessor_input_message_t buttonMessage = {0};
+    bool                        result        = false;
+    while (1) {
+        if (xQueueReceive(queue, &buttonMessage, portMAX_DELAY) == pdTRUE) {
+            if (buttonMessage.state == SWITCH_PRESS) {
+                if (buttonMessage.button == SWITCH_5) {
+                    result = true;
+                }
+                break;
+            }
+        }
+    }
+    return result;
 }
