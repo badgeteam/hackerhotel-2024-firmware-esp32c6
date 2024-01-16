@@ -21,7 +21,7 @@
 #define GPIO_I2C_SDA      6  // I2C bus SDA
 #define GPIO_I2C_SCL      7  // I2C bus SCL
 #define GPIO_EPAPER_CS    8  // digital output, epaper cs pin, active low
-#define GPIO_UNUSED1      9
+#define GPIO_UNUSED1      9  // On header
 #define GPIO_EPAPER_BUSY  10  // digital input, epaper busy pin
 #define GPIO_USB_DN       12  // USB
 #define GPIO_USB_DP       13  // USB
@@ -33,7 +33,7 @@
 #define GPIO_SPI_MISO     20  // SPI
 #define GPIO_SPI_CLK      21  // SPI
 #define GPIO_LED_DATA     22  // WS2812 LED data
-#define GPIO_UNUSED2      23
+#define GPIO_UNUSED2      23  // On header
 
 // I2C bus
 #define I2C_BUS     0
