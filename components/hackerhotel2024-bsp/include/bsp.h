@@ -122,3 +122,4 @@ esp_err_t bsp_apply_lut(epaper_lut_t lut_type);
  */
 
 bool bsp_wait_for_button();
+void bsp_flush_button_queue();

@@ -40,6 +40,8 @@
 #include <string.h>
 #include <time.h>
 
+#include "application_settings.h"
+
 #define MainMenuhub        0
 #define MainMenubattleship 1
 #define MainMenuBadgetag   2
@@ -234,27 +236,9 @@ unsigned long millis() {
     return (unsigned long)(esp_timer_get_time() / 1000ULL);
 }
 
-void menu_settings() {
-    pax_buf_t *gfx  = bsp_get_gfx_buffer();
-    QueueHandle_t queue = bsp_get_button_queue();
-
-    while (1) {
-        bsp_apply_lut(lut_4s);
-        pax_background(gfx, 0);
-        pax_draw_text(gfx, 1, pax_font_marker, 18, 1, 0, "R settings placeholder");
-        DisplaySwitchesBox(SWITCH_1);
-        pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 8, 116, "Exit");
-        bsp_display_flush();
-
-        coprocessor_input_message_t buttonMessage = {0};
-        if (xQueueReceive(queue, &buttonMessage, portMAX_DELAY) == pdTRUE) {
-            printf("In settings: button %u state changed to %u\n", buttonMessage.button, buttonMessage.state);
-            if (buttonMessage.state == SWITCH_PRESS) {
-                if (buttonMessage.button == SWITCH_1) {
-                    break; // Exit
-                }
-            }
-        }
+void reset_buttons() {
+    for (int i = 0; i < 5; i++) {
+        buttons[i] = SWITCH_IDLE;
     }
 }
 
@@ -284,7 +268,7 @@ void app_thread_entry(void) {
         // Quick hack to convert the new button queue back into the old polling method
         coprocessor_input_message_t buttonMessage = {0};
         if (xQueueReceive(queue, &buttonMessage, 0) == pdTRUE) {
-            printf("Button %u state changed to %u\n", buttonMessage.button, buttonMessage.state);
+            printf("Application: button %u state changed to %u\n", buttonMessage.button, buttonMessage.state);
             buttons[buttonMessage.button] = buttonMessage.state;
         }
 
@@ -366,18 +350,19 @@ void app_thread_entry(void) {
                         framenametag();
                         inputletter = NULL;
                     }
-
+                    break;
                 case MainMenuSettings:
-                    if (buttons[SWITCH_1] == SWITCH_PRESS) {
+                    menu_settings();
+                    MainMenustatemachine = MainMenuhub;
+                    MainMenuchangeflag   = 1;
+                    reset_buttons();
+                    /*if (buttons[SWITCH_1] == SWITCH_PRESS) {
                         MainMenustatemachine = MainMenuhub;
                         MainMenuchangeflag   = 1;
                         break;
                     }
                     if (MainMenuchangeflag == 1) {
-                        menu_settings();
-                        MainMenustatemachine = MainMenuhub;
-                        MainMenuchangeflag   = 1;
-                        /*bsp_apply_lut(lut_4s);
+                        bsp_apply_lut(lut_4s);
                         pax_background(gfx, 0);
                         pax_draw_text(gfx, 1, pax_font_marker, 18, 1, 0, "Settings placeholder");
                         DisplaySwitchesBox(SWITCH_1);
@@ -387,8 +372,8 @@ void app_thread_entry(void) {
                         // DisplaySwitchesBox(SWITCH_5);
                         // pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 247, 116, "Offline");
                         bsp_display_flush();
-                        MainMenuchangeflag = 0;*/
-                    }
+                        MainMenuchangeflag = 0;
+                    }*/
                     break;
 
                 case MainMenuCredits:

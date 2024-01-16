@@ -503,3 +503,11 @@ bool bsp_wait_for_button() {
     }
     return result;
 }
+
+void bsp_flush_button_queue() {
+    QueueHandle_t               queue         = bsp_get_button_queue();
+    coprocessor_input_message_t buttonMessage = {0};
+    while (xQueueReceive(queue, &buttonMessage, 0) == pdTRUE) {
+        // empty.
+    }
+}
