@@ -117,20 +117,18 @@ void display_ota_state(const char *text, bool nightly) {
     pax_buf_t *pax_buffer = bsp_get_gfx_buffer();
     pax_noclip(pax_buffer);
     const pax_font_t *font = pax_font_saira_regular;
-    pax_background(pax_buffer, nightly ? RED : WHITE);
-    pax_draw_text(pax_buffer, nightly ? WHITE : BLACK, font, 20, 5, 5, "Firmware update");
-    pax_vec1_t title_size = pax_text_size(font, 18, nightly ? "Experimental firmware" : "Firmware update");
-    pax_draw_text(pax_buffer, nightly ? WHITE : BLACK, font, 18, (pax_buffer->height / 2) - (title_size.x / 2), (pax_buffer->width / 2) - 30,
-                  nightly ? "Experimental firmware" : "Firmware update");
-    pax_vec1_t size = pax_text_size(font, 18, text);
-    pax_draw_text(pax_buffer, nightly ? WHITE : BLACK, font, 18, (pax_buffer->height / 2) - (size.x / 2), (pax_buffer->width / 2) + 10, text);
+    pax_background(pax_buffer, WHITE);
+    pax_draw_text(pax_buffer, BLACK, font, 20, 0, 0, "OTA update");
+    pax_draw_text(pax_buffer, nightly ? RED : BLACK, font, 18, 0, 20,
+                  nightly ? "Channel: experimental" : "Channel: stable");
+    pax_draw_text(pax_buffer, BLACK, font, 18, 0, 60, text);
     bsp_display_flush();
 }
 
 void ota_update(bool nightly) {
     display_ota_state("Connecting to WiFi...", nightly);
 
-    char *ota_url = nightly ? "https://mch2022.ota.bodge.team/mch2022_dev.bin" : "https://mch2022.ota.bodge.team/mch2022.bin";
+    char *ota_url = nightly ? "https://hackerhotel2024.ota.bodge.team/hackerhotel2024_dev.bin" : "https://hackerhotel2024.ota.bodge.team/hackerhotel2024.bin";
 
     if (!wifi_connect_to_stored()) {
         display_ota_state("Failed to connect to WiFi", nightly);
@@ -165,7 +163,7 @@ void ota_update(bool nightly) {
     if (err != ESP_OK) {
         wifi_disconnect_and_disable();
         ESP_LOGE(TAG, "ESP HTTPS OTA Begin failed");
-        display_ota_state("Failed to start download", nightly);
+        display_ota_state("Update failed:\nFailed to start download.", nightly);
         vTaskDelay(5000 / portTICK_PERIOD_MS);
         return;
     }
@@ -213,7 +211,7 @@ void ota_update(bool nightly) {
     if (esp_https_ota_is_complete_data_received(https_ota_handle) != true) {
         // the OTA image was not completely received and user can customise the response to this situation.
         ESP_LOGE(TAG, "Complete data was not received.");
-        display_ota_state("Download failed", nightly);
+        display_ota_state("Update failed:\nComplete data was not received.", nightly);
         vTaskDelay(5000 / portTICK_PERIOD_MS);
         esp_restart();
     } else {
@@ -226,9 +224,9 @@ void ota_update(bool nightly) {
         } else {
             if (ota_finish_err == ESP_ERR_OTA_VALIDATE_FAILED) {
                 ESP_LOGE(TAG, "Image validation failed, image is corrupted");
-                display_ota_state("Image validation failed", nightly);
+                display_ota_state("Update failed:\nImage validation failed", nightly);
             } else {
-                display_ota_state("Update failed", nightly);
+                display_ota_state("Update failed\nUnknown reason", nightly);
             }
             ESP_LOGE(TAG, "ESP_HTTPS_OTA upgrade failed 0x%x", ota_finish_err);
             vTaskDelay(5000 / portTICK_PERIOD_MS);

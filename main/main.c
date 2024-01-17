@@ -80,11 +80,9 @@ void app_main(void) {
     nvs_set_str(nvs_handle, "wifi.ssid", "ssid");
     nvs_set_str(nvs_handle, "wifi.password", "password");
     nvs_set_u8(nvs_handle, "wifi.authmode", WIFI_AUTH_WPA2_PSK);
-    nvs_close(nvs_handle);
+    nvs_close(nvs_handle);*/
 
-    ota_update(false);
-
-    return;*/
+    //ota_update(false);
 
     app_thread_entry();
 }
