@@ -1,5 +1,4 @@
 #include "application_settings.h"
-
 #include "application.h"
 #include "bsp.h"
 #include "freertos/FreeRTOS.h"
@@ -7,12 +6,11 @@
 #include "freertos/queue.h"
 #include "freertos/task.h"
 #include "wifi_ota.h"
-
 #include <inttypes.h>
 #include <stdio.h>
 
 void menu_settings() {
-    pax_buf_t    *gfx   = bsp_get_gfx_buffer();
+    pax_buf_t*    gfx   = bsp_get_gfx_buffer();
     QueueHandle_t queue = bsp_get_button_queue();
 
     bool exit = false;

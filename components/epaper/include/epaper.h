@@ -12,7 +12,6 @@ extern "C" {
 
 #include <stdbool.h>
 #include <stdint.h>
-
 #include <driver/spi_master.h>
 #include <esp_err.h>
 #include <freertos/FreeRTOS.h>
@@ -50,7 +49,7 @@ typedef struct _hink {
     spi_device_handle_t spi_device;
     bool                dc_level;
     SemaphoreHandle_t   mutex;
-    uint8_t const      *lut;
+    uint8_t const *     lut;
 } hink_t;
 
 typedef enum _epaper_lut {
@@ -129,31 +128,31 @@ typedef enum _epaper_lut {
 #define HINK_DISPLAY_UPDATE_CONTROL_2_ANALOG_ON             0x40
 #define HINK_DISPLAY_UPDATE_CONTROL_2_CLOCK_ON              0x80
 
-esp_err_t hink_init(hink_t *device);
-esp_err_t hink_deinit(hink_t *device);
+esp_err_t hink_init(hink_t* device);
+esp_err_t hink_deinit(hink_t* device);
 
-bool      hink_busy(hink_t *device);
-esp_err_t hink_wait(hink_t *device);
+bool      hink_busy(hink_t* device);
+esp_err_t hink_wait(hink_t* device);
 
 // Write data to the display.
-esp_err_t hink_write(hink_t *device, uint8_t const *data);
+esp_err_t hink_write(hink_t* device, uint8_t const * data);
 // Set the active LUT.
 // Does not create a copy of the LUT.
-esp_err_t hink_set_lut(hink_t *device, uint8_t const *lut);
+esp_err_t hink_set_lut(hink_t* device, uint8_t const * lut);
 
-esp_err_t hink_set_gate_driving_voltage(hink_t *device, uint8_t value);
-esp_err_t hink_set_source_driving_voltage(hink_t *device, uint8_t vsh1, uint8_t vsh2, uint8_t vsl);
-esp_err_t hink_set_dummy_line_period(hink_t *device, uint8_t period);
-esp_err_t hink_set_gate_line_width(hink_t *device, uint8_t width);
+esp_err_t hink_set_gate_driving_voltage(hink_t* device, uint8_t value);
+esp_err_t hink_set_source_driving_voltage(hink_t* device, uint8_t vsh1, uint8_t vsh2, uint8_t vsl);
+esp_err_t hink_set_dummy_line_period(hink_t* device, uint8_t period);
+esp_err_t hink_set_gate_line_width(hink_t* device, uint8_t width);
 
-esp_err_t hink_sleep(hink_t *device);
+esp_err_t hink_sleep(hink_t* device);
 
 esp_err_t hink_read_lut(int pin_data, int pin_clk, int pin_cs, int pin_dc, int pin_reset, int pin_busy);
 esp_err_t hink_reset_lut();
 bool      hink_get_lut_populated();
-esp_err_t hink_get_lut(uint8_t temperature, uint8_t *target_buffer);
+esp_err_t hink_get_lut(uint8_t temperature, uint8_t* target_buffer);
 
-esp_err_t hink_apply_lut(hink_t *epaper, epaper_lut_t lut_type);
+esp_err_t hink_apply_lut(hink_t* epaper, epaper_lut_t lut_type);
 
 #ifdef __cplusplus
 }
