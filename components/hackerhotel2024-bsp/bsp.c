@@ -20,6 +20,8 @@
 #include "nvs_flash.h"
 #include "pax_gfx.h"
 #include "sdmmc_cmd.h"
+#include "ledstrip.h"
+#include "pax_codecs.h"
 
 const uint8_t target_coprocessor_fw_version = 3;  // Must match the value in the ch32_firmware.bin resource
 
@@ -58,6 +60,10 @@ static SemaphoreHandle_t coprocessor_semaphore        = NULL;
 extern const uint8_t ch32_firmware_start[] asm("_binary_ch32_firmware_bin_start");
 extern const uint8_t ch32_firmware_end[] asm("_binary_ch32_firmware_bin_end");
 
+extern const uint8_t hackerhotel_png_start[] asm("_binary_hackerhotel_png_start");
+extern const uint8_t hackerhotel_png_end[] asm("_binary_hackerhotel_png_end");
+
+
 esp_err_t bsp_display_error(const char* error) {
     ESP_LOGE(TAG, "%s", error);
     if (epaper_ready) {
@@ -75,8 +81,8 @@ esp_err_t bsp_display_message(const char* title, const char* message) {
     if (epaper_ready) {
         const pax_font_t* font = pax_font_sky_mono;
         pax_background(&pax_buffer, WHITE);
-        pax_draw_text(&pax_buffer, RED, font, 18, 5, 5, title);
-        pax_draw_text(&pax_buffer, BLACK, font, 12, 5, 25, message);
+        pax_draw_text(&pax_buffer, RED, font, 18, 0, 0, title);
+        pax_draw_text(&pax_buffer, BLACK, font, 12, 0, 25, message);
         bsp_display_flush();
     }
     return ESP_OK;
@@ -150,6 +156,16 @@ static void coprocessor_intr_task(void* arg) {
             }
         }
     }
+}
+
+static esp_err_t initialize_led() {
+    esp_err_t res = ledstrip_init(GPIO_LED_DATA);
+    if (res != ESP_OK) {
+        return res;
+    }
+    const uint8_t data[3] = {0,0,0};
+    res = ledstrip_send(data, 3);
+    return res;
 }
 
 static esp_err_t initialize_nvs() {
@@ -277,6 +293,8 @@ static esp_err_t initialize_i2c_bus() {
 }
 
 esp_err_t initialize_coprocessor() {
+    bool invalid_version = false;
+
     coprocessor_fw_version = 0;
     esp_err_t res          = i2c_read_reg(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_FW_VERSION, (uint8_t*) &coprocessor_fw_version, sizeof(uint16_t));
     if (res != ESP_OK) {
@@ -292,19 +310,20 @@ esp_err_t initialize_coprocessor() {
 
         if (ch32_result != ESP_OK) {
             ESP_LOGE(TAG, "Failed to program the CH32V003 co-processor");
+            return ESP_ERR_INVALID_STATE;
         } else {
             ESP_LOGW(TAG, "Succesfully programmed the CH32V003 co-processor");
         }
 
         res = i2c_read_reg(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_FW_VERSION, (uint8_t*) &coprocessor_fw_version, sizeof(uint16_t));
-        if (res != ESP_OK) {
+        if (res != ESP_OK || coprocessor_fw_version == 0) {
             ESP_LOGE(TAG, "Failed to read from CH32V003 via I2C after flashing");
-            return ESP_FAIL;
+            return ESP_ERR_INVALID_RESPONSE;
         }
 
         if (coprocessor_fw_version != target_coprocessor_fw_version) {
             ESP_LOGE(TAG, "CH32V003 reports invalid version %u via I2C after flashing", coprocessor_fw_version);
-            return ESP_FAIL;
+            invalid_version = true;
         }
     }
 
@@ -347,6 +366,10 @@ esp_err_t initialize_coprocessor() {
 
     xSemaphoreGive(coprocessor_semaphore);
 
+    if (invalid_version) {
+        return ESP_ERR_INVALID_VERSION;
+    }
+
     return ESP_OK;
 }
 
@@ -375,6 +398,15 @@ esp_err_t bsp_init() {
     }
 
     esp_err_t res;
+
+    // Addressable LED
+    res = initialize_led();
+    if (res != ESP_OK) {
+        bsp_display_error("Initializing LED failed");
+        return res;
+    }
+
+    bsp_set_addressable_led(0xFF0000); // RED
 
     // Non volatile storage
     res = initialize_nvs();
@@ -418,6 +450,8 @@ esp_err_t bsp_init() {
         return res;
     }
 
+    bsp_set_addressable_led(0x0000FF); // BLUE
+
     // Signal that epaper display is ready to be used
     epaper_ready = true;
 
@@ -430,13 +464,24 @@ esp_err_t bsp_init() {
 
     // CH32V003 coprocessor
     res = initialize_coprocessor();
-    if (res != ESP_OK) {
+    if (res == ESP_ERR_INVALID_STATE) {
+        bsp_display_error("Flashing CH32V003 failed\nPlease contact support");
+        return res;
+    } else if (res == ESP_ERR_INVALID_RESPONSE) {
+        bsp_display_error("No response from coprocessor\nRemove all addons and restart\nIf that doesn't help\nplease contact support");
+        return res;
+    } else if (res == ESP_ERR_INVALID_VERSION) {
+        bsp_display_error("Coprocessor reports invalid\nversion. Please contact support\nBadge will attempt to continue starting");
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+    } else if (res != ESP_OK) {
         bsp_display_error("Initializing coprocessor failed\n\nPlease contact support");
         return res;
     }
 
     // Signal that ch32v003 coprocessor is ready to be used
     ch32v003_ready = true;
+
+    bsp_set_addressable_led(0x00FF00); // GREEN
 
     // SD card
     res = initialize_sdcard();
@@ -445,8 +490,16 @@ esp_err_t bsp_init() {
         return res;
     }
 
+    bsp_set_addressable_led(0x000000); // OFF
+
     // Signal that all hardware is ready to be used
     bsp_ready = true;
+
+    // Factory test
+    if (!bsp_passed_factory_test()) {
+        return bsp_factory_test();
+    }
+
     return ESP_OK;
 }
 
@@ -461,6 +514,22 @@ esp_err_t bsp_display_flush() {
     hink_write(&epaper, pax_buffer.buf);
     pax_mark_clean(&pax_buffer);
     return ESP_OK;
+}
+
+void bsp_display_wait() {
+    if (!epaper_ready) {
+        return;
+    }
+    while (hink_busy(&epaper)) {
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+}
+
+bool bsp_display_busy() {
+    if (!epaper_ready) {
+        return true;
+    }
+    return hink_busy(&epaper);
 }
 
 pax_buf_t* bsp_get_gfx_buffer() {
@@ -502,4 +571,142 @@ bool bsp_wait_for_button() {
         }
     }
     return result;
+}
+
+uint8_t bsp_wait_for_button_number() {
+    QueueHandle_t               queue         = bsp_get_button_queue();
+    coprocessor_input_message_t buttonMessage = {0};
+    bool                        result        = false;
+    while (1) {
+        if (xQueueReceive(queue, &buttonMessage, portMAX_DELAY) == pdTRUE) {
+            if (buttonMessage.state == SWITCH_PRESS) {
+                return buttonMessage.button;
+            }
+        }
+    }
+}
+
+void bsp_flush_button_queue() {
+    QueueHandle_t               queue         = bsp_get_button_queue();
+    coprocessor_input_message_t buttonMessage = {0};
+    while (xQueueReceive(queue, &buttonMessage, 0) == pdTRUE) {
+        // empty.
+    }
+}
+
+esp_err_t bsp_set_addressable_led(uint32_t color) {
+    uint8_t data[3];
+    data[0] = (color >>  8) & 0xFF; // R
+    data[1] = (color >> 16) & 0xFF; // G
+    data[2] = (color >>  0) & 0xFF; // B
+    return ledstrip_send(data, 3);
+}
+
+esp_err_t bsp_set_addressable_leds(uint8_t data, int length) {
+    return ledstrip_send(data, length);
+}
+
+bool bsp_passed_factory_test() {
+    nvs_handle_t nvs_handle;
+    esp_err_t res = nvs_open("system", NVS_READWRITE, &nvs_handle);
+    if (res != ESP_OK) {
+        return false;
+    }
+    uint8_t value;
+    res = nvs_get_u8(nvs_handle, "factory_test", &value);
+    nvs_close(nvs_handle);
+    if (res != ESP_OK) {
+        return false;
+    }
+
+    return (value == 1);
+}
+
+esp_err_t bsp_factory_test() {
+    esp_err_t res;
+
+    if (!bsp_ready) {
+        return ESP_FAIL;
+    }
+
+    bsp_display_message("Factory test", "Testing...");
+
+    bsp_set_addressable_led(0xFF00FF); // Purple
+
+    bsp_set_relay(true);
+    vTaskDelay(pdMS_TO_TICKS(500));
+    bsp_set_relay(false);
+
+    uint8_t   buttons[5];
+    xSemaphoreTake(coprocessor_semaphore, portMAX_DELAY);
+    res = i2c_read_reg(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_BTN, buttons, 5);
+    if (res != ESP_OK) {
+        ESP_LOGE(TAG, "Factory test failed to read button states");
+        bsp_display_message("Factory test", "Failed to read button states");
+        xSemaphoreGive(coprocessor_semaphore);
+        return ESP_FAIL;
+    }
+    xSemaphoreGive(coprocessor_semaphore);
+
+    for (uint8_t index = 0; index < sizeof(buttons); index++) {
+        if (buttons[index] != SWITCH_IDLE) {
+            char message[40] = {0};
+            snprintf(message, 39, " --- FAILED ---\nButton %u stuck (%u)", index, buttons[index]);
+            bsp_display_message("Factory test", message);
+            return ESP_FAIL;
+        }
+    }
+
+    bsp_set_leds(0xFFFFFFFF);
+
+    bsp_display_message("Factory test", "Check LEDs:\nAll diamond LEDs should be on\nAddressable LED should be pink\n\nOK?   Press button 5\nFAIL? Press button 1\nSKIP? Press button 2");
+
+    bsp_flush_button_queue();
+    uint8_t button = bsp_wait_for_button_number();
+
+    bool pass = (button == SWITCH_5);
+
+    if (button == SWITCH_2) {
+        bsp_display_message("Factory test", " --- SKIPPED ---\nStarting application...");
+        return ESP_OK;
+    }
+
+    if (!pass) {
+        bsp_display_message("Factory test", " --- FAILED ---\nLEDs not okay");
+        return ESP_FAIL;
+    }
+
+    bsp_display_message("Factory test", " --- PASS ---");
+
+    nvs_handle_t nvs_handle;
+    res = nvs_open("system", NVS_READWRITE, &nvs_handle);
+    if (res != ESP_OK) {
+        bsp_display_message("Factory test", " --- FAILED ---\nNVS open failed");
+        return ESP_FAIL;
+    }
+    res = nvs_set_u8(nvs_handle, "factory_test", 1);
+    nvs_close(nvs_handle);
+    if (res != ESP_OK) {
+        bsp_display_message("Factory test", " --- FAILED ---\nNVS store failed");
+        return ESP_FAIL;
+    }
+
+    pax_background(&pax_buffer, WHITE);
+    pax_insert_png_buf(&pax_buffer, hackerhotel_png_start, hackerhotel_png_end - hackerhotel_png_start, 0, 0, 0);
+    bsp_apply_lut(lut_full);
+    bsp_display_flush();
+    bsp_display_wait();
+
+    bsp_set_addressable_led(0x00FF00); // Green
+
+    // Wait until power gets removed
+    while (1) {
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+
+    return ESP_OK;
+}
+
+esp_err_t bsp_set_relay(bool state) {
+    return gpio_set_level(GPIO_RELAY, state);
 }

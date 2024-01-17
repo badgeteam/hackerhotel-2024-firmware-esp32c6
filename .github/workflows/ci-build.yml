@@ -1,0 +1,109 @@
+name: Build with ESP-IDF
+
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - '**.md'
+      - '.clang-format'
+      - '.gitignore'
+
+  pull_request:
+    branches: [master]
+    paths-ignore:
+      - '**.md'
+      - '.clang-format'
+      - '.gitignore'
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repo + submodules
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Build with ESP-IDF
+      uses: espressif/esp-idf-ci-action@v1
+      with:
+        esp_idf_version: v5.1.0
+        target: esp32
+
+    - name: Upload build to artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: build
+        path: |
+          build/hackerhotel2024.bin
+          build/hackerhotel2024.elf
+          build/bootloader/bootloader.bin
+          build/bootloader/bootloader.elf
+
+    - name: Generate build report
+      env:
+        base_branch: master
+        current_ref: ${{ github.ref_name }}
+        compare_url_template: ${{ format('/{0}/compare/{{base}}...{{head}}', github.repository) }}
+        commit_hash: ${{ github.event.after }}
+        head_compare_url: ${{ github.event.compare }}
+        new_commits_json: ${{ toJSON(github.event.commits) }}
+      run: |
+        build_size_main=$(du build/hackerhotel2024.bin | awk '{ print $1 }')
+        ref_compare_url=$(sed "s/{base}/$base_branch/; s/{head}/$commit_hash/" <<< $compare_url_template)
+
+        EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+
+        cat << $EOF >> $GITHUB_STEP_SUMMARY
+        # Build summary 🔨${{ github.ref_name != 'master' && '🚧' || '' }}
+
+        **Source:** ${{ github.ref_type }} \`$current_ref\` -> [${{ github.repository }}@\`${commit_hash:0:7}\`](${{ github.event.head_commit.url }})
+
+        **Size of \`hackerhotel2024.bin\`:** $build_size_main kB
+
+        \`\`\`console
+        \$ du -h build/*.bin build/*/*.bin
+        $(du -h build/*.bin build/*/*.bin)
+        \`\`\`
+
+        ## Build details
+        **Build trigger:** ${{ github.event.forced && '☢️ forced' || '' }} ${{ github.event_name }} \`${{ github.event.ref }}\`
+
+        ### Source
+        **HEAD:** [${{ github.repository }}@\`${commit_hash:0:7}\`](${{ github.event.head_commit.url }}) on ${{ github.ref_type }} [$current_ref]($ref_compare_url)
+
+        **Diff with previous HEAD:** $head_compare_url
+
+        #### New commits
+        $(jq -r 'map([
+          "**Commit [`\(.id[0:7])`](\(.url)) by \(if .author.username then "@"+.author.username else .author.name end):**",
+          .message,
+          (if .committer.name != .author.name then "\n> <sub>**Committer:** \(.committer.name) <\(.committer.email)></sub>" else "" end),
+          "<sub>**Timestamp:** \(.timestamp)</sub>"
+        ] | map("> \(.)\n") | join("")) | join("\n")' <<< $new_commits_json)
+
+        #### Submodules
+        \`\`\`
+        $(
+          git submodule --quiet foreach '
+            branch=$(grep -C1 "$(git config --get remote.origin.url)" $toplevel/.gitmodules | grep "branch =" | rev | cut -d" " -f1 | rev)
+            git fetch origin $branch --unshallow >&2
+            commits_behind=$(git --no-pager log --oneline HEAD..origin/$branch)
+            [ -n "$commits_behind" ] && echo "$name has new commits upstream:\n$commits_behind" >&2
+            echo \
+              "$path\t" \
+              "$branch\t" \
+              "$(git rev-parse --short HEAD)\t" \
+              $(if [ -z "$commits_behind" ];
+                then echo "✅ up to date";
+                else echo "⚠️ $(echo "$commits_behind" | wc -l) commits behind origin/$branch";
+              fi)
+          ' | column -t -s $'\t'
+        )
+        \`\`\`
+
+        $EOF
+      continue-on-error: true

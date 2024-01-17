@@ -412,22 +412,28 @@ bool ch32_set_nrst_mode(bool use_as_reset) {
     const uint32_t addr = 0x1ffff800;
 
     // Read current value.
-    uint32_t rdata[16];
+    uint32_t data[16];
     for (size_t i = 0; i < 16; i++) {
-        ch32_read_memory_word(addr + i * 4, &rdata[i]);
+        ch32_read_memory_word(addr + i * 4, &data[i]);
     }
+
+    uint32_t previous_data[16];
+    memcpy(previous_data, data, 16);
 
     // Update the NRST mode.
     if (use_as_reset) {
-        rdata[0] &= ~(0b11 << 27);
-        rdata[0] |= (0b01 << 27);
+        data[0] &= ~(0b11 << 27);
+        data[0] |= (0b01 << 27);
     } else {
-        rdata[0] |= (0b11 << 27);
+        data[0] |= (0b11 << 27);
     }
 
-    // Write new value.
-    ch32_erase_flash_block(addr);
-    ch32_write_flash_block(addr, rdata);
+    if (memcmp(previous_data, data, 16) != 0) {
+        ESP_LOGW(TAG, "Disabling NRST");
+        // Write new value.
+        ch32_erase_flash_block(addr);
+        ch32_write_flash_block(addr, data);
+    }
 
     return true;
 }

@@ -40,6 +40,8 @@
 #include <string.h>
 #include <time.h>
 
+#include "application_settings.h"
+
 #define MainMenuhub        0
 #define MainMenubattleship 1
 #define MainMenuBadgetag   2
@@ -234,6 +236,12 @@ unsigned long millis() {
     return (unsigned long)(esp_timer_get_time() / 1000ULL);
 }
 
+void reset_buttons() {
+    for (int i = 0; i < 5; i++) {
+        buttons[i] = SWITCH_IDLE;
+    }
+}
+
 void app_thread_entry(void) {
     esp_err_t res;
 
@@ -260,7 +268,7 @@ void app_thread_entry(void) {
         // Quick hack to convert the new button queue back into the old polling method
         coprocessor_input_message_t buttonMessage = {0};
         if (xQueueReceive(queue, &buttonMessage, 0) == pdTRUE) {
-            printf("Button %u state changed to %u\n", buttonMessage.button, buttonMessage.state);
+            printf("Application: button %u state changed to %u\n", buttonMessage.button, buttonMessage.state);
             buttons[buttonMessage.button] = buttonMessage.state;
         }
 
@@ -342,9 +350,13 @@ void app_thread_entry(void) {
                         framenametag();
                         inputletter = NULL;
                     }
-
+                    break;
                 case MainMenuSettings:
-                    if (buttons[SWITCH_1] == SWITCH_PRESS) {
+                    menu_settings();
+                    MainMenustatemachine = MainMenuhub;
+                    MainMenuchangeflag   = 1;
+                    reset_buttons();
+                    /*if (buttons[SWITCH_1] == SWITCH_PRESS) {
                         MainMenustatemachine = MainMenuhub;
                         MainMenuchangeflag   = 1;
                         break;
@@ -361,7 +373,7 @@ void app_thread_entry(void) {
                         // pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 247, 116, "Offline");
                         bsp_display_flush();
                         MainMenuchangeflag = 0;
-                    }
+                    }*/
                     break;
 
                 case MainMenuCredits:

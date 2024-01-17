@@ -49,7 +49,10 @@
         "esp_err.h": "c",
         "esp_wpa2.h": "c",
         "esp_eap_client.h": "c",
-        "wifi_defaults.h": "c"
+        "wifi_defaults.h": "c",
+        "bsp.h": "c",
+        "sdmmc_defs.h": "c",
+        "task.h": "c"
     },
     "idf.port": "/dev/ttyACM0",
     "editor.formatOnType": false,
