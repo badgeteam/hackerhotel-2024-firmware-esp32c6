@@ -199,7 +199,7 @@ void ota_update(bool nightly) {
         int len_read  = esp_https_ota_get_image_len_read(https_ota_handle);
         int percent   = (len_read * 100) / len_total;
 
-        if (percent != percent_shown) {
+        if ((percent/10) != (percent_shown/10)) {
             ESP_LOGI(TAG, "Downloading %d / %d (%d%%)", len_read, len_total, percent);
             percent_shown = percent;
             char buffer[128];

@@ -35,6 +35,10 @@
 #define GPIO_LED_DATA     22  // WS2812 LED data
 #define GPIO_UNUSED2      23  // On header
 
+// ADC
+#define ADC_VBATT ADC_CHANNEL_2
+#define ATTEN_VBATT ADC_ATTEN_DB_12
+
 // I2C bus
 #define I2C_BUS     0
 #define I2C_SPEED   400000  // 400 kHz

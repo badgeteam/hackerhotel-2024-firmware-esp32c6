@@ -52,7 +52,10 @@
         "wifi_defaults.h": "c",
         "bsp.h": "c",
         "sdmmc_defs.h": "c",
-        "task.h": "c"
+        "task.h": "c",
+        "wifi_ota.h": "c",
+        "esp_flash_partitions.h": "c",
+        "pax_codecs.h": "c"
     },
     "idf.port": "/dev/ttyACM0",
     "editor.formatOnType": false,

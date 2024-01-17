@@ -22,6 +22,9 @@
 #include "sdmmc_cmd.h"
 #include "ledstrip.h"
 #include "pax_codecs.h"
+#include "esp_adc/adc_oneshot.h"
+#include "esp_adc/adc_cali.h"
+#include "esp_adc/adc_cali_scheme.h"
 
 const uint8_t target_coprocessor_fw_version = 3;  // Must match the value in the ch32_firmware.bin resource
 
@@ -46,6 +49,8 @@ static uint16_t coprocessor_fw_version = 0;
 static bool bsp_ready      = false;
 static bool ch32v003_ready = false;
 static bool epaper_ready   = false;
+
+static adc_oneshot_unit_handle_t adc_vbatt_handle = NULL;
 
 static pax_buf_t pax_buffer;
 static pax_col_t palette[] = {0xffffffff, 0xff000000, 0xffff0000};  // white, black, red
@@ -212,6 +217,36 @@ static esp_err_t initialize_gpio() {
         .intr_type    = GPIO_INTR_DISABLE,
     };
     res = gpio_config(&sao_cfg);
+    if (res != ESP_OK) {
+        return res;
+    }
+
+    // Battery
+    gpio_config_t battery_cfg = {
+        .pin_bit_mask = BIT64(GPIO_BATT_CHRG) | BIT64(GPIO_BATT_ADC),
+        .mode         = GPIO_MODE_INPUT,
+        .pull_up_en   = false,
+        .pull_down_en = false,
+        .intr_type    = GPIO_INTR_DISABLE,
+    };
+    res = gpio_config(&battery_cfg);
+    if (res != ESP_OK) {
+        return res;
+    }
+
+    adc_oneshot_unit_init_cfg_t init_config1 = {
+        .unit_id = ADC_UNIT_1,
+    };
+    res = adc_oneshot_new_unit(&init_config1, &adc_vbatt_handle);
+    if (res != ESP_OK) {
+        return res;
+    }
+
+    adc_oneshot_chan_cfg_t config = {
+        .bitwidth = ADC_BITWIDTH_DEFAULT,
+        .atten = ATTEN_VBATT,
+    };
+    res = adc_oneshot_config_channel(adc_vbatt_handle, ADC_VBATT, &config);
     if (res != ESP_OK) {
         return res;
     }
@@ -709,4 +744,18 @@ esp_err_t bsp_factory_test() {
 
 esp_err_t bsp_set_relay(bool state) {
     return gpio_set_level(GPIO_RELAY, state);
+}
+
+float bsp_battery_voltage() {
+    int adc_raw = 0;
+    esp_err_t res = adc_oneshot_read(adc_vbatt_handle, ADC_VBATT, &adc_raw);
+    if (res != ESP_OK) {
+        return 0;
+    }
+
+    return (adc_raw * 8.3) / 4095.0;
+}
+
+bool bsp_battery_charging() {
+    return !gpio_get_level(GPIO_BATT_CHRG);
 }
