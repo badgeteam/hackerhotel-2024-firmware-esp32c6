@@ -352,6 +352,7 @@ void app_thread_entry(void) {
                     }
                     break;
                 case MainMenuSettings:
+                    bsp_set_relay(false);
                     menu_settings();
                     MainMenustatemachine = MainMenuhub;
                     MainMenuchangeflag   = 1;

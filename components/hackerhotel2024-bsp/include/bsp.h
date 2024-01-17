@@ -131,3 +131,5 @@ esp_err_t bsp_set_addressable_leds(uint8_t data, int length);
 bool bsp_passed_factory_test();
 esp_err_t bsp_factory_test();
 esp_err_t bsp_set_relay(bool state);
+float bsp_battery_voltage();
+bool bsp_battery_charging();

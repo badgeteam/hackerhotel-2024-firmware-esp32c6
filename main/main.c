@@ -44,10 +44,14 @@
 #include <sdmmc_cmd.h>
 #include <string.h>
 #include <time.h>
+#include "esp_ota_ops.h"
 
 static char const *TAG = "main";
 
 void app_main(void) {
+    const esp_app_desc_t* app_description = esp_ota_get_app_description();
+    printf("BADGE.TEAM %s firmware v%s\r\n", app_description->project_name, app_description->version);
+
     esp_err_t res = bsp_init();
     if (res != ESP_OK) {
         ESP_LOGE(TAG, "Hardware initialization failed, bailing out.");
@@ -81,6 +85,16 @@ void app_main(void) {
     nvs_set_str(nvs_handle, "wifi.password", "password");
     nvs_set_u8(nvs_handle, "wifi.authmode", WIFI_AUTH_WPA2_PSK);
     nvs_close(nvs_handle);*/
+
+    while (1) {
+        bool charging = bsp_battery_charging();
+        float voltage = bsp_battery_voltage();
+        char buffer[64];
+        sprintf(buffer, "Charging: %s, voltage %f\n", charging ? "yes" : "no", voltage);
+        printf(buffer);
+        bsp_display_message("Battery measurements", buffer);
+        vTaskDelay(pdMS_TO_TICKS(2000));
+    }
 
     app_thread_entry();
 }

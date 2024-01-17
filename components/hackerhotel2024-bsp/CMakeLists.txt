@@ -8,6 +8,7 @@ idf_component_register(
         "sdmmc"
         "fatfs"
         "nvs_flash"
+        "esp_adc"
         "bus-i2c"
         "epaper"
         "ch32"
