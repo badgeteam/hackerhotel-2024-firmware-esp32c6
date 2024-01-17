@@ -68,8 +68,8 @@ hink_t* bsp_get_epaper();
  */
 
 esp_err_t bsp_display_flush();
-void bsp_display_wait();
-bool bsp_display_busy();
+void      bsp_display_wait();
+bool      bsp_display_busy();
 
 /** \brief Fetch a handle for the framebuffer
  *
@@ -123,13 +123,13 @@ esp_err_t bsp_apply_lut(epaper_lut_t lut_type);
  * \details Wait for a button to be pressed
  */
 
-bool bsp_wait_for_button();
-uint8_t bsp_wait_for_button_number();
-void bsp_flush_button_queue();
+bool      bsp_wait_for_button();
+uint8_t   bsp_wait_for_button_number();
+void      bsp_flush_button_queue();
 esp_err_t bsp_set_addressable_led(uint32_t color);
 esp_err_t bsp_set_addressable_leds(uint8_t data, int length);
-bool bsp_passed_factory_test();
+bool      bsp_passed_factory_test();
 esp_err_t bsp_factory_test();
 esp_err_t bsp_set_relay(bool state);
-float bsp_battery_voltage();
-bool bsp_battery_charging();
+float     bsp_battery_voltage();
+bool      bsp_battery_charging();

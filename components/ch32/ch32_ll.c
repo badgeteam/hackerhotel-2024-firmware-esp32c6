@@ -15,7 +15,6 @@
 #include "freertos/task.h"
 #include "riscv/rv_utils.h"
 #include "soc/gpio_struct.h"
-
 #include <inttypes.h>
 #include <stdio.h>
 
@@ -142,7 +141,7 @@ esp_err_t ch32_init(uint8_t pin) {
     return ESP_OK;
 }
 
-void ch32_sdi_read(uint8_t address, uint32_t *value) {
+void ch32_sdi_read(uint8_t address, uint32_t* value) {
     portDISABLE_INTERRUPTS();
     rv_utils_intr_global_disable();
     ch32_tx1();            // start bit (always 1)

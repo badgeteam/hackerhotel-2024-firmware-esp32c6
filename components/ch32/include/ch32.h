@@ -11,10 +11,8 @@ extern "C" {
 #endif  //__cplusplus
 
 #include "driver/gpio.h"
-
 #include <stdbool.h>
 #include <stdint.h>
-
 #include <esp_err.h>
 
 #define CH32_REG_DEBUG_DATA0        0x04  // Data register 0, can be used for temporary storage of data
@@ -87,7 +85,7 @@ extern "C" {
 
 // Low level functions
 esp_err_t ch32_init(uint8_t pin);
-void      ch32_sdi_read(uint8_t address, uint32_t *value);
+void      ch32_sdi_read(uint8_t address, uint32_t* value);
 void      ch32_sdi_write(uint8_t address, uint32_t value);
 void      ch32_sdi_write_bypass(uint32_t value);
 void      ch32_sdi_reset();
@@ -101,12 +99,12 @@ bool ch32_reset_microprocessor_and_run();
 bool ch32_reset_microprocessor_and_halt();
 bool ch32_reset_debug_module();
 bool ch32_write_cpu_reg(uint16_t regno, uint32_t value);
-bool ch32_read_cpu_reg(uint16_t regno, uint32_t *value_out);
-bool ch32_run_debug_code(void const *code, size_t code_size);
+bool ch32_read_cpu_reg(uint16_t regno, uint32_t* value_out);
+bool ch32_run_debug_code(void const * code, size_t code_size);
 // If halted, overwrite a0 and a1 in order to write memory.
 bool ch32_write_memory_word(uint32_t address, uint32_t value);
 // If halted, overwrite a0 and a1 in order to read memory.
-bool ch32_read_memory_word(uint32_t address, uint32_t *value_out);
+bool ch32_read_memory_word(uint32_t address, uint32_t* value_out);
 // Unlock the FLASH if not already unlocked.
 bool ch32_unlock_flash();
 // Lock the FLASH if not already locked.
@@ -116,9 +114,9 @@ bool ch32_erase_flash();
 // If unlocked: Erase a 64-byte block of FLASH.
 bool ch32_erase_flash_block(uint32_t addr);
 // If unlocked: Write the FLASH.
-bool ch32_write_flash(uint32_t addr, void const *data, size_t data_len);
+bool ch32_write_flash(uint32_t addr, void const * data, size_t data_len);
 // If unlocked: Write a 64-byte block of FLASH.
-bool ch32_write_flash_block(uint32_t addr, void const *data);
+bool ch32_write_flash_block(uint32_t addr, void const * data);
 // If unlocked: Set the NRST mode on startup.
 // If true: use as reset pit, false: use as GPIO pin.
 bool ch32_set_nrst_mode(bool use_as_reset);

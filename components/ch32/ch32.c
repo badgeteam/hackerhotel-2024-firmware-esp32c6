@@ -5,7 +5,6 @@
  */
 
 #include "ch32.h"
-
 #include "driver/dedic_gpio.h"
 #include "driver/gpio.h"
 #include "esp_err.h"
@@ -16,13 +15,11 @@
 #include "freertos/task.h"
 #include "riscv/rv_utils.h"
 #include "soc/gpio_struct.h"
-
 #include <inttypes.h>
 #include <stdio.h>
-
 #include <string.h>
 
-static char const *TAG = "CH32";
+static char const * TAG = "CH32";
 
 // Initialization functions
 
@@ -230,7 +227,7 @@ bool ch32_write_cpu_reg(uint16_t regno, uint32_t value) {
     return true;
 }
 
-bool ch32_read_cpu_reg(uint16_t regno, uint32_t *value_out) {
+bool ch32_read_cpu_reg(uint16_t regno, uint32_t* value_out) {
     uint32_t command = regno         // Register to access.
                        | (0 << 16)   // Read access.
                        | (1 << 17)   // Perform transfer.
@@ -242,7 +239,7 @@ bool ch32_read_cpu_reg(uint16_t regno, uint32_t *value_out) {
     return true;
 }
 
-bool ch32_run_debug_code(void const *code, size_t code_size) {
+bool ch32_run_debug_code(void const * code, size_t code_size) {
     if (code_size > 8 * 4) {
         ESP_LOGE(TAG, "Debug program is too long (%zd/%zd)", code_size, (size_t)8 * 4);
         return false;
@@ -279,7 +276,7 @@ bool                 ch32_write_memory_word(uint32_t address, uint32_t value) {
 
 extern const uint8_t ch32_readmem_S_c[];
 extern const size_t  ch32_readmem_S_c_len;
-bool                 ch32_read_memory_word(uint32_t address, uint32_t *value_out) {
+bool                 ch32_read_memory_word(uint32_t address, uint32_t* value_out) {
     ch32_write_cpu_reg(CH32_REGS_GPR + 11, address);
     ch32_run_debug_code(ch32_readmem_S_c, ch32_readmem_S_c_len);
     ch32_read_cpu_reg(CH32_REGS_GPR + 10, value_out);
@@ -343,10 +340,10 @@ bool ch32_erase_flash_block(uint32_t addr) {
 }
 
 // If unlocked: Erase and write a range of FLASH memory.
-bool ch32_write_flash(uint32_t addr, void const *_data, size_t data_len) {
+bool ch32_write_flash(uint32_t addr, void const * _data, size_t data_len) {
     if (addr % 64)
         return false;
-    uint8_t const *data = _data;
+    uint8_t const * data = _data;
 
     for (size_t i = 0; i < data_len; i += 64) {
         if (!ch32_erase_flash_block(addr + i)) {
@@ -363,7 +360,7 @@ bool ch32_write_flash(uint32_t addr, void const *_data, size_t data_len) {
 }
 
 // If unlocked: Write a 64-byte block of FLASH.
-bool ch32_write_flash_block(uint32_t addr, void const *data) {
+bool ch32_write_flash_block(uint32_t addr, void const * data) {
     if (addr % 64)
         return false;
 

@@ -8,6 +8,9 @@
 #include "driver/sdmmc_defs.h"
 #include "driver/sdspi_host.h"
 #include "driver/spi_master.h"
+#include "esp_adc/adc_cali.h"
+#include "esp_adc/adc_cali_scheme.h"
+#include "esp_adc/adc_oneshot.h"
 #include "esp_log.h"
 #include "esp_vfs_fat.h"
 #include "freertos/FreeRTOS.h"
@@ -15,16 +18,13 @@
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
+#include "ledstrip.h"
 #include "managed_i2c.h"
 #include "nvs.h"
 #include "nvs_flash.h"
+#include "pax_codecs.h"
 #include "pax_gfx.h"
 #include "sdmmc_cmd.h"
-#include "ledstrip.h"
-#include "pax_codecs.h"
-#include "esp_adc/adc_oneshot.h"
-#include "esp_adc/adc_cali.h"
-#include "esp_adc/adc_cali_scheme.h"
 
 const uint8_t target_coprocessor_fw_version = 3;  // Must match the value in the ch32_firmware.bin resource
 
@@ -67,7 +67,6 @@ extern const uint8_t ch32_firmware_end[] asm("_binary_ch32_firmware_bin_end");
 
 extern const uint8_t hackerhotel_png_start[] asm("_binary_hackerhotel_png_start");
 extern const uint8_t hackerhotel_png_end[] asm("_binary_hackerhotel_png_end");
-
 
 esp_err_t bsp_display_error(const char* error) {
     ESP_LOGE(TAG, "%s", error);
@@ -168,8 +167,8 @@ static esp_err_t initialize_led() {
     if (res != ESP_OK) {
         return res;
     }
-    const uint8_t data[3] = {0,0,0};
-    res = ledstrip_send(data, 3);
+    const uint8_t data[3] = {0, 0, 0};
+    res                   = ledstrip_send(data, 3);
     return res;
 }
 
@@ -244,7 +243,7 @@ static esp_err_t initialize_gpio() {
 
     adc_oneshot_chan_cfg_t config = {
         .bitwidth = ADC_BITWIDTH_DEFAULT,
-        .atten = ATTEN_VBATT,
+        .atten    = ATTEN_VBATT,
     };
     res = adc_oneshot_config_channel(adc_vbatt_handle, ADC_VBATT, &config);
     if (res != ESP_OK) {
@@ -441,7 +440,7 @@ esp_err_t bsp_init() {
         return res;
     }
 
-    bsp_set_addressable_led(0xFF0000); // RED
+    bsp_set_addressable_led(0xFF0000);  // RED
 
     // Non volatile storage
     res = initialize_nvs();
@@ -485,7 +484,7 @@ esp_err_t bsp_init() {
         return res;
     }
 
-    bsp_set_addressable_led(0x0000FF); // BLUE
+    bsp_set_addressable_led(0x0000FF);  // BLUE
 
     // Signal that epaper display is ready to be used
     epaper_ready = true;
@@ -516,7 +515,7 @@ esp_err_t bsp_init() {
     // Signal that ch32v003 coprocessor is ready to be used
     ch32v003_ready = true;
 
-    bsp_set_addressable_led(0x00FF00); // GREEN
+    bsp_set_addressable_led(0x00FF00);  // GREEN
 
     // SD card
     res = initialize_sdcard();
@@ -525,7 +524,7 @@ esp_err_t bsp_init() {
         return res;
     }
 
-    bsp_set_addressable_led(0x000000); // OFF
+    bsp_set_addressable_led(0x000000);  // OFF
 
     // Signal that all hardware is ready to be used
     bsp_ready = true;
@@ -631,19 +630,17 @@ void bsp_flush_button_queue() {
 
 esp_err_t bsp_set_addressable_led(uint32_t color) {
     uint8_t data[3];
-    data[0] = (color >>  8) & 0xFF; // R
-    data[1] = (color >> 16) & 0xFF; // G
-    data[2] = (color >>  0) & 0xFF; // B
+    data[0] = (color >> 8) & 0xFF;   // R
+    data[1] = (color >> 16) & 0xFF;  // G
+    data[2] = (color >> 0) & 0xFF;   // B
     return ledstrip_send(data, 3);
 }
 
-esp_err_t bsp_set_addressable_leds(uint8_t data, int length) {
-    return ledstrip_send(data, length);
-}
+esp_err_t bsp_set_addressable_leds(uint8_t data, int length) { return ledstrip_send(data, length); }
 
 bool bsp_passed_factory_test() {
     nvs_handle_t nvs_handle;
-    esp_err_t res = nvs_open("system", NVS_READWRITE, &nvs_handle);
+    esp_err_t    res = nvs_open("system", NVS_READWRITE, &nvs_handle);
     if (res != ESP_OK) {
         return false;
     }
@@ -666,13 +663,13 @@ esp_err_t bsp_factory_test() {
 
     bsp_display_message("Factory test", "Testing...");
 
-    bsp_set_addressable_led(0xFF00FF); // Purple
+    bsp_set_addressable_led(0xFF00FF);  // Purple
 
     bsp_set_relay(true);
     vTaskDelay(pdMS_TO_TICKS(500));
     bsp_set_relay(false);
 
-    uint8_t   buttons[5];
+    uint8_t buttons[5];
     xSemaphoreTake(coprocessor_semaphore, portMAX_DELAY);
     res = i2c_read_reg(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_BTN, buttons, 5);
     if (res != ESP_OK) {
@@ -686,15 +683,43 @@ esp_err_t bsp_factory_test() {
     for (uint8_t index = 0; index < sizeof(buttons); index++) {
         if (buttons[index] != SWITCH_IDLE) {
             char message[40] = {0};
-            snprintf(message, 39, " --- FAILED ---\nButton %u stuck (%u)", index, buttons[index]);
+            snprintf(message, 39, " --- FAILED ---\nButton %u stuck (%u)", index + 1, buttons[index]);
             bsp_display_message("Factory test", message);
             return ESP_FAIL;
         }
     }
 
+    bool  charging = bsp_battery_charging();
+    float voltage  = bsp_battery_voltage();
+
+    if (charging) {
+        bsp_set_addressable_led(0xFF0000);  // Red
+        char message[128];
+        snprintf(message, sizeof(message) - 1,
+                 " --- FAILED ---\nBattery chip indicates charging\nwithout battery connected\nVoltage: %.2fv\n\nIGNORE? Press button 3", voltage);
+        bsp_display_message("Factory test", message);
+        uint8_t button = 0;
+        while (button != SWITCH_3) {
+            button = bsp_wait_for_button_number();
+        }
+    }
+
+    if (voltage >= 4.3) {
+        bsp_set_addressable_led(0xFF0000);  // Red
+        char message[128];
+        snprintf(message, sizeof(message) - 1, " --- FAILED ---\nBattery terminal voltage too high\nVoltage: %.2fv\n\nIGNORE? Press button 4", voltage);
+        bsp_display_message("Factory test", message);
+        uint8_t button = 0;
+        while (button != SWITCH_4) {
+            button = bsp_wait_for_button_number();
+        }
+    }
+
     bsp_set_leds(0xFFFFFFFF);
 
-    bsp_display_message("Factory test", "Check LEDs:\nAll diamond LEDs should be on\nAddressable LED should be pink\n\nOK?   Press button 5\nFAIL? Press button 1\nSKIP? Press button 2");
+    bsp_display_message(
+        "Factory test",
+        "Check LEDs:\nAll diamond LEDs should be on\nAddressable LED should be pink\n\nOK?   Press button 5\nFAIL? Press button 1\nSKIP? Press button 2");
 
     bsp_flush_button_queue();
     uint8_t button = bsp_wait_for_button_number();
@@ -707,6 +732,7 @@ esp_err_t bsp_factory_test() {
     }
 
     if (!pass) {
+        bsp_set_addressable_led(0xFF0000);  // Red
         bsp_display_message("Factory test", " --- FAILED ---\nLEDs not okay");
         return ESP_FAIL;
     }
@@ -716,12 +742,14 @@ esp_err_t bsp_factory_test() {
     nvs_handle_t nvs_handle;
     res = nvs_open("system", NVS_READWRITE, &nvs_handle);
     if (res != ESP_OK) {
+        bsp_set_addressable_led(0xFF0000);  // Red
         bsp_display_message("Factory test", " --- FAILED ---\nNVS open failed");
         return ESP_FAIL;
     }
     res = nvs_set_u8(nvs_handle, "factory_test", 1);
     nvs_close(nvs_handle);
     if (res != ESP_OK) {
+        bsp_set_addressable_led(0xFF0000);  // Red
         bsp_display_message("Factory test", " --- FAILED ---\nNVS store failed");
         return ESP_FAIL;
     }
@@ -732,7 +760,7 @@ esp_err_t bsp_factory_test() {
     bsp_display_flush();
     bsp_display_wait();
 
-    bsp_set_addressable_led(0x00FF00); // Green
+    bsp_set_addressable_led(0x00FF00);  // Green
 
     // Wait until power gets removed
     while (1) {
@@ -742,13 +770,11 @@ esp_err_t bsp_factory_test() {
     return ESP_OK;
 }
 
-esp_err_t bsp_set_relay(bool state) {
-    return gpio_set_level(GPIO_RELAY, state);
-}
+esp_err_t bsp_set_relay(bool state) { return gpio_set_level(GPIO_RELAY, state); }
 
 float bsp_battery_voltage() {
-    int adc_raw = 0;
-    esp_err_t res = adc_oneshot_read(adc_vbatt_handle, ADC_VBATT, &adc_raw);
+    int       adc_raw = 0;
+    esp_err_t res     = adc_oneshot_read(adc_vbatt_handle, ADC_VBATT, &adc_raw);
     if (res != ESP_OK) {
         return 0;
     }
@@ -756,6 +782,4 @@ float bsp_battery_voltage() {
     return (adc_raw * 8.3) / 4095.0;
 }
 
-bool bsp_battery_charging() {
-    return !gpio_get_level(GPIO_BATT_CHRG);
-}
+bool bsp_battery_charging() { return !gpio_get_level(GPIO_BATT_CHRG); }

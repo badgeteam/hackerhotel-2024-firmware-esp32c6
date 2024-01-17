@@ -23,14 +23,12 @@
 #include "soc/gpio_sig_map.h"
 #include "soc/gpio_struct.h"
 #include "soc/spi_reg.h"
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-
 #include <string.h>
 
-static char const *TAG = "epaper";
+static char const * TAG = "epaper";
 
 static uint8_t lut_buffer[HINK_LUT_SIZE];
 
@@ -338,7 +336,7 @@ bool hink_get_lut_populated() {
     return (value == 1);
 }
 
-esp_err_t hink_get_lut(uint8_t temperature, uint8_t *target_buffer) {
+esp_err_t hink_get_lut(uint8_t temperature, uint8_t* target_buffer) {
     nvs_handle_t nvs_handle;
 
     esp_err_t res = nvs_open("epaper", NVS_READWRITE, &nvs_handle);
@@ -372,7 +370,7 @@ esp_err_t hink_get_lut(uint8_t temperature, uint8_t *target_buffer) {
     return res;
 }
 
-esp_err_t hink_apply_lut(hink_t *epaper, epaper_lut_t lut_type) {
+esp_err_t hink_apply_lut(hink_t* epaper, epaper_lut_t lut_type) {
     esp_err_t res;
 
     res = hink_get_lut(20, lut_buffer);
@@ -380,7 +378,7 @@ esp_err_t hink_apply_lut(hink_t *epaper, epaper_lut_t lut_type) {
         return res;
     }
 
-    lut7_t *lut = (lut7_t *)lut_buffer;
+    lut7_t* lut = (lut7_t*)lut_buffer;
 
     switch (lut_type) {
         case lut_8s:
@@ -590,5 +588,5 @@ esp_err_t hink_apply_lut(hink_t *epaper, epaper_lut_t lut_type) {
                 break;
             }
     }
-    return hink_set_lut(epaper, (uint8_t *)lut);
+    return hink_set_lut(epaper, (uint8_t*)lut);
 }

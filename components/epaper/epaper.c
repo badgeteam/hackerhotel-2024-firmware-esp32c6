@@ -5,13 +5,10 @@
  */
 
 #include "include/epaper.h"
-
 #include "hextools.h"
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-
 #include <driver/gpio.h>
 #include <driver/spi_master.h>
 #include <esp_err.h>
@@ -27,14 +24,14 @@
 #include <soc/spi_reg.h>
 #include <string.h>
 
-static char const *TAG = "epaper";
+static char const * TAG = "epaper";
 
-static void IRAM_ATTR hink_spi_pre_transfer_callback(spi_transaction_t *t) {
-    hink_t *device = ((hink_t *)t->user);
+static void IRAM_ATTR hink_spi_pre_transfer_callback(spi_transaction_t* t) {
+    hink_t* device = ((hink_t*)t->user);
     gpio_set_level(device->pin_dcx, device->dc_level);
 }
 
-static esp_err_t hink_send(hink_t *device, uint8_t const *data, int const len, bool const dc_level) {
+static esp_err_t hink_send(hink_t* device, uint8_t const * data, int const len, bool const dc_level) {
     if (device->spi_device == NULL) {
         return ESP_FAIL;
     }
@@ -49,13 +46,13 @@ static esp_err_t hink_send(hink_t *device, uint8_t const *data, int const len, b
         .rxlength  = 0,
         .tx_buffer = data,
         .rx_buffer = NULL,
-        .user      = (void *)device,
+        .user      = (void*)device,
     };
 
     return spi_device_transmit(device->spi_device, &transaction);
 }
 
-static esp_err_t hink_write_init_data(hink_t *device, uint8_t const *data) {
+static esp_err_t hink_write_init_data(hink_t* device, uint8_t const * data) {
     esp_err_t res;
     uint8_t   cmd, len;
 
@@ -82,15 +79,15 @@ static esp_err_t hink_write_init_data(hink_t *device, uint8_t const *data) {
     return res;
 }
 
-static esp_err_t hink_send_command(hink_t *device, uint8_t const cmd) {
+static esp_err_t hink_send_command(hink_t* device, uint8_t const cmd) {
     return hink_send(device, &cmd, 1, false);
 }
 
-static esp_err_t hink_send_data(hink_t *device, uint8_t const *data, uint16_t const length) {
+static esp_err_t hink_send_data(hink_t* device, uint8_t const * data, uint16_t const length) {
     return hink_send(device, data, length, true);
 }
 
-static esp_err_t hink_send_u32(hink_t *device, uint32_t const data) {
+static esp_err_t hink_send_u32(hink_t* device, uint32_t const data) {
     uint8_t buffer[4];
     buffer[0] = (data >> 24) & 0xFF;
     buffer[1] = (data >> 16) & 0xFF;
@@ -99,18 +96,18 @@ static esp_err_t hink_send_u32(hink_t *device, uint32_t const data) {
     return hink_send(device, buffer, 4, true);
 }
 
-static esp_err_t hink_send_u16(hink_t *device, uint32_t const data) {
+static esp_err_t hink_send_u16(hink_t* device, uint32_t const data) {
     uint8_t buffer[2];
     buffer[0] = (data >> 8) & 0xFF;
     buffer[1] = data & 0xFF;
     return hink_send(device, buffer, 2, true);
 }
 
-static esp_err_t hink_send_u8(hink_t *device, uint8_t const data) {
+static esp_err_t hink_send_u8(hink_t* device, uint8_t const data) {
     return hink_send(device, &data, 1, true);
 }
 
-static esp_err_t hink_reset(hink_t *device) {
+static esp_err_t hink_reset(hink_t* device) {
     if (device->pin_reset >= 0) {
         ESP_LOGI(TAG, "epaper display reset");
         esp_err_t res = gpio_set_level(device->pin_reset, false);
@@ -128,25 +125,25 @@ static esp_err_t hink_reset(hink_t *device) {
     return ESP_OK;
 }
 
-bool hink_busy(hink_t *device) {
+bool hink_busy(hink_t* device) {
     return gpio_get_level(device->pin_busy);
 }
 
-esp_err_t hink_wait(hink_t *device) {
+esp_err_t hink_wait(hink_t* device) {
     while (hink_busy(device)) {
         vTaskDelay(10 / portTICK_PERIOD_MS);
     }
     return ESP_OK;
 }
 
-static esp_err_t hink_select(hink_t *device, bool const state) {
+static esp_err_t hink_select(hink_t* device, bool const state) {
     if (device->spi_device != NULL) {
         return ESP_FAIL;
     }
     return gpio_set_level(device->pin_cs, !state);
 }
 
-static esp_err_t hink_write_lut(hink_t *device) {
+static esp_err_t hink_write_lut(hink_t* device) {
     esp_err_t res;
     if (device->lut == NULL) {
         return ESP_FAIL;
@@ -178,7 +175,7 @@ static esp_err_t hink_write_lut(hink_t *device) {
     return res;
 }
 
-esp_err_t hink_set_gate_driving_voltage(hink_t *device, uint8_t value) {
+esp_err_t hink_set_gate_driving_voltage(hink_t* device, uint8_t value) {
     esp_err_t res;
     if (device->spi_device == NULL) {
         return ESP_FAIL;
@@ -194,7 +191,7 @@ esp_err_t hink_set_gate_driving_voltage(hink_t *device, uint8_t value) {
     return res;
 }
 
-esp_err_t hink_set_source_driving_voltage(hink_t *device, uint8_t vsh1, uint8_t vsh2, uint8_t vsl) {
+esp_err_t hink_set_source_driving_voltage(hink_t* device, uint8_t vsh1, uint8_t vsh2, uint8_t vsl) {
     esp_err_t res;
     if (device->spi_device == NULL) {
         return ESP_FAIL;
@@ -218,7 +215,7 @@ esp_err_t hink_set_source_driving_voltage(hink_t *device, uint8_t vsh1, uint8_t 
     return res;
 }
 
-esp_err_t hink_set_dummy_line_period(hink_t *device, uint8_t period) {
+esp_err_t hink_set_dummy_line_period(hink_t* device, uint8_t period) {
     esp_err_t res;
     if (device->spi_device == NULL) {
         return ESP_FAIL;
@@ -234,7 +231,7 @@ esp_err_t hink_set_dummy_line_period(hink_t *device, uint8_t period) {
     return res;
 }
 
-esp_err_t hink_set_gate_line_width(hink_t *device, uint8_t width) {
+esp_err_t hink_set_gate_line_width(hink_t* device, uint8_t width) {
     esp_err_t res;
     if (device->spi_device == NULL) {
         return ESP_FAIL;
@@ -250,7 +247,7 @@ esp_err_t hink_set_gate_line_width(hink_t *device, uint8_t width) {
     return res;
 }
 
-esp_err_t hink_init(hink_t *device) {
+esp_err_t hink_init(hink_t* device) {
     esp_err_t res;
 
     if (device->pin_dcx < 0)
@@ -311,7 +308,7 @@ esp_err_t hink_init(hink_t *device) {
     return ESP_OK;
 }
 
-esp_err_t hink_deinit(hink_t *device) {
+esp_err_t hink_deinit(hink_t* device) {
     esp_err_t res;
     if (device->spi_device != NULL) {
         res                = spi_bus_remove_device(device->spi_device);
@@ -334,7 +331,7 @@ esp_err_t hink_deinit(hink_t *device) {
     return res;
 }
 
-esp_err_t hink_write(hink_t *device, uint8_t const *buffer) {
+esp_err_t hink_write(hink_t* device, uint8_t const * buffer) {
     if (device->spi_device == NULL) {
         return ESP_FAIL;
     }
@@ -464,7 +461,7 @@ esp_err_t hink_write(hink_t *device, uint8_t const *buffer) {
     return ESP_OK;
 }
 
-esp_err_t hink_sleep(hink_t *device) {
+esp_err_t hink_sleep(hink_t* device) {
     esp_err_t res;
     ESP_LOGI(TAG, "Set display to deep sleep mode");
     res = hink_send_command(device, HINK_CMD_DEEP_SLEEP_MODE);
@@ -477,7 +474,7 @@ esp_err_t hink_sleep(hink_t *device) {
 
 // Set the active LUT.
 // Does not create a copy of the LUT.
-esp_err_t hink_set_lut(hink_t *device, uint8_t const *lut) {
+esp_err_t hink_set_lut(hink_t* device, uint8_t const * lut) {
     device->lut = lut;
     return ESP_OK;
 }

@@ -14,14 +14,14 @@
 // GPIO
 #define GPIO_SAO_IO1      0
 #define GPIO_SAO_IO2      1
-#define GPIO_BATT_ADC     2  // analog input
-#define GPIO_BATT_CHRG    3  // digital input, active low
-#define GPIO_CH32_INT     4  // digital input, active low
-#define GPIO_EPAPER_DCX   5  // digital output, epaper data/command pin
-#define GPIO_I2C_SDA      6  // I2C bus SDA
-#define GPIO_I2C_SCL      7  // I2C bus SCL
-#define GPIO_EPAPER_CS    8  // digital output, epaper cs pin, active low
-#define GPIO_UNUSED1      9  // On header
+#define GPIO_BATT_ADC     2   // analog input
+#define GPIO_BATT_CHRG    3   // digital input, active low
+#define GPIO_CH32_INT     4   // digital input, active low
+#define GPIO_EPAPER_DCX   5   // digital output, epaper data/command pin
+#define GPIO_I2C_SDA      6   // I2C bus SDA
+#define GPIO_I2C_SCL      7   // I2C bus SCL
+#define GPIO_EPAPER_CS    8   // digital output, epaper cs pin, active low
+#define GPIO_UNUSED1      9   // On header
 #define GPIO_EPAPER_BUSY  10  // digital input, epaper busy pin
 #define GPIO_USB_DN       12  // USB
 #define GPIO_USB_DP       13  // USB
@@ -36,7 +36,7 @@
 #define GPIO_UNUSED2      23  // On header
 
 // ADC
-#define ADC_VBATT ADC_CHANNEL_2
+#define ADC_VBATT   ADC_CHANNEL_2
 #define ATTEN_VBATT ADC_ATTEN_DB_12
 
 // I2C bus

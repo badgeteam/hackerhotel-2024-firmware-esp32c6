@@ -1,3 +1,4 @@
+#include "application_settings.h"
 #include "bsp.h"
 #include "driver/dedic_gpio.h"
 #include "driver/gpio.h"
@@ -22,10 +23,8 @@
 #include "sdkconfig.h"
 #include "sdmmc_cmd.h"
 #include "soc/gpio_struct.h"
-
 #include <inttypes.h>
 #include <stdio.h>
-
 #include <esp_err.h>
 #include <esp_log.h>
 #include <esp_system.h>
@@ -40,15 +39,13 @@
 #include <string.h>
 #include <time.h>
 
-#include "application_settings.h"
-
 #define MainMenuhub        0
 #define MainMenubattleship 1
 #define MainMenuBadgetag   2
 #define MainMenuSettings   3
 #define MainMenuCredits    4
 
-static char const *TAG = "app";
+static char const * TAG = "app";
 
 uint8_t buttons[5];
 int     delaySM                      = 1;
@@ -72,7 +69,7 @@ int DisplaySelectedLetter(int _selectedletter) {
 
 void DisplayDebugCenterlines(void)  // in black
 {
-    pax_buf_t *gfx = bsp_get_gfx_buffer();
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_draw_line(gfx, 1, 147, 0, 147, 127);
     pax_draw_line(gfx, 1, 148, 0, 148, 127);
     pax_draw_line(gfx, 1, 0, 63, 295, 63);
@@ -81,7 +78,7 @@ void DisplayDebugCenterlines(void)  // in black
 
 void DisplayDebugSwitchesBoxes(void)  // in black
 {
-    pax_buf_t *gfx = bsp_get_gfx_buffer();
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_outline_rect(gfx, 1, 0, 114, 52, 14);  // Switch 1
     // pax_draw_rect(gfx, 0, 1, 115, 50, 12);
 
@@ -100,13 +97,13 @@ void DisplayDebugSwitchesBoxes(void)  // in black
 
 void DisplaySwitchesBox(int _switch)  // in black
 {
-    pax_buf_t *gfx = bsp_get_gfx_buffer();
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_outline_rect(gfx, 1, 61 * _switch, 114, 50, 12);
 }
 
 // Position is the X coordinate of the center/left (since it's even) pixel
 void DisplayTelegraph(int _colour, int _position) {
-    pax_buf_t *gfx = bsp_get_gfx_buffer();
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
     if (_position < 36)
         _position = 36;  // prevent to draw outside of buffer
 
@@ -164,7 +161,7 @@ void testaa(void) {
 
 void framenametag(void) {
     bsp_apply_lut(lut_1s);
-    pax_buf_t *gfx = bsp_get_gfx_buffer();
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, 0);
     if (specialcharacterselect == 0 || specialcharacterselect == 1)
         pax_draw_text(gfx, 1, pax_font_saira_regular, 30, 80, 50, playername);
@@ -262,7 +259,7 @@ void app_thread_entry(void) {
     xTaskCreate(testaa, "testaa", 1024, NULL, 1, NULL);
 
     while (1) {
-        pax_buf_t *gfx  = bsp_get_gfx_buffer();
+        pax_buf_t* gfx  = bsp_get_gfx_buffer();
         bool       busy = hink_busy(bsp_get_epaper());
 
         // Quick hack to convert the new button queue back into the old polling method
