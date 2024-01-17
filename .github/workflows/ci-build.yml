@@ -30,7 +30,7 @@ jobs:
     - name: Build with ESP-IDF
       uses: espressif/esp-idf-ci-action@v1
       with:
-        esp_idf_version: v5.1.0
+        esp_idf_version: v5.1
         target: esp32
 
     - name: Upload build to artifact
