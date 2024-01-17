@@ -1,3 +1,4 @@
+#include "application_settings.h"
 #include "bsp.h"
 #include "driver/dedic_gpio.h"
 #include "driver/gpio.h"
@@ -39,8 +40,6 @@
 #include <sdmmc_cmd.h>
 #include <string.h>
 #include <time.h>
-
-#include "application_settings.h"
 
 #define MainMenuhub        0
 #define MainMenubattleship 1

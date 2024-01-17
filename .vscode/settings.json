@@ -1,5 +1,4 @@
 {
-    "editor.formatOnSave": true,
     "files.associations": {
         "freertos.h": "c",
         "*.tcc": "c",
@@ -55,9 +54,10 @@
         "task.h": "c",
         "wifi_ota.h": "c",
         "esp_flash_partitions.h": "c",
-        "pax_codecs.h": "c"
+        "pax_codecs.h": "c",
+        "queue.h": "c"
     },
-    "idf.port": "/dev/ttyACM0",
     "editor.formatOnType": false,
+    "editor.formatOnSave": true,
     "C_Cpp.clang_format_style": "file"
 }

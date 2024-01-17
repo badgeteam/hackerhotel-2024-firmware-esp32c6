@@ -20,7 +20,6 @@ IndentPPDirectives: None
 IndentExternBlock: AfterExternBlock
 IndentWrappedFunctionNames: true
 NamespaceIndentation: All
-AlignConsecutiveMacros: true
 
 AlignConsecutiveAssignments:
   # The column at which the = starts is constant among a block of definitions.
@@ -49,16 +48,6 @@ AllowShortFunctionsOnASingleLine: None
 AllowShortEnumsOnASingleLine: false
 KeepEmptyLinesAtTheStartOfBlocks: true
 BreakBeforeBraces: Custom
-BraceWrapping:
-  AfterClass: false
-  AfterControlStatement: false
-  AfterEnum: false
-  AfterFunction: false
-  AfterNamespace: false
-  AfterStruct: false
-  AfterUnion: false
-  BeforeCatch: false
-  BeforeElse: false
 ColumnLimit: 120
 
 # Includes
@@ -66,11 +55,13 @@ IncludeBlocks: Merge
 
 # configure braces and parens:
 BraceWrapping:
+  AfterClass: false
+  AfterNamespace: false
   AfterEnum: false # The { is on the same line as the struct, union or enum keyword.
   AfterStruct: false # The { is on the same line as the struct, union or enum keyword.
   AfterUnion: false # The { is on the same line as the struct, union or enum keyword.
   AfterFunction: false # The { is on the same line as the ).
-
+  BeforeCatch: false
   AfterCaseLabel: false
   AfterControlStatement: Never
 
@@ -84,7 +75,6 @@ BraceWrapping:
 AllowShortBlocksOnASingleLine: Never # never make single-line blocks
 AllowShortIfStatementsOnASingleLine: Never # never make single-line ifs
 AllowShortLoopsOnASingleLine: true # allow single-line loops
-AllowShortEnumsOnASingleLine: true # allow enum { FOO = 10 };
 
 # configure general code:
 
@@ -92,15 +82,12 @@ AllowShortEnumsOnASingleLine: true # allow enum { FOO = 10 };
 SpaceBeforeAssignmentOperators: true
 
 # configure pointers:
-
-PointerAlignment: Right # The * is at the function name and has at least one space from the type before it.
 QualifierAlignment: Right # The const is to the left of the type (unless the pointer is also a constant).
 SpaceAroundPointerQualifiers: After
 
 # include sorting:
 
 SortIncludes: CaseInsensitive
-IncludeBlocks: Regroup
 IncludeCategories:
   # External headers
   - Regex: '^\<('

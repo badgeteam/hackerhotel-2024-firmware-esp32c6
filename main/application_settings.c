@@ -1,17 +1,18 @@
-#include <inttypes.h>
-#include <stdio.h>
-
 #include "application_settings.h"
+
 #include "application.h"
+#include "bsp.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/portmacro.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
-#include "bsp.h"
 #include "wifi_ota.h"
 
+#include <inttypes.h>
+#include <stdio.h>
+
 void menu_settings() {
-    pax_buf_t *gfx  = bsp_get_gfx_buffer();
+    pax_buf_t    *gfx   = bsp_get_gfx_buffer();
     QueueHandle_t queue = bsp_get_button_queue();
 
     bool exit = false;
@@ -37,13 +38,13 @@ void menu_settings() {
                     if (buttonMessage.button == SWITCH_1) {
                         printf("Exiting settings!\n");
                         exit = true;
-                        break; // Exit button loop
+                        break;  // Exit button loop
                     } else if (buttonMessage.button == SWITCH_4) {
                         ota_update(true);
-                        break; // Exit button loop
+                        break;  // Exit button loop
                     } else if (buttonMessage.button == SWITCH_5) {
                         ota_update(false);
-                        break; // Exit button loop
+                        break;  // Exit button loop
                     }
                 }
             }
