@@ -39,6 +39,7 @@ sdk:
 	cd "$(IDF_PATH)"; git submodule update --init --recursive
 	cd "$(IDF_PATH)"; bash install.sh all
 	source "$(IDF_PATH)/export.sh" && idf.py --preview set-target esp32c6
+	git checkout sdkconfig
 
 .PHONY: menuconfig
 menuconfig:

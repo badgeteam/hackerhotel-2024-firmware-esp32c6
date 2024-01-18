@@ -12,6 +12,7 @@
 #include "esp_adc/adc_cali_scheme.h"
 #include "esp_adc/adc_oneshot.h"
 #include "esp_log.h"
+#include "esp_ota_ops.h"
 #include "esp_vfs_fat.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/portmacro.h"
@@ -756,6 +757,8 @@ esp_err_t bsp_factory_test() {
 
     pax_background(&pax_buffer, WHITE);
     pax_insert_png_buf(&pax_buffer, hackerhotel_png_start, hackerhotel_png_end - hackerhotel_png_start, 0, 0, 0);
+    esp_app_desc_t const* app_description = esp_ota_get_app_description();
+    pax_draw_text(&pax_buffer, RED, pax_font_sky_mono, 9, 0, 0, app_description->version);
     bsp_apply_lut(lut_full);
     bsp_display_flush();
     bsp_display_wait();
