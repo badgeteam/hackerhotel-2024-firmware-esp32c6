@@ -16,4 +16,5 @@ idf_component_register(
         "pax-gfx"
         "pax-codecs"
         "ledstrip"
+        "app_update"
 )

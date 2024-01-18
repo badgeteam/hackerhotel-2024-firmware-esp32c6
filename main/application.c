@@ -9,6 +9,7 @@
 #include "esp_system.h"
 #include "esp_timer.h"
 #include "esp_vfs_fat.h"
+#include "events.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/portmacro.h"
 #include "freertos/queue.h"
@@ -239,20 +240,8 @@ void reset_buttons() {
     }
 }
 
-void app_thread_entry(void) {
+void app_thread_entry(QueueHandle_t event_queue) {
     esp_err_t res;
-
-    QueueHandle_t queue = bsp_get_button_queue();
-
-    /*
-    // This example shows how to wait for button events
-    while(1) {
-        coprocessor_input_message_t buttonMessage = {0};
-        if (xQueueReceive(queue, &buttonMessage, portMAX_DELAY) == pdTRUE) {
-            printf("Button %u state changed to %u\n", buttonMessage.button, buttonMessage.state);
-        }
-    }
-    */
 
     bsp_apply_lut(lut_4s);
 
@@ -263,10 +252,26 @@ void app_thread_entry(void) {
         bool       busy = hink_busy(bsp_get_epaper());
 
         // Quick hack to convert the new button queue back into the old polling method
-        coprocessor_input_message_t buttonMessage = {0};
-        if (xQueueReceive(queue, &buttonMessage, 0) == pdTRUE) {
-            printf("Application: button %u state changed to %u\n", buttonMessage.button, buttonMessage.state);
-            buttons[buttonMessage.button] = buttonMessage.state;
+        event_t event;
+        if (xQueueReceive(event_queue, &event, 0) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button:
+                    printf(
+                        "Application: button %u state changed to %u\n",
+                        event.args_input_button.button,
+                        event.args_input_button.state
+                    );
+                    buttons[event.args_input_button.button] = event.args_input_button.state;
+                    break;
+                case event_input_keyboard:
+                    if (event.args_input_keyboard.action >= 0) {
+                        printf("Keyboard action: %u\n", event.args_input_keyboard.action);
+                    } else {
+                        printf("Keyboard input:  %c\n", event.args_input_keyboard.character);
+                    }
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
         }
 
         if (!busy) {
@@ -349,7 +354,6 @@ void app_thread_entry(void) {
                     }
                     break;
                 case MainMenuSettings:
-                    bsp_set_relay(false);
                     menu_settings();
                     MainMenustatemachine = MainMenuhub;
                     MainMenuchangeflag   = 1;
@@ -421,11 +425,6 @@ void app_thread_entry(void) {
 
         if (delayLEDflag == 0)
             res = TextInputTelegraph();
-
-        gpio_set_level(
-            GPIO_RELAY,
-            buttons[0] | buttons[1] | buttons[2] | buttons[3] | buttons[4]
-        );  // Turn on relay if one of the buttons is activated
     }
 }
 

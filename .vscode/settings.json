@@ -55,7 +55,13 @@
         "wifi_ota.h": "c",
         "esp_flash_partitions.h": "c",
         "pax_codecs.h": "c",
-        "queue.h": "c"
+        "queue.h": "c",
+        "adc_cali_scheme.h": "c",
+        "portmacro.h": "c",
+        "events.h": "c",
+        "any": "c",
+        "nvs_flash.h": "c",
+        "esp_system.h": "c"
     },
     "editor.formatOnType": false,
     "editor.formatOnSave": true,
