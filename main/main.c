@@ -41,7 +41,7 @@ static char const * TAG = "main";
 esp_err_t setup() {
     esp_app_desc_t const * app_description = esp_app_get_description();
     printf("BADGE.TEAM %s firmware v%s\r\n", app_description->project_name, app_description->version);
-
+    // banana
     esp_err_t res = bsp_init();
     if (res != ESP_OK) {
         ESP_LOGE(TAG, "Hardware initialization failed, bailing out.");
