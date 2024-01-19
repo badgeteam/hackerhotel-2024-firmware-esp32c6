@@ -18,6 +18,7 @@ typedef struct _keyboard_state {
     bool    enable_actions[NUM_SWITCHES];
     bool    enable_leds;
     bool    enable_relay;
+    bool    capslock;
 } keyboard_state_t;
 
 void keyboard_handle_input(keyboard_state_t* state, coprocessor_input_message_t* input, QueueHandle_t output_queue) {
@@ -32,15 +33,13 @@ void keyboard_handle_input(keyboard_state_t* state, coprocessor_input_message_t*
 
     uint32_t leds = 0;
 
-    bool caps = true;
-
     if (state->wait_for_release) {
         if (((!state->button_state_left) || (!state->button_state_right)) && (!state->button_state_press)) {
             if (state->enable_relay) {
                 bsp_set_relay(false);
             }
             state->wait_for_release = false;
-            vTaskDelay(pdMS_TO_TICKS(100));
+            vTaskDelay(pdMS_TO_TICKS(200));
         }
     } else if (state->button_state_press) {
         // Action
@@ -54,7 +53,7 @@ void keyboard_handle_input(keyboard_state_t* state, coprocessor_input_message_t*
                 case (1 << 4): action = SWITCH_5; break;
             }
 
-            if (action >= 0) {
+            if (action >= 0 && state->enable_actions[action]) {
                 if (state->enable_relay) {
                     bsp_set_relay(true);
                 }
@@ -67,7 +66,7 @@ void keyboard_handle_input(keyboard_state_t* state, coprocessor_input_message_t*
                 xQueueSend(output_queue, &event, 0);
             }
         }
-    } else if (state->button_state_left && state->button_state_right) {
+    } else if (state->button_state_left && state->button_state_right && state->enable_typing) {
         // Select character
         char character = '\0';
         if (state->button_state_left == 0x01 && state->button_state_right == 0x10) {
@@ -157,12 +156,14 @@ void keyboard_handle_input(keyboard_state_t* state, coprocessor_input_message_t*
         }
         // Z
 
-        if (character != '\0' && !caps) {
+        if (character != '\0' && !state->capslock) {
             character += 32;  // replace uppercase character with lowercase character
         }
 
-        if (character != 0) {
-            bsp_set_relay(true);
+        if (character != 0 && state->enable_typing) {
+            if (state->enable_relay) {
+                bsp_set_relay(true);
+            }
             state->wait_for_release = true;
             event_t event;
             event.type                          = event_input_keyboard;
@@ -209,6 +210,7 @@ void keyboard_handle_control(keyboard_state_t* state, event_control_keyboard_arg
     }
     state->enable_leds  = input->enable_leds;
     state->enable_relay = input->enable_relay;
+    state->capslock     = input->capslock;
 }
 
 void task_keyboard(void* pvParameters) {

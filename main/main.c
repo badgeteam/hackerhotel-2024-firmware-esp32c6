@@ -27,6 +27,7 @@
 #include "soc/gpio_struct.h"
 #include "task_button_input_handler.h"
 #include "task_keyboard.h"
+#include "textedit.h"
 #include "wifi_cert.h"
 #include "wifi_connection.h"
 #include "wifi_defaults.h"
@@ -101,15 +102,44 @@ void app_main(void) {
         return;
     }
 
-
+    /*nvs_handle_t nvs_handle;
+    nvs_open("system", NVS_READWRITE, &nvs_handle);
+    nvs_set_str(nvs_handle, "wifi.ssid", "ssid");
+    nvs_set_str(nvs_handle, "wifi.password", "password");
+    nvs_set_u8(nvs_handle, "wifi.authmode", WIFI_AUTH_WPA2_PSK);
+    nvs_close(nvs_handle);*/
 
     /*while (1) {
-        printf("PRINTF ");
-        fprintf(stdout, "FPRINTF ");
-        fflush(stdout);
-        fsync(fileno(stdout));
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        bool charging = bsp_battery_charging();
+        float voltage = bsp_battery_voltage();
+        char buffer[64];
+        sprintf(buffer, "Charging: %s, voltage %f\n", charging ? "yes" : "no", voltage);
+        printf(buffer);
+        bsp_display_message("Battery measurements", buffer);
+        vTaskDelay(pdMS_TO_TICKS(2000));
     }*/
+
+    char buffer[64] = "Hello";
+    bool editres    = textedit("Just a test", application_event_queue, keyboard_event_queue, buffer, sizeof(buffer));
+
+    ESP_LOGW(
+        TAG,
+        "Text edit test: user %s the prompt and the resulting string is '%s'",
+        editres ? "accepted" : "canceled",
+        buffer
+    );
+
+    // Configure keyboard
+    event_t kbsettings = {
+        .type                                 = event_control_keyboard,
+        .args_control_keyboard.enable_typing  = true,
+        .args_control_keyboard.enable_actions = {true, true, true, true, true},
+        .args_control_keyboard.enable_leds    = true,
+        .args_control_keyboard.enable_relay   = true,
+        .args_control_keyboard.capslock       = false,
+    };
+    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+
 
     // Test application
     /*while (1) {
@@ -131,33 +161,18 @@ void app_main(void) {
         }
     }*/
 
-    /*nvs_handle_t nvs_handle;
-    nvs_open("system", NVS_READWRITE, &nvs_handle);
-    nvs_set_str(nvs_handle, "wifi.ssid", "ssid");
-    nvs_set_str(nvs_handle, "wifi.password", "password");
-    nvs_set_u8(nvs_handle, "wifi.authmode", WIFI_AUTH_WPA2_PSK);
-    nvs_close(nvs_handle);*/
-
-    /*while (1) {
-        bool charging = bsp_battery_charging();
-        float voltage = bsp_battery_voltage();
-        char buffer[64];
-        sprintf(buffer, "Charging: %s, voltage %f\n", charging ? "yes" : "no", voltage);
-        printf(buffer);
-        bsp_display_message("Battery measurements", buffer);
-        vTaskDelay(pdMS_TO_TICKS(2000));
-    }*/
-
-    // Disable some of the keyboard functions for compatibility
-    event_t kbsettings = {
+    // Configure keyboard
+    event_t kbsettings2 = {
         .type                                 = event_control_keyboard,
         .args_control_keyboard.enable_typing  = true,
         .args_control_keyboard.enable_actions = {true, true, true, true, true},
-        .args_control_keyboard.enable_leds    = false,
+        .args_control_keyboard.enable_leds    = true,
         .args_control_keyboard.enable_relay   = true,
+        .args_control_keyboard.capslock       = false,
     };
-    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+    xQueueSend(keyboard_event_queue, &kbsettings2, portMAX_DELAY);
+
 
     // Start main app
-    app_thread_entry(application_event_queue);
+    // app_thread_entry(application_event_queue);
 }

@@ -18,6 +18,7 @@ typedef struct _event_control_keyboard_args {
     bool enable_actions[NUM_SWITCHES];
     bool enable_leds;
     bool enable_relay;
+    bool capslock;
 } event_control_keyboard_args_t;
 
 typedef struct _event {
