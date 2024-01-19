@@ -36,7 +36,9 @@ void keyboard_handle_input(keyboard_state_t* state, coprocessor_input_message_t*
 
     if (state->wait_for_release) {
         if (((!state->button_state_left) || (!state->button_state_right)) && (!state->button_state_press)) {
-            bsp_set_relay(false);
+            if (state->enable_relay) {
+                bsp_set_relay(false);
+            }
             state->wait_for_release = false;
             vTaskDelay(pdMS_TO_TICKS(100));
         }
@@ -53,7 +55,9 @@ void keyboard_handle_input(keyboard_state_t* state, coprocessor_input_message_t*
             }
 
             if (action >= 0) {
-                bsp_set_relay(true);
+                if (state->enable_relay) {
+                    bsp_set_relay(true);
+                }
                 state->wait_for_release = true;
 
                 event_t event;
