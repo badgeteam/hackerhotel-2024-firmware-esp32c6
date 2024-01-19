@@ -190,9 +190,11 @@ void keyboard_handle_input(keyboard_state_t* state, coprocessor_input_message_t*
             leds |= LED_A | LED_D | LED_G | LED_L;
     }
 
-    esp_err_t _res = bsp_set_leds(leds);
-    if (_res != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to set LEDs (%d)\n", _res);
+    if (state->enable_leds) {
+        esp_err_t _res = bsp_set_leds(leds);
+        if (_res != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to set LEDs (%d)\n", _res);
+        }
     }
 }
 
