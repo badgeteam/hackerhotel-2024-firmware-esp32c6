@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 static char const * TAG = "main";
 
@@ -99,6 +100,16 @@ void app_main(void) {
         bsp_display_error("Failed to start keyboard task");
         return;
     }
+
+
+
+    /*while (1) {
+        printf("PRINTF ");
+        fprintf(stdout, "FPRINTF ");
+        fflush(stdout);
+        fsync(fileno(stdout));
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }*/
 
     // Test application
     /*while (1) {
