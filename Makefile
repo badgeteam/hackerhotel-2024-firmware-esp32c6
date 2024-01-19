@@ -3,8 +3,8 @@ BUILDDIR ?= build
 
 IDF_PATH ?= $(shell pwd)/esp-idf
 IDF_TOOLS_PATH ?= $(shell pwd)/esp-idf-tools
-IDF_BRANCH ?= release/v5.1
-IDF_COMMIT ?= c57b352725ab36f007850d42578d2c7bc858ed47
+IDF_BRANCH ?= v5.1.2
+#IDF_COMMIT ?= c57b352725ab36f007850d42578d2c7bc858ed47
 IDF_EXPORT_QUIET ?= 1
 IDF_GITHUB_ASSETS ?= dl.espressif.com/github_assets
 
@@ -35,7 +35,7 @@ sdk:
 	rm -rf "$(IDF_PATH)"
 	rm -rf "$(IDF_TOOLS_PATH)"
 	git clone --recursive --branch "$(IDF_BRANCH)" https://github.com/espressif/esp-idf.git "$(IDF_PATH)"
-	cd "$(IDF_PATH)"; git checkout "$(IDF_COMMIT)"
+	#cd "$(IDF_PATH)"; git checkout "$(IDF_COMMIT)"
 	cd "$(IDF_PATH)"; git submodule update --init --recursive
 	cd "$(IDF_PATH)"; bash install.sh all
 	source "$(IDF_PATH)/export.sh" && idf.py --preview set-target esp32c6

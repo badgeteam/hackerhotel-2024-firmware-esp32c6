@@ -11,6 +11,8 @@
 
 #pragma once
 
+#include "hal/adc_types.h"
+
 // GPIO
 #define GPIO_SAO_IO1      0
 #define GPIO_SAO_IO2      1
@@ -37,7 +39,7 @@
 
 // ADC
 #define ADC_VBATT   ADC_CHANNEL_2
-#define ATTEN_VBATT ADC_ATTEN_DB_12
+#define ATTEN_VBATT ADC_ATTEN_DB_11
 
 // I2C bus
 #define I2C_BUS     0
