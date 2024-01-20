@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <esp_err.h>
 #include <esp_log.h>
+#include <esp_random.h>
 #include <esp_system.h>
 #include <esp_vfs_fat.h>
 #include <freertos/FreeRTOS.h>
@@ -40,11 +41,25 @@
 #include <string.h>
 #include <time.h>
 
-#define MainMenuhub        0
-#define MainMenubattleship 1
-#define MainMenuBadgetag   2
-#define MainMenuSettings   3
-#define MainMenuCredits    4
+#define MainMenuhub          0
+#define MainMenubattleship   1
+#define MainMenuBadgetag     2
+#define MainMenuSettings     3
+#define MainMenuCredits      4
+#define Gamescreenbattleship 5
+#define Gameendbattleship    6
+
+#define BSplaceboat  0
+#define playerturn   1
+#define opponentturn 2
+
+#define menuinputdelay 500
+
+#define water         0
+#define boat          1
+#define missedshot    2
+#define boathit       3
+#define boatdestroyed 4
 
 static char const * TAG = "app";
 
@@ -53,12 +68,26 @@ int     delaySM                      = 1;
 int     delaySMflag                  = 0;
 int     delayLED                     = 0;
 int     delayLEDflag                 = 0;
+int     delayMISC                    = 0;
+int     delayMISCflag                = 0;
 int     MainMenustatemachine         = MainMenuhub;
+int     Battleshipstatemachine       = BSplaceboat;
 int     MainMenuchangeflag           = 1;
 char    inputletter                  = NULL;
-char    playername[20]               = "";
+char    playername[30]               = "";
+char    opponent[30]                 = "";
 int     specialcharacterselect       = 0;
 char    specialcharactersicon[4][20] = {"A/!", "CAPS", "!?", "<|>"};
+int     BSplayerboard[20]            = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int     BSopponentboard[20]          = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int     telegraphX[20]               = {0, -8, 8, -16, 0, 16, -24, -8, 8, 24, -24, -8, 8, 24, -16, 0, 16, -8, 8, 0};
+int     telegraphY[20]   = {12, 27, 27, 42, 42, 42, 57, 57, 57, 57, 71, 71, 71, 71, 86, 86, 86, 101, 101, 116};
+int     BSvictory        = 0;
+int     AIshotsfired[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int     playerboats[6]   = {0, 0, 0, 0, 0, 0};
+int     opponentboats[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
+int     popboat          = 0;
+
 
 esp_err_t TextInputTelegraph(void);
 
@@ -102,6 +131,22 @@ void DisplaySwitchesBox(int _switch)  // in black
     pax_outline_rect(gfx, 1, 61 * _switch, 114, 50, 12);
 }
 
+void DisplayblockstatusBS(int _position, int _block, int _status) {
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    switch (_status) {
+        case water:
+            // do nothing
+            break;
+
+        case missedshot: pax_outline_circle(gfx, BLACK, _position + telegraphX[_block], telegraphY[_block], 3); break;
+        case boat: pax_draw_circle(gfx, BLACK, _position + telegraphX[_block], telegraphY[_block], 3); break;
+        case boathit: pax_draw_circle(gfx, RED, _position + telegraphX[_block], telegraphY[_block], 3); break;
+        case boatdestroyed: pax_draw_circle(gfx, RED, _position + telegraphX[_block], telegraphY[_block], 5); break;
+
+        default: break;
+    }
+}
+
 // Position is the X coordinate of the center/left (since it's even) pixel
 void DisplayTelegraph(int _colour, int _position) {
     pax_buf_t* gfx = bsp_get_gfx_buffer();
@@ -116,35 +161,38 @@ void DisplayTelegraph(int _colour, int _position) {
 
     // Letter circles
 
-    pax_outline_circle(gfx, _colour, _position, 12, 6);
+    for (int i = 0; i < 20; i++) pax_outline_circle(gfx, _colour, _position + telegraphX[i], telegraphY[i], 6);
 
-    pax_outline_circle(gfx, _colour, _position - 8, 27, 6);
-    pax_outline_circle(gfx, _colour, _position + 8, 27, 6);
+    // pax_outline_circle(gfx, _colour, _position, 12, 6);
 
-    pax_outline_circle(gfx, _colour, _position - 16, 42, 6);
-    pax_outline_circle(gfx, _colour, _position, 42, 6);
-    pax_outline_circle(gfx, _colour, _position + 16, 42, 6);
+    // pax_outline_circle(gfx, _colour, _position - 8, 27, 6);
+    // pax_outline_circle(gfx, _colour, _position + 8, 27, 6);
 
-    pax_outline_circle(gfx, _colour, _position - 24, 57, 6);
-    pax_outline_circle(gfx, _colour, _position - 8, 57, 6);
-    pax_outline_circle(gfx, _colour, _position + 8, 57, 6);
-    pax_outline_circle(gfx, _colour, _position + 24, 57, 6);
+    // pax_outline_circle(gfx, _colour, _position - 16, 42, 6);
+    // pax_outline_circle(gfx, _colour, _position, 42, 6);
+    // pax_outline_circle(gfx, _colour, _position + 16, 42, 6);
 
-    pax_outline_circle(gfx, _colour, _position - 24, 71, 6);
-    pax_outline_circle(gfx, _colour, _position - 8, 71, 6);
-    pax_outline_circle(gfx, _colour, _position + 8, 71, 6);
-    pax_outline_circle(gfx, _colour, _position + 24, 71, 6);
+    // pax_outline_circle(gfx, _colour, _position - 24, 57, 6);
+    // pax_outline_circle(gfx, _colour, _position - 8, 57, 6);
+    // pax_outline_circle(gfx, _colour, _position + 8, 57, 6);
+    // pax_outline_circle(gfx, _colour, _position + 24, 57, 6);
 
-    pax_outline_circle(gfx, _colour, _position - 16, 86, 6);
-    pax_outline_circle(gfx, _colour, _position, 86, 6);
-    pax_outline_circle(gfx, _colour, _position + 16, 86, 6);
+    // pax_outline_circle(gfx, _colour, _position - 24, 71, 6);
+    // pax_outline_circle(gfx, _colour, _position - 8, 71, 6);
+    // pax_outline_circle(gfx, _colour, _position + 8, 71, 6);
+    // pax_outline_circle(gfx, _colour, _position + 24, 71, 6);
 
-    pax_outline_circle(gfx, _colour, _position - 8, 101, 6);
-    pax_outline_circle(gfx, _colour, _position + 8, 101, 6);
+    // pax_outline_circle(gfx, _colour, _position - 16, 86, 6);
+    // pax_outline_circle(gfx, _colour, _position, 86, 6);
+    // pax_outline_circle(gfx, _colour, _position + 16, 86, 6);
 
-    pax_outline_circle(gfx, _colour, _position, 116, 6);
+    // pax_outline_circle(gfx, _colour, _position - 8, 101, 6);
+    // pax_outline_circle(gfx, _colour, _position + 8, 101, 6);
+
+    // pax_outline_circle(gfx, _colour, _position, 116, 6);
 }
 
+// bodge timer and debouncing, to fix
 void testaa(void) {
     while (1) {
         vTaskDelay(pdMS_TO_TICKS(10));
@@ -156,6 +204,10 @@ void testaa(void) {
         if (delayLEDflag == 1) {
             vTaskDelay(pdMS_TO_TICKS(delayLED));
             delayLEDflag = 0;
+        }
+        if (delayMISCflag == 1) {
+            vTaskDelay(pdMS_TO_TICKS(delayLED));
+            delayMISCflag = 0;
         }
     }
 }
@@ -230,6 +282,32 @@ void framenametag(void) {
     bsp_display_flush();
 }
 
+int SelectBlock(void) {
+    switch (inputletter) {
+        case 'a': return 0; break;
+        case 'b': return 1; break;
+        case 'd': return 2; break;
+        case 'e': return 3; break;
+        case 'f': return 4; break;
+        case 'g': return 5; break;
+        case 'h': return 6; break;
+        case 'i': return 7; break;
+        case 'k': return 8; break;
+        case 'l': return 9; break;
+        case 'm': return 10; break;
+        case 'n': return 11; break;
+        case 'o': return 12; break;
+        case 'p': return 13; break;
+        case 'r': return 14; break;
+        case 's': return 15; break;
+        case 't': return 16; break;
+        case 'v': return 17; break;
+        case 'w': return 18; break;
+        case 'y': return 19; break;
+        default: return 0; break;
+    }
+}
+
 unsigned long millis() {
     return (unsigned long)(esp_timer_get_time() / 1000ULL);
 }
@@ -246,6 +324,8 @@ void app_thread_entry(QueueHandle_t event_queue) {
     bsp_apply_lut(lut_4s);
 
     xTaskCreate(testaa, "testaa", 1024, NULL, 1, NULL);
+
+
 
     while (1) {
         pax_buf_t* gfx  = bsp_get_gfx_buffer();
@@ -299,6 +379,8 @@ void app_thread_entry(QueueHandle_t event_queue) {
                     if (buttons[SWITCH_5] == SWITCH_PRESS) {
                         MainMenustatemachine = MainMenubattleship;
                         MainMenuchangeflag   = 1;
+                        delaySMflag          = 1;
+                        delaySM              = menuinputdelay;
                         break;
                     }
                     if (MainMenuchangeflag == 1) {
@@ -400,11 +482,33 @@ void app_thread_entry(QueueHandle_t event_queue) {
                     break;
 
                 case MainMenubattleship:
-                    if (buttons[SWITCH_1] == SWITCH_PRESS) {
-                        MainMenustatemachine = MainMenuhub;
-                        MainMenuchangeflag   = 1;
-                        break;
+
+                    if (delaySMflag == 0) {
+                        if (buttons[SWITCH_1] == SWITCH_PRESS) {
+                            MainMenustatemachine = MainMenuhub;
+                            MainMenuchangeflag   = 1;
+                            delaySMflag          = 1;
+                            delaySM              = menuinputdelay;
+                            break;
+                        }
+
+                        if (buttons[SWITCH_3] == SWITCH_PRESS) {
+                            // Placeholder for multiplayer
+                            // MainMenustatemachine = MainMenuhub;
+                            // MainMenuchangeflag   = 1;
+                            // break;
+                        }
+
+                        if (buttons[SWITCH_5] == SWITCH_PRESS) {
+                            MainMenustatemachine = Gamescreenbattleship;
+                            strcpy(opponent, "AI");
+                            MainMenuchangeflag = 1;
+                            delaySMflag        = 1;
+                            delaySM            = menuinputdelay;
+                            break;
+                        }
                     }
+
                     if (MainMenuchangeflag == 1) {
                         bsp_apply_lut(lut_4s);
                         pax_background(gfx, 0);
@@ -416,6 +520,214 @@ void app_thread_entry(QueueHandle_t event_queue) {
                         DisplaySwitchesBox(SWITCH_5);
                         pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 247, 116, "Offline");
                         bsp_display_flush();
+                        MainMenuchangeflag = 0;
+                    }
+
+                case Gamescreenbattleship:
+
+
+                    if (buttons[SWITCH_1] == SWITCH_PRESS) {
+                        MainMenustatemachine = MainMenuhub;
+                        MainMenuchangeflag   = 1;
+                        break;
+                    }
+
+                    switch (Battleshipstatemachine) {
+                        case BSplaceboat:
+                            if (inputletter != NULL && delaySMflag == 0) {
+                                playerboats[popboat]         = SelectBlock();
+                                BSplayerboard[SelectBlock()] = boat;
+                                inputletter                  = NULL;
+                                popboat++;
+                                if (popboat > 5) {
+                                    Battleshipstatemachine = playerturn;
+                                    // generate AI boats
+                                    for (int i = 0; i < 6; i++) {
+                                        int _flagduplicate = 1;
+                                        int tempplacement  = 0;
+                                        while (_flagduplicate) {
+                                            _flagduplicate = 0;
+                                            tempplacement  = abs(esp_random()) % 20;
+                                            for (int y = 0; y < 6; y++) {
+                                                if (tempplacement == opponentboats[y])
+                                                    _flagduplicate = 1;
+                                            }
+                                        }
+                                        opponentboats[i]               = tempplacement;
+                                        BSopponentboard[tempplacement] = boat;
+                                    }
+                                }
+                                MainMenuchangeflag = 1;
+                                delaySMflag        = 1;
+                                delaySM            = menuinputdelay;
+                            }
+                            break;
+
+                        case playerturn:
+                            if (inputletter != NULL && delaySMflag == 0) {
+                                printf("player turn");
+                                if (BSopponentboard[SelectBlock()] == boat)
+                                    BSopponentboard[SelectBlock()] = boathit;
+                                else if (BSopponentboard[SelectBlock()] == water)
+                                    BSopponentboard[SelectBlock()] = missedshot;
+                                inputletter            = NULL;
+                                Battleshipstatemachine = opponentturn;
+                                MainMenuchangeflag     = 1;
+                                delaySMflag            = 1;
+                                delaySM                = menuinputdelay;
+
+                                // check for victory - ie no boats left
+                                BSvictory = 1;
+                                for (int i = 0; i < 20; i++) {
+                                    if (BSopponentboard[i] == boat)
+                                        BSvictory = 0;
+                                }
+                            }
+                            if (buttons[SWITCH_4] == SWITCH_PRESS && delaySMflag == 0) {
+                                Battleshipstatemachine = opponentturn;
+                                MainMenuchangeflag     = 1;
+                                delaySMflag            = 1;
+                                delaySM                = menuinputdelay;
+                            }
+                            break;
+
+                        case opponentturn:
+                            // if (inputletter != NULL && delaySMflag == 0) {
+                            printf("opponent turn");
+
+                            int shotturn = abs(esp_random()) % 20;
+                            while (AIshotsfired[shotturn] == 1) {
+                                shotturn = abs(esp_random()) % 20;
+                            }
+                            AIshotsfired[shotturn] = 1;
+                            if (BSplayerboard[shotturn] == boat)
+                                BSplayerboard[shotturn] = boathit;
+                            else if (BSplayerboard[shotturn] == water)
+                                BSplayerboard[shotturn] = missedshot;
+                            inputletter            = NULL;
+                            Battleshipstatemachine = playerturn;
+                            MainMenuchangeflag     = 1;
+                            delaySMflag            = 1;
+                            delaySM                = menuinputdelay;
+
+                            // check for victory - ie no boats left
+                            BSvictory = 2;
+                            for (int i = 0; i < 20; i++) {
+                                if (BSplayerboard[i] == boat)
+                                    BSvictory = 0;
+                            }
+                            // }
+                            if (buttons[SWITCH_4] == SWITCH_PRESS && delaySMflag == 0) {
+                                Battleshipstatemachine = playerturn;
+                                MainMenuchangeflag     = 1;
+                                delaySMflag            = 1;
+                                delaySM                = menuinputdelay;
+                            }
+                            break;
+                            // case opponentturn:
+                            //     if (buttons[SWITCH_4] == SWITCH_PRESS && delaySMflag == 0) {
+                            //         Battleshipstatemachine = playerturn;
+                            //         MainMenuchangeflag     = 1;
+                            //         delaySMflag            = 1;
+                            //         delaySM                = menuinputdelay;
+                            //         printf("opponent turn");
+                            //     }
+                            //     break;
+
+                        default: break;
+                    }
+
+                    if (BSplayerboard[playerboats[0]] == boathit)
+                        BSplayerboard[playerboats[0]] = boatdestroyed;
+                    if (BSplayerboard[playerboats[1]] == boathit && BSplayerboard[playerboats[2]] == boathit) {
+                        BSplayerboard[playerboats[1]] = boatdestroyed;
+                        BSplayerboard[playerboats[2]] = boatdestroyed;
+                    }
+                    if (BSplayerboard[playerboats[3]] == boathit && BSplayerboard[playerboats[4]] == boathit &&
+                        BSplayerboard[playerboats[5]] == boathit) {
+                        BSplayerboard[playerboats[3]] = boatdestroyed;
+                        BSplayerboard[playerboats[4]] = boatdestroyed;
+                        BSplayerboard[playerboats[5]] = boatdestroyed;
+                    }
+
+                    if (BSopponentboard[opponentboats[0]] == boathit)
+                        BSopponentboard[opponentboats[0]] = boatdestroyed;
+                    if (BSopponentboard[opponentboats[1]] == boathit && BSopponentboard[opponentboats[2]] == boathit) {
+                        BSopponentboard[opponentboats[1]] = boatdestroyed;
+                        BSopponentboard[opponentboats[2]] = boatdestroyed;
+                    }
+                    if (BSopponentboard[opponentboats[3]] == boathit && BSopponentboard[opponentboats[4]] == boathit &&
+                        BSopponentboard[opponentboats[5]] == boathit) {
+                        BSopponentboard[opponentboats[3]] = boatdestroyed;
+                        BSopponentboard[opponentboats[4]] = boatdestroyed;
+                        BSopponentboard[opponentboats[5]] = boatdestroyed;
+                    }
+
+
+
+                    if (buttons[SWITCH_2] == SWITCH_PRESS || BSvictory != 0) {
+                        MainMenustatemachine = Gameendbattleship;
+                        MainMenuchangeflag   = 1;
+                        delaySMflag          = 1;
+                        delaySM              = menuinputdelay;
+                        break;
+                    }
+
+                    if (MainMenuchangeflag == 1) {
+                        bsp_apply_lut(lut_4s);
+                        pax_background(gfx, 0);
+                        int telegraphpos = 100;
+                        DisplayTelegraph(BLACK, telegraphpos);
+                        DisplayTelegraph(BLACK, pax_buf_get_width(gfx) - telegraphpos);
+                        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 12, 8, 0, "Player");
+                        pax_draw_text(gfx, BLACK, pax_font_sky_mono, 12, 275, 0, opponent);
+                        for (int i = 0; i < 20; i++) {
+                            DisplayblockstatusBS(telegraphpos, i, BSplayerboard[i]);
+                            if (BSopponentboard[i] != boat)
+                                DisplayblockstatusBS(pax_buf_get_width(gfx) - telegraphpos, i, BSopponentboard[i]);
+                        }
+                        // pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 8, 116, "Exit");
+                        DisplaySwitchesBox(SWITCH_1);
+                        pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 8, 116, "Exit");
+                        // DisplaySwitchesBox(SWITCH_3);
+                        // pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 125, 116, "Online");
+                        // DisplaySwitchesBox(SWITCH_5);
+                        // pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 247, 116, "Offline");
+                        bsp_display_flush();
+                        MainMenuchangeflag = 0;
+                    }
+
+                case Gameendbattleship:
+
+                    if (buttons[SWITCH_1] == SWITCH_PRESS) {
+                        MainMenustatemachine = MainMenuhub;
+                        MainMenuchangeflag   = 1;
+                        break;
+                    }
+
+                    if (MainMenuchangeflag == 1) {
+                        // reset game
+                        for (int i = 0; i < 20; i++) {
+                            AIshotsfired[i]    = 0;
+                            BSopponentboard[i] = 0;
+                            BSplayerboard[i]   = 0;
+                        }
+                        for (int i = 0; i < 20; i++) {
+                            playerboats[i]   = 0;
+                            opponentboats[i] = NULL;
+                        }
+
+
+                        bsp_apply_lut(lut_4s);
+                        pax_background(gfx, 0);
+                        if (BSvictory == 1)
+                            pax_draw_text(gfx, 1, pax_font_marker, 36, 80, 50, "Victory");
+                        if (BSvictory == 2)
+                            pax_draw_text(gfx, 1, pax_font_marker, 36, 80, 50, "Defeat");
+                        DisplaySwitchesBox(SWITCH_1);
+                        pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 8, 116, "Exit");
+                        bsp_display_flush();
+                        BSvictory          = 0;
                         MainMenuchangeflag = 0;
                     }
 
