@@ -25,7 +25,10 @@ jobs:
       run: make prepare
 
     - name: build firmware
-      run: make build
+      run: >
+        export PROJECT_VER=${{ github.event.release.tag_name }} &&
+        echo ${PROJECT_VER} &&
+        make build
 
     - name: Upload release assets
       env:
