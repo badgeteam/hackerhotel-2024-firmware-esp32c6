@@ -70,8 +70,8 @@ int     delayLED                     = 0;
 int     delayLEDflag                 = 0;
 int     delayMISC                    = 0;
 int     delayMISCflag                = 0;
-int     MainMenustatemachine         = Gamescreenbattleship;
-int     Battleshipstatemachine       = playerturn;
+int     MainMenustatemachine         = MainMenuhub;
+int     Battleshipstatemachine       = BSplaceboat;
 int     MainMenuchangeflag           = 1;
 char    inputletter                  = NULL;
 char    playername[30]               = "";
@@ -84,8 +84,9 @@ int     telegraphX[20]               = {0, -8, 8, -16, 0, 16, -24, -8, 8, 24, -2
 int     telegraphY[20]   = {12, 27, 27, 42, 42, 42, 57, 57, 57, 57, 71, 71, 71, 71, 86, 86, 86, 101, 101, 116};
 int     BSvictory        = 0;
 int     AIshotsfired[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-int     playerboats[6]   = {18, 0, 1, 7, 8, 9};
-int     opponentboats[6] = {18, 0, 1, 7, 8, 9};
+int     playerboats[6]   = {0, 0, 0, 0, 0, 0};
+int     opponentboats[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
+int     popboat          = 0;
 
 
 esp_err_t TextInputTelegraph(void);
@@ -324,25 +325,7 @@ void app_thread_entry(QueueHandle_t event_queue) {
 
     xTaskCreate(testaa, "testaa", 1024, NULL, 1, NULL);
 
-    // debug to remove
-    // BSopponentboard[1]  = boat;
-    // BSopponentboard[3]  = boat;
-    // BSopponentboard[5]  = boat;
-    // BSopponentboard[13] = water;
-    // BSopponentboard[15] = boatdestroyed;
-    // BSopponentboard[18] = boathit;
 
-    // BSplayerboard[1]  = boat;
-    // BSplayerboard[3]  = boat;
-    // BSplayerboard[5]  = boat;
-    // BSplayerboard[13] = water;
-    // BSplayerboard[15] = boatdestroyed;
-    // BSplayerboard[18] = boathit;
-
-    for (int i = 0; i < 6; i++) {
-        BSplayerboard[playerboats[i]]     = boat;
-        BSopponentboard[opponentboats[i]] = boat;
-    }
 
     while (1) {
         pax_buf_t* gfx  = bsp_get_gfx_buffer();
@@ -541,26 +524,7 @@ void app_thread_entry(QueueHandle_t event_queue) {
                     }
 
                 case Gamescreenbattleship:
-                    //  debug to remove
-                    strcpy(opponent, "AI");
-                    // BSopponentboard[1]  = missedshot;
-                    // BSopponentboard[3]  = boatdestroyed;
-                    // BSopponentboard[5]  = boathit;
-                    // BSopponentboard[13] = water;
-                    // BSopponentboard[18] = missedshot;
-                    // BSopponentboard[1]  = boat;
-                    // BSopponentboard[3]  = boat;
-                    // BSopponentboard[5]  = boat;
-                    // BSopponentboard[13] = water;
-                    // BSopponentboard[15] = boatdestroyed;
-                    // BSopponentboard[18] = boathit;
 
-                    // BSplayerboard[1]  = boat;
-                    // BSplayerboard[3]  = boat;
-                    // BSplayerboard[5]  = boat;
-                    // BSplayerboard[13] = water;
-                    // BSplayerboard[15] = boatdestroyed;
-                    // BSplayerboard[18] = boathit;
 
                     if (buttons[SWITCH_1] == SWITCH_PRESS) {
                         MainMenustatemachine = MainMenuhub;
@@ -570,7 +534,33 @@ void app_thread_entry(QueueHandle_t event_queue) {
 
                     switch (Battleshipstatemachine) {
                         case BSplaceboat:
-                            /* code */
+                            if (inputletter != NULL && delaySMflag == 0) {
+                                playerboats[popboat]         = SelectBlock();
+                                BSplayerboard[SelectBlock()] = boat;
+                                inputletter                  = NULL;
+                                popboat++;
+                                if (popboat > 5) {
+                                    Battleshipstatemachine = playerturn;
+                                    // generate AI boats
+                                    for (int i = 0; i < 6; i++) {
+                                        int _flagduplicate = 1;
+                                        int tempplacement  = 0;
+                                        while (_flagduplicate) {
+                                            _flagduplicate = 0;
+                                            tempplacement  = abs(esp_random()) % 20;
+                                            for (int y = 0; y < 6; y++) {
+                                                if (tempplacement == opponentboats[y])
+                                                    _flagduplicate = 1;
+                                            }
+                                        }
+                                        opponentboats[i]               = tempplacement;
+                                        BSopponentboard[tempplacement] = boat;
+                                    }
+                                }
+                                MainMenuchangeflag = 1;
+                                delaySMflag        = 1;
+                                delaySM            = menuinputdelay;
+                            }
                             break;
 
                         case playerturn:
@@ -722,6 +712,11 @@ void app_thread_entry(QueueHandle_t event_queue) {
                             BSopponentboard[i] = 0;
                             BSplayerboard[i]   = 0;
                         }
+                        for (int i = 0; i < 20; i++) {
+                            playerboats[i]   = 0;
+                            opponentboats[i] = NULL;
+                        }
+
 
                         bsp_apply_lut(lut_4s);
                         pax_background(gfx, 0);
@@ -732,6 +727,7 @@ void app_thread_entry(QueueHandle_t event_queue) {
                         DisplaySwitchesBox(SWITCH_1);
                         pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 8, 116, "Exit");
                         bsp_display_flush();
+                        BSvictory          = 0;
                         MainMenuchangeflag = 0;
                     }
 
