@@ -748,6 +748,7 @@ esp_err_t bsp_factory_test() {
         return ESP_FAIL;
     }
     res = nvs_set_u8(nvs_handle, "factory_test", 1);
+    nvs_commit(nvs_handle);
     nvs_close(nvs_handle);
     if (res != ESP_OK) {
         bsp_set_addressable_led(0xFF0000);  // Red

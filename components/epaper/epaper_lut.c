@@ -304,6 +304,7 @@ esp_err_t hink_read_lut(int pin_data, int pin_clk, int pin_cs, int pin_dc, int p
     }
 
     res = nvs_set_u8(nvs_handle, "lut_populated", 1);
+    nvs_commit(nvs_handle);
     nvs_close(nvs_handle);
     return res;
 }
@@ -317,6 +318,7 @@ esp_err_t hink_reset_lut() {
     }
 
     res = nvs_set_u8(nvs_handle, "lut_populated", 0);
+    nvs_commit(nvs_handle);
     nvs_close(nvs_handle);
     return res;
 }
