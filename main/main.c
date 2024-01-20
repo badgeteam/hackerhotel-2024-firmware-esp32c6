@@ -22,11 +22,18 @@
 #include "pax_gfx.h"
 #include "resources.h"
 #include "riscv/rv_utils.h"
+#include "screen_battleship.h"
+#include "screen_home.h"
+#include "screen_mascots.h"
+#include "screen_settings.h"
+#include "screen_shades.h"
+#include "screens.h"
 #include "sdkconfig.h"
 #include "sdmmc_cmd.h"
 #include "soc/gpio_struct.h"
 #include "task_button_input_handler.h"
 #include "task_keyboard.h"
+#include "textedit.h"
 #include "wifi_cert.h"
 #include "wifi_connection.h"
 #include "wifi_defaults.h"
@@ -35,8 +42,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 static char const * TAG = "main";
+
+static QueueHandle_t keyboard_event_queue    = NULL;
+static QueueHandle_t application_event_queue = NULL;
+static QueueHandle_t input_handler_queues[3] = {NULL};
 
 esp_err_t setup() {
     esp_app_desc_t const * app_description = esp_app_get_description();
@@ -79,11 +91,10 @@ void app_main(void) {
     }
 
     // Create event queues
-    QueueHandle_t keyboard_event_queue    = xQueueCreate(8, sizeof(event_t));
-    QueueHandle_t application_event_queue = xQueueCreate(8, sizeof(event_t));
+    keyboard_event_queue    = xQueueCreate(8, sizeof(event_t));
+    application_event_queue = xQueueCreate(8, sizeof(event_t));
 
     // Set up the input handler
-    QueueHandle_t input_handler_queues[3];
     input_handler_queues[0] = keyboard_event_queue;
     input_handler_queues[1] = application_event_queue;
     input_handler_queues[2] = NULL;  // Terminate the list
@@ -99,6 +110,81 @@ void app_main(void) {
         bsp_display_error("Failed to start keyboard task");
         return;
     }
+
+    // Main application
+    screen_t current_screen = screen_mascots;
+    while (1) {
+        switch (current_screen) {
+            case screen_mascots:
+                {
+                    current_screen = screen_mascots_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_home:
+                {
+                    current_screen = screen_home_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_settings:
+                {
+                    current_screen = screen_settings_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_battleship:
+                {
+                    current_screen = screen_battleship_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_shades:
+                {
+                    current_screen = screen_shades_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            default: current_screen = screen_home;
+        }
+    }
+
+    /*nvs_handle_t nvs_handle;
+    nvs_open("system", NVS_READWRITE, &nvs_handle);
+    nvs_set_str(nvs_handle, "wifi.ssid", "ssid");
+    nvs_set_str(nvs_handle, "wifi.password", "password");
+    nvs_set_u8(nvs_handle, "wifi.authmode", WIFI_AUTH_WPA2_PSK);
+    nvs_close(nvs_handle);*/
+
+    /*while (1) {
+        bool charging = bsp_battery_charging();
+        float voltage = bsp_battery_voltage();
+        char buffer[64];
+        sprintf(buffer, "Charging: %s, voltage %f\n", charging ? "yes" : "no", voltage);
+        printf(buffer);
+        bsp_display_message("Battery measurements", buffer);
+        vTaskDelay(pdMS_TO_TICKS(2000));
+    }*/
+
+    char buffer[64] = {0};
+    bool editres =
+        textedit("What is your name?", application_event_queue, keyboard_event_queue, buffer, sizeof(buffer));
+
+    ESP_LOGW(
+        TAG,
+        "Text edit test: user %s the prompt and the resulting string is '%s'",
+        editres ? "accepted" : "canceled",
+        buffer
+    );
+
+    // return;
+
+    // Configure keyboard
+    event_t kbsettings = {
+        .type                                 = event_control_keyboard,
+        .args_control_keyboard.enable_typing  = true,
+        .args_control_keyboard.enable_actions = {true, true, true, true, true},
+        .args_control_keyboard.enable_leds    = true,
+        .args_control_keyboard.enable_relay   = true,
+        .args_control_keyboard.capslock       = false,
+    };
+    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+
 
     // Test application
     /*while (1) {
@@ -120,33 +206,18 @@ void app_main(void) {
         }
     }*/
 
-    /*nvs_handle_t nvs_handle;
-    nvs_open("system", NVS_READWRITE, &nvs_handle);
-    nvs_set_str(nvs_handle, "wifi.ssid", "ssid");
-    nvs_set_str(nvs_handle, "wifi.password", "password");
-    nvs_set_u8(nvs_handle, "wifi.authmode", WIFI_AUTH_WPA2_PSK);
-    nvs_close(nvs_handle);*/
-
-    /*while (1) {
-        bool charging = bsp_battery_charging();
-        float voltage = bsp_battery_voltage();
-        char buffer[64];
-        sprintf(buffer, "Charging: %s, voltage %f\n", charging ? "yes" : "no", voltage);
-        printf(buffer);
-        bsp_display_message("Battery measurements", buffer);
-        vTaskDelay(pdMS_TO_TICKS(2000));
-    }*/
-
-    // Disable some of the keyboard functions for compatibility
-    event_t kbsettings = {
+    // Configure keyboard
+    event_t kbsettings2 = {
         .type                                 = event_control_keyboard,
         .args_control_keyboard.enable_typing  = true,
         .args_control_keyboard.enable_actions = {true, true, true, true, true},
-        .args_control_keyboard.enable_leds    = false,
+        .args_control_keyboard.enable_leds    = true,
         .args_control_keyboard.enable_relay   = true,
+        .args_control_keyboard.capslock       = false,
     };
-    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+    xQueueSend(keyboard_event_queue, &kbsettings2, portMAX_DELAY);
+
 
     // Start main app
-    app_thread_entry(application_event_queue);
+    // app_thread_entry(application_event_queue);
 }

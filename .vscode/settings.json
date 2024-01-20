@@ -61,7 +61,13 @@
         "events.h": "c",
         "any": "c",
         "nvs_flash.h": "c",
-        "esp_system.h": "c"
+        "esp_system.h": "c",
+        "inttypes.h": "c",
+        "typeindex": "c",
+        "typeinfo": "c",
+        "textedit.h": "c",
+        "epaper.h": "c",
+        "esp_wifi_types.h": "c"
     },
     "editor.formatOnType": false,
     "editor.formatOnSave": true,
