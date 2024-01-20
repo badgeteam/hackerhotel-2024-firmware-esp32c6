@@ -273,7 +273,7 @@ static void draw_wifi_defaults() {
         18,
         5,
         5,
-        "WiFi:\nButton 1: Cancel\nButton 4: Default settings\nButton 5: Manual WPA2-PSK configuration"
+        "WiFi:\nButton 1&2: Return\nButton 3: Manual enterprise\nButton 4: Default settings\nButton 5: Manual WPA2-PSK configuration"
     );
     bsp_display_flush();
 }
@@ -291,7 +291,7 @@ int wifi_defaults(QueueHandle_t application_event_queue, QueueHandle_t keyboard_
                     switch (event.args_input_keyboard.action) {
                         case SWITCH_1: return 0; break;
                         case SWITCH_2: return 0; break;
-                        case SWITCH_3: return 0; break;
+                        case SWITCH_3: return 3; break;
                         case SWITCH_4: return 1; break;
                         case SWITCH_5: return 2; break;
                         default: break;
@@ -308,39 +308,72 @@ int wifi_defaults(QueueHandle_t application_event_queue, QueueHandle_t keyboard_
 static void edit_wifi(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     char             ssid[33]     = {0};
     char             password[65] = {0};
-    wifi_auth_mode_t network_type = WIFI_AUTH_WPA2_PSK;
+    char             username[65] = {0};
+    char             identity[65] = {0};
+    bool res;
 
     int d = wifi_defaults(application_event_queue, keyboard_event_queue);
 
-    if (d == 0) {
-        return;
+    switch (d) {
+        case 1: // set hackerhotel defaults
+            wifi_set_defaults();
+            return;
+        case 2: // set custom WPA2_PSK network
+            nvs_get_str_wrapped("system", "wifi.ssid", ssid, sizeof(ssid));
+            nvs_get_str_wrapped("system", "wifi.password", password, sizeof(password));
+
+            res = textedit("Enter SSID", application_event_queue, keyboard_event_queue, ssid, sizeof(ssid));
+            if (!res) {
+                return;
+            }
+
+            res = textedit("Enter password", application_event_queue, keyboard_event_queue, password, sizeof(password));
+            if (!res) {
+                return;
+            }
+
+            nvs_set_str_wrapped("system", "wifi.ssid", ssid);
+            nvs_set_str_wrapped("system", "wifi.password", password);
+            nvs_set_u8_wrapped("system", "wifi.authmode", WIFI_AUTH_WPA2_PSK);
+
+            configure_keyboard(keyboard_event_queue);
+        case 3:
+            nvs_get_str_wrapped("system", "wifi.ssid", ssid, sizeof(ssid));
+            nvs_get_str_wrapped("system", "wifi.password", password, sizeof(password));
+            nvs_get_str_wrapped("system", "wifi.username", username, sizeof(username));
+            nvs_get_str_wrapped("system", "wifi.anon_ident", identity, sizeof(identity));
+
+            res = textedit("Enter SSID", application_event_queue, keyboard_event_queue, ssid, sizeof(ssid));
+            if (!res) {
+                return;
+            }
+
+            res = textedit("Enter password", application_event_queue, keyboard_event_queue, password, sizeof(password));
+            if (!res) {
+                return;
+            }
+
+            res = textedit("Enter username", application_event_queue, keyboard_event_queue, username, sizeof(username));
+            if (!res) {
+                return;
+            }
+
+            res = textedit("Enter identity", application_event_queue, keyboard_event_queue, identity, sizeof(identity));
+            if (!res) {
+                return;
+            }
+
+            nvs_set_u8_wrapped("system", "wifi.authmode", WIFI_AUTH_ENTERPRISE);
+            nvs_set_u8_wrapped("system", "wifi.phase2", ESP_EAP_TTLS_PHASE2_PAP);
+            nvs_set_str_wrapped("system", "wifi.ssid", ssid);
+            nvs_set_str_wrapped("system", "wifi.username", username);
+            nvs_set_str_wrapped("system", "wifi.anon_ident", identity);
+            nvs_set_str_wrapped("system", "wifi.password", password);
+
+            configure_keyboard(keyboard_event_queue);
+        default: // cancel
+            return;
     }
-
-    if (d == 1) {
-        wifi_set_defaults();
-        return;
-    }
-
-    nvs_get_str_wrapped("system", "wifi.ssid", ssid, sizeof(ssid));
-    nvs_get_str_wrapped("system", "wifi.password", password, sizeof(password));
-
-    bool res;
-
-    res = textedit("Enter SSID", application_event_queue, keyboard_event_queue, ssid, sizeof(ssid));
-    if (!res) {
-        return;
-    }
-
-    res = textedit("Enter password", application_event_queue, keyboard_event_queue, password, sizeof(password));
-    if (!res) {
-        return;
-    }
-
-    nvs_set_str_wrapped("system", "wifi.ssid", ssid);
-    nvs_set_str_wrapped("system", "wifi.password", password);
-    nvs_set_u8_wrapped("system", "wifi.authmode", WIFI_AUTH_WPA2_PSK);
-
-    configure_keyboard(keyboard_event_queue);
 }
 
 static void draw() {
