@@ -1,4 +1,5 @@
 #include "screen_battleship.h"
+#include "application.h"
 #include "bsp.h"
 #include "esp_err.h"
 #include "esp_log.h"
@@ -22,7 +23,7 @@ screen_t screen_battleship_entry(QueueHandle_t application_event_queue, QueueHan
     event_t kbsettings = {
         .type                                     = event_control_keyboard,
         .args_control_keyboard.enable_typing      = false,
-        .args_control_keyboard.enable_actions     = {true, false, false, false, false},
+        .args_control_keyboard.enable_actions     = {false, false, false, false, false},
         .args_control_keyboard.enable_leds        = true,
         .args_control_keyboard.enable_relay       = true,
         kbsettings.args_control_keyboard.capslock = false,
@@ -35,7 +36,7 @@ screen_t screen_battleship_entry(QueueHandle_t application_event_queue, QueueHan
     pax_draw_text(gfx, RED, font, 18, 5, 5, "BATTLESHIP");
     bsp_display_flush();
 
-    while (1) {
+    /*while (1) {
         event_t event = {0};
         if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
             switch (event.type) {
@@ -53,5 +54,13 @@ screen_t screen_battleship_entry(QueueHandle_t application_event_queue, QueueHan
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
             }
         }
-    }
+    }*/
+
+
+
+    app_thread_entry(application_event_queue);
+
+    bsp_apply_lut(lut_1s);
+
+    return screen_home;
 }
