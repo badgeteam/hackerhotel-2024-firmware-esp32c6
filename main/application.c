@@ -70,7 +70,7 @@ int     delayLED                     = 0;
 int     delayLEDflag                 = 0;
 int     delayMISC                    = 0;
 int     delayMISCflag                = 0;
-int     MainMenustatemachine         = MainMenuhub;
+int     MainMenustatemachine         = MainMenubattleship;
 int     Battleshipstatemachine       = BSplaceboat;
 int     MainMenuchangeflag           = 1;
 char    inputletter                  = NULL;
@@ -318,13 +318,19 @@ void reset_buttons() {
     }
 }
 
+TaskHandle_t testaa_handle = NULL;
+
 void app_thread_entry(QueueHandle_t event_queue) {
     esp_err_t res;
 
+    MainMenustatemachine = MainMenubattleship;
+    reset_buttons();
+
     bsp_apply_lut(lut_4s);
 
-    xTaskCreate(testaa, "testaa", 1024, NULL, 1, NULL);
-
+    if (testaa_handle == NULL) {
+        xTaskCreate(testaa, "testaa", 1024, NULL, 1, testaa_handle);
+    }
 
 
     while (1) {
@@ -357,6 +363,7 @@ void app_thread_entry(QueueHandle_t event_queue) {
         if (!busy) {
             switch (MainMenustatemachine) {
                 case MainMenuhub:
+                    return;  // Exit to main fw
 
                     if (buttons[SWITCH_2] == SWITCH_PRESS) {
                         MainMenustatemachine = MainMenuBadgetag;
