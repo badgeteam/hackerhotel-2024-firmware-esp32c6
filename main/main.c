@@ -22,6 +22,12 @@
 #include "pax_gfx.h"
 #include "resources.h"
 #include "riscv/rv_utils.h"
+#include "screen_battleship.h"
+#include "screen_home.h"
+#include "screen_mascots.h"
+#include "screen_settings.h"
+#include "screen_shades.h"
+#include "screens.h"
 #include "sdkconfig.h"
 #include "sdmmc_cmd.h"
 #include "soc/gpio_struct.h"
@@ -39,6 +45,10 @@
 #include <unistd.h>
 
 static char const * TAG = "main";
+
+static QueueHandle_t keyboard_event_queue    = NULL;
+static QueueHandle_t application_event_queue = NULL;
+static QueueHandle_t input_handler_queues[3] = {NULL};
 
 esp_err_t setup() {
     esp_app_desc_t const * app_description = esp_app_get_description();
@@ -81,11 +91,10 @@ void app_main(void) {
     }
 
     // Create event queues
-    QueueHandle_t keyboard_event_queue    = xQueueCreate(8, sizeof(event_t));
-    QueueHandle_t application_event_queue = xQueueCreate(8, sizeof(event_t));
+    keyboard_event_queue    = xQueueCreate(8, sizeof(event_t));
+    application_event_queue = xQueueCreate(8, sizeof(event_t));
 
     // Set up the input handler
-    QueueHandle_t input_handler_queues[3];
     input_handler_queues[0] = keyboard_event_queue;
     input_handler_queues[1] = application_event_queue;
     input_handler_queues[2] = NULL;  // Terminate the list
@@ -100,6 +109,39 @@ void app_main(void) {
     if (res != ESP_OK) {
         bsp_display_error("Failed to start keyboard task");
         return;
+    }
+
+    // Main application
+    screen_t current_screen = screen_mascots;
+    while (1) {
+        switch (current_screen) {
+            case screen_mascots:
+                {
+                    current_screen = screen_mascots_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_home:
+                {
+                    current_screen = screen_home_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_settings:
+                {
+                    current_screen = screen_settings_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_battleship:
+                {
+                    current_screen = screen_battleship_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_shades:
+                {
+                    current_screen = screen_shades_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            default: current_screen = screen_home;
+        }
     }
 
     /*nvs_handle_t nvs_handle;
@@ -119,8 +161,9 @@ void app_main(void) {
         vTaskDelay(pdMS_TO_TICKS(2000));
     }*/
 
-    char buffer[64] = "Hello";
-    bool editres    = textedit("Just a test", application_event_queue, keyboard_event_queue, buffer, sizeof(buffer));
+    char buffer[64] = {0};
+    bool editres =
+        textedit("What is your name?", application_event_queue, keyboard_event_queue, buffer, sizeof(buffer));
 
     ESP_LOGW(
         TAG,
@@ -128,6 +171,8 @@ void app_main(void) {
         editres ? "accepted" : "canceled",
         buffer
     );
+
+    // return;
 
     // Configure keyboard
     event_t kbsettings = {

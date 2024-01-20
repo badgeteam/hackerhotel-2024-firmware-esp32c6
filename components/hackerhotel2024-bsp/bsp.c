@@ -27,7 +27,7 @@
 #include "pax_gfx.h"
 #include "sdmmc_cmd.h"
 
-const uint8_t target_coprocessor_fw_version = 3;  // Must match the value in the ch32_firmware.bin resource
+const uint8_t target_coprocessor_fw_version = 4;  // Must match the value in the ch32_firmware.bin resource
 
 static const char* TAG = "bsp";
 
