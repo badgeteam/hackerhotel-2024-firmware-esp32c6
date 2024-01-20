@@ -78,6 +78,7 @@ static esp_err_t nvs_set_str_wrapped(char const * namespace, char const * key, c
     if (res == ESP_OK) {
         res = nvs_set_str(handle, key, buffer);
     }
+    nvs_commit(handle);
     nvs_close(handle);
     return res;
 }
@@ -100,6 +101,7 @@ static esp_err_t nvs_set_u8_wrapped(char const * namespace, char const * key, ui
         return res;
     }
     res = nvs_set_u8(handle, key, value);
+    nvs_commit(handle);
     nvs_close(handle);
     return res;
 }
