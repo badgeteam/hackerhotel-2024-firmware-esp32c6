@@ -16,7 +16,7 @@ jobs:
     name: Build & upload to release
     runs-on: ubuntu-latest
     steps:
-    - name: verify vervion name
+    - name: verify version name
       run: >
         VERSION_REQUIREMENTS="^v[[:digit:]]\.[[:digit:]]\.[[:digit:]]$" &&
         if ! [[ ${{ github.event.release.tag_name }} =~ $VERSION_REQUIREMENTS ]]; then echo "Version does not match requirements: v<number>.<number>.<number> with input '$VERSION'"; exit 1; fi
