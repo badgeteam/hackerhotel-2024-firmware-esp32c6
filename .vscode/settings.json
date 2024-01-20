@@ -66,7 +66,8 @@
         "typeindex": "c",
         "typeinfo": "c",
         "textedit.h": "c",
-        "epaper.h": "c"
+        "epaper.h": "c",
+        "esp_wifi_types.h": "c"
     },
     "editor.formatOnType": false,
     "editor.formatOnSave": true,
