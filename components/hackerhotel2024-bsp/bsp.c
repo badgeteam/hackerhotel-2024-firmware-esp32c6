@@ -396,7 +396,7 @@ esp_err_t initialize_coprocessor() {
         return res;
     }
 
-    xTaskCreate(&coprocessor_intr_task, "Coprocessor interrupt", 4096, NULL, 10, coprocessor_intr_task_handle);
+    xTaskCreate(&coprocessor_intr_task, "Coprocessor interrupt", 4096, NULL, 10, &coprocessor_intr_task_handle);
     xSemaphoreGive(coprocessor_intr_trigger);
 
     xSemaphoreGive(coprocessor_semaphore);
@@ -611,7 +611,6 @@ bool bsp_wait_for_button() {
 uint8_t bsp_wait_for_button_number() {
     QueueHandle_t               queue         = bsp_get_button_queue();
     coprocessor_input_message_t buttonMessage = {0};
-    bool                        result        = false;
     while (1) {
         if (xQueueReceive(queue, &buttonMessage, portMAX_DELAY) == pdTRUE) {
             if (buttonMessage.state == SWITCH_PRESS) {
@@ -637,7 +636,7 @@ esp_err_t bsp_set_addressable_led(uint32_t color) {
     return ledstrip_send(data, 3);
 }
 
-esp_err_t bsp_set_addressable_leds(uint8_t data, int length) { return ledstrip_send(data, length); }
+esp_err_t bsp_set_addressable_leds(uint8_t data, int length) { return ledstrip_send(&data, length); }
 
 bool bsp_passed_factory_test() {
     nvs_handle_t nvs_handle;
@@ -758,7 +757,7 @@ esp_err_t bsp_factory_test() {
 
     pax_background(&pax_buffer, WHITE);
     pax_insert_png_buf(&pax_buffer, hackerhotel_png_start, hackerhotel_png_end - hackerhotel_png_start, 0, 0, 0);
-    esp_app_desc_t const* app_description = esp_ota_get_app_description();
+    esp_app_desc_t const* app_description = esp_app_get_description();
     pax_draw_text(&pax_buffer, RED, pax_font_sky_mono, 9, 0, 0, app_description->version);
     bsp_apply_lut(lut_full);
     bsp_display_flush();

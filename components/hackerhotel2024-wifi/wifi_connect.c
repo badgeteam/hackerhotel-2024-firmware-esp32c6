@@ -36,7 +36,7 @@ bool wifi_connect_to_stored() {
     if (res) goto errcheck;
     
     // Check whether connection is enterprise.
-    res = nvs_get_u8(handle, "wifi.authmode", &authmode);
+    res = nvs_get_u8(handle, "wifi.authmode", (uint8_t*) &authmode);
     bool use_ent = authmode == WIFI_AUTH_WPA2_ENTERPRISE;
     if (res) goto errcheck;
     
@@ -44,7 +44,7 @@ bool wifi_connect_to_stored() {
         // Read enterprise-specific parameters.
         
         // Read phase2 mode.
-        res = nvs_get_u8(handle, "wifi.phase2", &phase2);
+        res = nvs_get_u8(handle, "wifi.phase2", (uint8_t*) &phase2);
         if (res) goto errcheck;
         
         // Read identity.

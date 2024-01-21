@@ -186,8 +186,8 @@ static bool edit_network_type(wifi_auth_mode_t* network_type) {
         }
     }
 
-    bool               render = true;
-    menu_wifi_action_t action = ACTION_NONE;
+//    bool               render = true;
+//    menu_wifi_action_t action = ACTION_NONE;
     wifi_auth_mode_t   pick   = *network_type;
 
     // action = (menu_wifi_action_t)menu_get_callback_args(menu, menu_get_position(menu));
@@ -337,6 +337,7 @@ static void edit_wifi(QueueHandle_t application_event_queue, QueueHandle_t keybo
             nvs_set_u8_wrapped("system", "wifi.authmode", WIFI_AUTH_WPA2_PSK);
 
             configure_keyboard(keyboard_event_queue);
+            return;
         case 3:
             nvs_get_str_wrapped("system", "wifi.ssid", ssid, sizeof(ssid));
             nvs_get_str_wrapped("system", "wifi.password", password, sizeof(password));
@@ -371,6 +372,7 @@ static void edit_wifi(QueueHandle_t application_event_queue, QueueHandle_t keybo
             nvs_set_str_wrapped("system", "wifi.password", password);
 
             configure_keyboard(keyboard_event_queue);
+            return;
         default: // cancel
             return;
     }

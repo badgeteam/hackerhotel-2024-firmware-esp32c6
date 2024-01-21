@@ -103,7 +103,7 @@ esp_err_t ledstrip_init(gpio_num_t pin) {
     return res;
 }
 
-esp_err_t ledstrip_send(uint8_t* data, int length) {
+esp_err_t ledstrip_send(const uint8_t* data, int length) {
     esp_err_t res;
 
     rmt_transmit_config_t tx_config = {

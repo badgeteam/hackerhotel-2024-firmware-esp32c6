@@ -31,7 +31,7 @@ screen_t screen_mascots_entry(QueueHandle_t application_event_queue, QueueHandle
     };
     xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 
-    pax_font_t const * font = pax_font_saira_regular;
+//    pax_font_t const * font = pax_font_saira_regular;
     pax_buf_t*         gfx  = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
     pax_insert_png_buf(gfx, mascots_png_start, mascots_png_end - mascots_png_start, 0, 0, 0);

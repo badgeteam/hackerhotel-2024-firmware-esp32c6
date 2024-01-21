@@ -38,7 +38,7 @@ esp_err_t bsp_init();
  * returned by SDK functions.
  */
 
-esp_err_t bsp_display_error();
+esp_err_t bsp_display_error(const char* error);
 
 esp_err_t bsp_display_message(const char* title, const char* message);
 
