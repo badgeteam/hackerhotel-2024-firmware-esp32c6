@@ -50,7 +50,7 @@ static QueueHandle_t keyboard_event_queue    = NULL;
 static QueueHandle_t application_event_queue = NULL;
 static QueueHandle_t input_handler_queues[3] = {NULL};
 
-esp_err_t setup() {
+esp_err_t setup(void) {
     esp_app_desc_t const * app_description = esp_app_get_description();
     printf("BADGE.TEAM %s firmware v%s\r\n", app_description->project_name, app_description->version);
 

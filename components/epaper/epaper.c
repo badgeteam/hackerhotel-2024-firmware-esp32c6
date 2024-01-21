@@ -446,7 +446,7 @@ esp_err_t hink_write(hink_t* device, uint8_t const * buffer) {
     }
 
     if (device->lut) {
-        esp_err_t res = hink_write_lut(device);
+        hink_write_lut(device);
     }
 
     hink_send_command(device, HINK_CMD_DISPLAY_UPDATE_CONTROL_2);

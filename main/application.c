@@ -85,7 +85,7 @@ int     telegraphY[20]   = {12, 27, 27, 42, 42, 42, 57, 57, 57, 57, 71, 71, 71, 
 int     BSvictory        = 0;
 int     AIshotsfired[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 int     playerboats[6]   = {0, 0, 0, 0, 0, 0};
-int     opponentboats[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
+int     opponentboats[6] = {0, 0, 0, 0, 0, 0};
 int     popboat          = 0;
 
 
@@ -193,7 +193,8 @@ void DisplayTelegraph(int _colour, int _position) {
 }
 
 // bodge timer and debouncing, to fix
-void testaa(void) {
+void testaa(void *param) {
+    (void) param;
     while (1) {
         vTaskDelay(pdMS_TO_TICKS(10));
         if (delaySMflag == 1) {
@@ -321,15 +322,13 @@ void reset_buttons() {
 TaskHandle_t testaa_handle = NULL;
 
 void app_thread_entry(QueueHandle_t event_queue) {
-    esp_err_t res;
-
     MainMenustatemachine = MainMenubattleship;
     reset_buttons();
 
     bsp_apply_lut(lut_4s);
 
     if (testaa_handle == NULL) {
-        xTaskCreate(testaa, "testaa", 1024, NULL, 1, testaa_handle);
+        xTaskCreate(testaa, "testaa", 1024, NULL, 1, &testaa_handle);
     }
 
 
@@ -554,7 +553,7 @@ void app_thread_entry(QueueHandle_t event_queue) {
                                         int tempplacement  = 0;
                                         while (_flagduplicate) {
                                             _flagduplicate = 0;
-                                            tempplacement  = abs(esp_random()) % 20;
+                                            tempplacement  = esp_random() % 20;
                                             for (int y = 0; y < 6; y++) {
                                                 if (tempplacement == opponentboats[y])
                                                     _flagduplicate = 1;
@@ -602,9 +601,9 @@ void app_thread_entry(QueueHandle_t event_queue) {
                             // if (inputletter != NULL && delaySMflag == 0) {
                             printf("opponent turn");
 
-                            int shotturn = abs(esp_random()) % 20;
+                            int shotturn = esp_random() % 20;
                             while (AIshotsfired[shotturn] == 1) {
-                                shotturn = abs(esp_random()) % 20;
+                                shotturn = esp_random() % 20;
                             }
                             AIshotsfired[shotturn] = 1;
                             if (BSplayerboard[shotturn] == boat)
@@ -743,7 +742,7 @@ void app_thread_entry(QueueHandle_t event_queue) {
         }
 
         if (delayLEDflag == 0)
-            res = TextInputTelegraph();
+            TextInputTelegraph();
     }
 }
 
