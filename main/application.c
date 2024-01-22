@@ -193,8 +193,8 @@ void DisplayTelegraph(int _colour, int _position) {
 }
 
 // bodge timer and debouncing, to fix
-void testaa(void *param) {
-    (void) param;
+void testaa(void* param) {
+    (void)param;
     while (1) {
         vTaskDelay(pdMS_TO_TICKS(10));
         if (delaySMflag == 1) {

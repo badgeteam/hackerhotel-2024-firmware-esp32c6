@@ -23,10 +23,12 @@
 #include "resources.h"
 #include "riscv/rv_utils.h"
 #include "screen_battleship.h"
+#include "screen_billboard.h"
 #include "screen_home.h"
 #include "screen_mascots.h"
 #include "screen_settings.h"
 #include "screen_shades.h"
+#include "screen_test.h"
 #include "screens.h"
 #include "sdkconfig.h"
 #include "sdmmc_cmd.h"
@@ -43,6 +45,7 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+
 
 static char const * TAG = "main";
 
@@ -138,6 +141,11 @@ void app_main(void) {
             case screen_shades:
                 {
                     current_screen = screen_shades_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_billboard:
+                {
+                    current_screen = screen_billboard_entry(application_event_queue, keyboard_event_queue);
                     break;
                 }
             default: current_screen = screen_home;
