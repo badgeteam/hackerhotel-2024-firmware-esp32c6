@@ -636,7 +636,7 @@ esp_err_t bsp_set_addressable_led(uint32_t color) {
     return ledstrip_send(data, 3);
 }
 
-esp_err_t bsp_set_addressable_leds(uint8_t data, int length) { return ledstrip_send(&data, length); }
+esp_err_t bsp_set_addressable_leds(const uint8_t *data, int length) { return ledstrip_send(data, length); }
 
 bool bsp_passed_factory_test() {
     nvs_handle_t nvs_handle;
