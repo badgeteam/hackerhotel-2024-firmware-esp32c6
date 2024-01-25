@@ -12,7 +12,7 @@ esp_err_t init_badge_comms(void);
 typedef struct {
     badge_comms_message_type_t message_type;
     uint8_t                    from_mac[8];
-    uint8_t                    data[BADGE_COMMS_MAX_MESSAGE_SIZE];
+    uint8_t                    data[BADGE_COMMS_USER_DATA_MAX_LEN];
     uint8_t                    data_len_to_send;
 } badge_comms_message_t;
 

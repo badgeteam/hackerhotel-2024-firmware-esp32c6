@@ -4,7 +4,7 @@
 #include "freertos/FreeRTOS.h"
 
 // please no more userdata than this, else we might not have enough buffer for the message structure
-#define BADGE_COMMS_RECOMMENDED_MAX_LEN (100)
+#define BADGE_COMMS_USER_DATA_MAX_LEN (100)
 
 // NOTE: DO NOT MOVE OR REMOVE ITEMS
 typedef enum {
@@ -17,5 +17,5 @@ typedef struct {
     time_t unix_time;
 } badge_message_timestamp_t;
 static_assert(
-    sizeof(badge_message_timestamp_t) < BADGE_COMMS_RECOMMENDED_MAX_LEN, "badge_message_timestamp_t is too big"
+    sizeof(badge_message_timestamp_t) < BADGE_COMMS_USER_DATA_MAX_LEN, "badge_message_timestamp_t is too big"
 );

@@ -151,7 +151,7 @@ void badge_comms_receiver(void* param) {
     (void)param;
 
     uint8_t               received_message[BADGE_COMMS_MAX_MESSAGE_SIZE];
-    uint8_t               parsed_userdata[BADGE_COMMS_MAX_MESSAGE_SIZE];
+    uint8_t               parsed_userdata[BADGE_COMMS_USER_DATA_MAX_LEN];
     uint8_t               userdata_len;
     badge_comms_message_t message;
     uint8_t               from_mac[8];
@@ -162,6 +162,9 @@ void badge_comms_receiver(void* param) {
 
         message.message_type = parsed_userdata[0];
         uint8_t data_len     = userdata_len - 1;
+        if (data_len >= BADGE_COMMS_USER_DATA_MAX_LEN) {
+            data_len = BADGE_COMMS_USER_DATA_MAX_LEN;
+        }
         memcpy(message.data, parsed_userdata + 1, data_len);  // -1 for the message type
         memcpy(message.from_mac, from_mac, 8);
 
