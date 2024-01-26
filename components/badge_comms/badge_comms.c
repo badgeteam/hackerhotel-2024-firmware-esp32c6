@@ -125,7 +125,7 @@ void badge_comms_send_message(badge_comms_message_t* comms_message) {
 
 void parse_message(
     uint8_t  message[BADGE_COMMS_MAX_MESSAGE_SIZE],
-    uint8_t  userdata[BADGE_COMMS_MAX_MESSAGE_SIZE],
+    uint8_t  userdata[BADGE_COMMS_USER_DATA_MAX_LEN],
     uint8_t  from_mac[8],
     uint8_t* userdata_len
 ) {
@@ -140,7 +140,7 @@ void parse_message(
         from_mac[7 - i] = message[i + 8];
     }
 
-    *userdata_len = len - 16 - 2;  // lenth - bytes till the beginning of userdata - proceeding protocol bytes
+    *userdata_len = MIN(len - 16 - 2, BADGE_COMMS_USER_DATA_MAX_LEN);  // lenth - bytes till the beginning of userdata - proceeding protocol bytes
     memcpy(userdata, message + 16, *userdata_len);
 
     //    uint8_t rssi = message[len-2];
