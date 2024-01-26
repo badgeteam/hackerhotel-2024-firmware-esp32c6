@@ -1,9 +1,12 @@
 #include "application.h"
+#include "badge_comms.h"
+#include "badge_messages.h"
 #include "bsp.h"
 #include "driver/dedic_gpio.h"
 #include "driver/gpio.h"
 #include "epaper.h"
 #include "esp_err.h"
+#include "esp_ieee802154.h"
 #include "esp_log.h"
 #include "esp_ota_ops.h"
 #include "esp_sleep.h"
@@ -78,6 +81,11 @@ esp_err_t setup(void) {
     res = init_ca_store();
     if (res != ESP_OK) {
         bsp_display_error("Failed to initialize\nTLS certificate storage");
+        return res;
+    }
+
+    if ((res = init_badge_comms()) != ESP_OK) {
+        bsp_display_error("Failed to initialize\nBodge comms failed to start");
         return res;
     }
 
