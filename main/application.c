@@ -1,3 +1,4 @@
+#include "application.h"
 #include "application_settings.h"
 #include "bsp.h"
 #include "driver/dedic_gpio.h"
@@ -19,6 +20,7 @@
 #include "nvs_flash.h"
 #include "pax_codecs.h"
 #include "pax_gfx.h"
+#include "pax_types.h"
 #include "resources.h"
 #include "riscv/rv_utils.h"
 #include "sdkconfig.h"
@@ -40,6 +42,11 @@
 #include <sdmmc_cmd.h>
 #include <string.h>
 #include <time.h>
+
+extern uint8_t const border1_png_start[] asm("_binary_border1_png_start");
+extern uint8_t const border1_png_end[] asm("_binary_border1_png_end");
+extern uint8_t const border2_png_start[] asm("_binary_border2_png_start");
+extern uint8_t const border2_png_end[] asm("_binary_border2_png_end");
 
 #define MainMenuhub          0
 #define MainMenubattleship   1
@@ -91,6 +98,241 @@ int     popboat          = 0;
 
 esp_err_t TextInputTelegraph(void);
 
+void debug_(void) {
+    bsp_set_addressable_led(0xFF0000);
+}
+
+void Addborder1toBuffer(void) {
+
+    pax_insert_png_buf(bsp_get_gfx_buffer(), border1_png_start, border1_png_end - border1_png_start, 0, 0, 0);
+}
+
+void Addborder2toBuffer(void) {
+
+    pax_insert_png_buf(bsp_get_gfx_buffer(), border2_png_start, border2_png_end - border2_png_start, 0, 0, 0);
+}
+
+void Justify_right_text(
+    pax_buf_t* buf, pax_col_t color, pax_font_t const * font, float font_size, float x, float y, char const * text
+) {
+    pax_vec1_t dims = {
+        .x = 999,
+        .y = 999,
+    };
+
+    dims         = pax_text_size(font, font_size, text);
+    int _xoffset = buf->height - (int)dims.x - x;
+    pax_draw_text(buf, color, font, font_size, _xoffset, y, text);
+}
+
+int DisplayExitConfirmation(char _prompt[128], QueueHandle_t keyboard_event_queue) {
+    event_t kbsettings = {
+        .type                                     = event_control_keyboard,
+        .args_control_keyboard.enable_typing      = true,
+        .args_control_keyboard.enable_actions     = {true, false, false, false, true},
+        .args_control_keyboard.enable_leds        = true,
+        .args_control_keyboard.enable_relay       = true,
+        kbsettings.args_control_keyboard.capslock = false,
+    };
+    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+
+    int text_x        = 50;
+    int text_y        = 20;
+    int text_fontsize = 18;
+
+    pax_font_t const * font = pax_font_sky;
+    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
+    bsp_apply_lut(lut_1s);
+    pax_background(gfx, WHITE);
+    Addborder2toBuffer();
+    pax_draw_text(gfx, BLACK, font, 9, text_x, text_y, _prompt);
+    AddSwitchesBoxtoBuffer(SWITCH_1);
+    pax_draw_text(gfx, BLACK, font, 9, 8 + SWITCH_1 * 62, 116, "yes");
+    AddSwitchesBoxtoBuffer(SWITCH_5);
+    pax_draw_text(gfx, BLACK, font, 9, 8 + SWITCH_5 * 62, 116, "no");
+    bsp_display_flush();
+    return 1;
+}
+
+// PARSE STRING INTO WORDS, AND MAKES INTO UP TO maxnblines LINES WITH THEM THAT ARE maxlinelenght pixel long
+void DisplayWallofTextWords(
+    int  _fontsize,
+    int  _maxlinelenght,
+    int  _maxnblines,
+    int  _nbwords,
+    int  _xoffset,
+    int  _yoffset,
+    char _message[200],
+    int  _centered
+) {
+    // set screen font and buffer
+    pax_font_t const * font = pax_font_sky;
+    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
+
+    // to verify text lenght on buffer
+    pax_vec1_t dims = {
+        .x = 999,
+        .y = 999,
+    };
+
+    // char message[128]       = "The quick brown fox jumps over the lazy dog, The quick brie da";  // message to parse
+    char linetodisplay[128] = "";
+    char Words[50][32];  // Array of parsed words
+
+    // counters
+    int nblines   = 0;
+    int j         = 0;
+    int wordcount = 0;
+
+    pax_background(gfx, WHITE);
+
+    // goes through each character until the end of the string (unless nblines >= maxnblines)
+    for (int i = 0; i <= (strlen(_message)); i++) {
+        // If space or end of string found, process word/lines
+        if (_message[i] == ' ' || _message[i] == '\0') {
+            Words[wordcount][j] = '\0';  // end of string terminate the word
+            j                   = 0;
+            // pax_draw_text(gfx, BLACK, font, fontsize, xoffset, wordcount * fontsize, Words[wordcount]);//use to
+            // display words
+            strcat(linetodisplay, Words[wordcount]);  // add word to linetodisplay
+            strcat(linetodisplay, " ");               // and a space that was not parsed
+
+            // if longer than maxlinelenght, go to the next line
+            dims = pax_text_size(font, _fontsize, linetodisplay);
+            if ((int)dims.x > _maxlinelenght) {
+                linetodisplay[strlen(linetodisplay) - (strlen(Words[wordcount]) + 2)] =
+                    '\0';  // remove the last word and 2 spaces
+
+                // center the text
+                if (_centered) {
+                    dims     = pax_text_size(font, _fontsize, linetodisplay);
+                    _xoffset = gfx->height / 2 - (int)(dims.x / 2);
+                }
+
+                pax_draw_text(
+                    gfx,
+                    BLACK,
+                    font,
+                    _fontsize,
+                    _xoffset,
+                    _yoffset + nblines * _fontsize,
+                    linetodisplay
+                );  // displays
+                    // the line
+                strcpy(
+                    linetodisplay,
+                    Words[wordcount]
+                );  // Add the latest word that was parsed and removed to the next line
+                nblines++;
+                if (nblines >= _maxnblines) {
+                    break;
+                }
+            }
+
+            // If it is the last word of the string
+            if (_message[i] == '\0') {
+                pax_draw_text(gfx, BLACK, font, _fontsize, _xoffset, _yoffset + nblines * _fontsize, linetodisplay);
+            }
+            wordcount++;  // Move to the next word
+
+        } else {
+            Words[wordcount][j] = _message[i];  // Store the character into newString
+            j++;                                // Move to the next character within the word
+        }
+    }
+
+    bsp_display_flush();
+}
+
+// PARSE STRING INTO WORDS, AND MAKES INTO UP TO maxnblines LINES WITH THEM THAT ARE maxlinelenght pixel long
+void DisplayWallofText(
+    int  _fontsize,
+    int  _maxlinelenght,
+    int  _maxnblines,
+    int  _nbwords,
+    int  _xoffset,
+    int  _yoffset,
+    char _message[500],
+    int  _centered
+) {
+    // set screen font and buffer
+    pax_font_t const * font = pax_font_sky;
+    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
+
+    // to verify text lenght on buffer
+    pax_vec1_t dims = {
+        .x = 999,
+        .y = 999,
+    };
+
+    // char message[128]       = "The quick brown fox jumps over the lazy dog, The quick brie da";  // message to parse
+    char linetodisplay[128] = "";
+    char Words[64];  // Array of parsed words
+
+    // counters
+    int nblines   = 0;
+    int j         = 0;
+    int wordcount = 0;
+
+    // pax_background(gfx, WHITE);
+
+    // goes through each character until the end of the string (unless nblines >= maxnblines)
+    for (int i = 0; i <= (strlen(_message)); i++) {
+        // If space or end of string found, process word/lines
+        if (_message[i] == ' ' || _message[i] == '\0') {
+            Words[j] = '\0';  // end of string terminate the word
+            j        = 0;
+            // pax_draw_text(gfx, BLACK, font, fontsize, xoffset, wordcount * fontsize, Words[wordcount]);//use to
+            // display words
+            strcat(linetodisplay, Words);  // add word to linetodisplay
+            strcat(linetodisplay, " ");    // and a space that was not parsed
+
+            // if longer than maxlinelenght, go to the next line
+            dims = pax_text_size(font, _fontsize, linetodisplay);
+            if ((int)dims.x > _maxlinelenght) {
+                linetodisplay[strlen(linetodisplay) - (strlen(Words) + 2)] = '\0';  // remove the last word and 2 spaces
+
+                // center the text
+                if (_centered) {
+                    dims     = pax_text_size(font, _fontsize, linetodisplay);
+                    _xoffset = gfx->height / 2 - (int)(dims.x / 2);
+                }
+
+                pax_draw_text(
+                    gfx,
+                    BLACK,
+                    font,
+                    _fontsize,
+                    _xoffset,
+                    _yoffset + nblines * _fontsize,
+                    linetodisplay
+                );  // displays
+                    // the line
+                strcpy(linetodisplay,
+                       Words);  // Add the latest word that was parsed and removed to the next line
+                nblines++;
+                if (nblines >= _maxnblines) {
+                    break;
+                }
+            }
+
+            // If it is the last word of the string
+            if (_message[i] == '\0') {
+                pax_draw_text(gfx, BLACK, font, _fontsize, _xoffset, _yoffset + nblines * _fontsize, linetodisplay);
+            }
+            wordcount++;  // Move to the next word
+
+        } else {
+            Words[j] = _message[i];  // Store the character into newString
+            j++;                     // Move to the next character within the word
+        }
+    }
+
+    // bsp_display_flush();
+}
+
+
+
 int DisplaySelectedLetter(int _selectedletter) {
     delayLED     = 500;
     delayLEDflag = 1;
@@ -125,7 +367,7 @@ void DisplayDebugSwitchesBoxes(void)  // in black
     // pax_draw_rect(gfx, 0, 1 + 61 * 4, 115, 50, 12);
 }
 
-void DisplaySwitchesBox(int _switch)  // in black
+void AddSwitchesBoxtoBuffer(int _switch)  // in black
 {
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_outline_rect(gfx, 1, 61 * _switch, 114, 50, 12);
@@ -219,11 +461,11 @@ void framenametag(void) {
     pax_background(gfx, 0);
     if (specialcharacterselect == 0 || specialcharacterselect == 1)
         pax_draw_text(gfx, 1, pax_font_saira_regular, 30, 80, 50, playername);
-    DisplaySwitchesBox(SWITCH_1);
+    AddSwitchesBoxtoBuffer(SWITCH_1);
     pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 8, 116, "Exit");
-    DisplaySwitchesBox(SWITCH_3);
+    AddSwitchesBoxtoBuffer(SWITCH_3);
     pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 133, 116, specialcharactersicon[specialcharacterselect]);
-    DisplaySwitchesBox(SWITCH_5);
+    AddSwitchesBoxtoBuffer(SWITCH_5);
     pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 247, 116, "delete");
     if (specialcharacterselect == 2) {
         int _position = 90;
@@ -393,15 +635,15 @@ void app_thread_entry(QueueHandle_t event_queue) {
                         bsp_apply_lut(lut_4s);
                         pax_background(gfx, 0);
                         pax_draw_text(gfx, 1, pax_font_sky_mono, 12, 50, 50, "Main hub");
-                        DisplaySwitchesBox(SWITCH_1);
+                        AddSwitchesBoxtoBuffer(SWITCH_1);
                         pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 8, 116, " ");
-                        DisplaySwitchesBox(SWITCH_2);
+                        AddSwitchesBoxtoBuffer(SWITCH_2);
                         pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 65, 116, "Nametag");
-                        DisplaySwitchesBox(SWITCH_3);
+                        AddSwitchesBoxtoBuffer(SWITCH_3);
                         pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 125, 116, "Credits");
-                        DisplaySwitchesBox(SWITCH_4);
+                        AddSwitchesBoxtoBuffer(SWITCH_4);
                         pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 187, 116, "Settings");
-                        DisplaySwitchesBox(SWITCH_5);
+                        AddSwitchesBoxtoBuffer(SWITCH_5);
                         pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 247, 116, "battle");
                         bsp_display_flush();
                         MainMenuchangeflag = 0;
@@ -476,7 +718,7 @@ void app_thread_entry(QueueHandle_t event_queue) {
                         bsp_apply_lut(lut_4s);
                         pax_background(gfx, 0);
                         pax_draw_text(gfx, 1, pax_font_marker, 18, 1, 0, "Credits placeholder");
-                        DisplaySwitchesBox(SWITCH_1);
+                        AddSwitchesBoxtoBuffer(SWITCH_1);
                         pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 8, 116, "Exit");
                         // DisplaySwitchesBox(SWITCH_3);
                         // pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 125, 116, "Online");
@@ -519,11 +761,11 @@ void app_thread_entry(QueueHandle_t event_queue) {
                         bsp_apply_lut(lut_4s);
                         pax_background(gfx, 0);
                         pax_draw_text(gfx, 1, pax_font_marker, 18, 1, 0, "Battleship");
-                        DisplaySwitchesBox(SWITCH_1);
+                        AddSwitchesBoxtoBuffer(SWITCH_1);
                         pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 8, 116, "Exit");
-                        DisplaySwitchesBox(SWITCH_3);
+                        AddSwitchesBoxtoBuffer(SWITCH_3);
                         pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 125, 116, "Online");
-                        DisplaySwitchesBox(SWITCH_5);
+                        AddSwitchesBoxtoBuffer(SWITCH_5);
                         pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 247, 116, "Offline");
                         bsp_display_flush();
                         MainMenuchangeflag = 0;
@@ -693,7 +935,7 @@ void app_thread_entry(QueueHandle_t event_queue) {
                                 DisplayblockstatusBS(pax_buf_get_width(gfx) - telegraphpos, i, BSopponentboard[i]);
                         }
                         // pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 8, 116, "Exit");
-                        DisplaySwitchesBox(SWITCH_1);
+                        AddSwitchesBoxtoBuffer(SWITCH_1);
                         pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 8, 116, "Exit");
                         // DisplaySwitchesBox(SWITCH_3);
                         // pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 125, 116, "Online");
@@ -730,7 +972,7 @@ void app_thread_entry(QueueHandle_t event_queue) {
                             pax_draw_text(gfx, 1, pax_font_marker, 36, 80, 50, "Victory");
                         if (BSvictory == 2)
                             pax_draw_text(gfx, 1, pax_font_marker, 36, 80, 50, "Defeat");
-                        DisplaySwitchesBox(SWITCH_1);
+                        AddSwitchesBoxtoBuffer(SWITCH_1);
                         pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 8, 116, "Exit");
                         bsp_display_flush();
                         BSvictory          = 0;

@@ -21,4 +21,9 @@ idf_component_register(
                 ${project_dir}/resources/shades.png
                 ${project_dir}/resources/homescreen.png
                 ${project_dir}/resources/settings.png
+                ${project_dir}/resources/border1.png
+                ${project_dir}/resources/border2.png
+                ${project_dir}/resources/caronl.png
+                ${project_dir}/resources/caronv.png
+                ${project_dir}/resources/carond.png
 )

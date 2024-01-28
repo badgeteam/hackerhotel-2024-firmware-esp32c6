@@ -123,7 +123,7 @@ void app_main(void) {
     }
 
     // Main application
-    screen_t current_screen = screen_mascots;
+    screen_t current_screen = screen_test;
     while (1) {
         switch (current_screen) {
             case screen_mascots:
@@ -154,6 +154,11 @@ void app_main(void) {
             case screen_billboard:
                 {
                     current_screen = screen_billboard_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_test:
+                {
+                    current_screen = screen_test_entry(application_event_queue, keyboard_event_queue);
                     break;
                 }
             default: current_screen = screen_home;

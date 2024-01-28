@@ -1,4 +1,5 @@
 #include "application.h"
+#include "badge_comms.h"
 #include "bsp.h"
 #include "esp_err.h"
 #include "esp_log.h"
@@ -13,6 +14,7 @@
 #include "screen_home.h"
 #include "screens.h"
 #include "textedit.h"
+#include "time.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <esp_random.h>
@@ -27,6 +29,114 @@ static char const * TAG = "billboard";
 char nicknamearray[nbmessages][sizenickname];
 char messagearray[nbmessages][sizemessages];
 int  messagecursor = 0;
+
+void receive_timestamp(void) {
+    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
+    QueueHandle_t timestamp_queue = badge_comms_add_listener(MESSAGE_TYPE_TIMESTAMP, sizeof(badge_message_timestamp_t));
+    // check if an error occurred (check logs for the reason)
+    if (timestamp_queue == NULL) {
+        ESP_LOGE(TAG, "Failed to add listener");
+        return;
+    }
+
+    uint32_t i = 0;
+
+    while (true) {
+        // variable for the queue to store the message in
+        badge_comms_message_t message;
+        xQueueReceive(timestamp_queue, &message, portMAX_DELAY);
+
+        // typecast the message data to the expected message type
+        badge_message_timestamp_t* ts = (badge_message_timestamp_t*)message.data;
+
+        // show we got a message, and its contents
+        ESP_LOGI(TAG, "Got a timestamp: %lld (%08llX)\n", ts->unix_time, ts->unix_time);
+
+        // receive 3 timestamps
+        i++;
+        if (i >= 3) {
+
+            // to clean up a listener, call the remove listener
+            // this free's the queue from heap
+            esp_err_t err = badge_comms_remove_listener(timestamp_queue);
+
+            // show the result of the listener removal
+            ESP_LOGI(TAG, "unsubscription result: %s", esp_err_to_name(err));
+            return;
+        }
+    }
+}
+
+void send_timestamp(void) {
+    // first we create a struct with the data, as we would like to receive on the other side
+    badge_message_timestamp_t data = {
+        .unix_time = time(NULL)  // add the system timestamp to the message
+    };
+
+    // then we wrap the data in something to send over the comms bus
+    badge_comms_message_t message = {0};
+    message.message_type          = MESSAGE_TYPE_TIMESTAMP;
+    message.data_len_to_send      = sizeof(data);
+    memcpy(message.data, &data, message.data_len_to_send);
+
+    // send the message over the comms bus
+    badge_comms_send_message(&message);
+}
+
+void receive_str(void) {
+    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
+    QueueHandle_t str_queue = badge_comms_add_listener(MESSAGE_TYPE_STRING, sizeof(badge_message_str));
+    // check if an error occurred (check logs for the reason)
+    if (str_queue == NULL) {
+        ESP_LOGE(TAG, "Failed to add listener");
+        return;
+    }
+
+    uint32_t i = 0;
+
+    while (true) {
+        // variable for the queue to store the message in
+        ESP_LOGI(TAG, "listening");
+        badge_comms_message_t message;
+        xQueueReceive(str_queue, &message, portMAX_DELAY);
+
+        // typecast the message data to the expected message type
+        badge_message_str* ts = (badge_message_str*)message.data;
+
+        // show we got a message, and its contents
+        ESP_LOGI(TAG, "Got a string: %d \n", ts->messagestr);
+
+        // receive 3 timestamps
+        i++;
+        if (i >= 3) {
+
+            // to clean up a listener, call the remove listener
+            // this free's the queue from heap
+            esp_err_t err = badge_comms_remove_listener(str_queue);
+
+            // show the result of the listener removal
+            ESP_LOGI(TAG, "unsubscription result: %s", esp_err_to_name(err));
+            return;
+        }
+    }
+}
+
+void send_str(void) {
+    // first we create a struct with the data, as we would like to receive on the other side
+    badge_message_str data = {
+        .messagestr = 'd'  // add the system timestamp to the message
+    };
+
+    // then we wrap the data in something to send over the comms bus
+    badge_comms_message_t message = {0};
+    message.message_type          = MESSAGE_TYPE_STRING;
+    message.data_len_to_send      = sizeof(data);
+    memcpy(message.data, &data, message.data_len_to_send);
+
+    // send the message over the comms bus
+    badge_comms_send_message(&message);
+}
+
 
 static esp_err_t nvs_get_str_wrapped(char const * namespace, char const * key, char* buffer, size_t buffer_size) {
     nvs_handle_t handle;
@@ -55,9 +165,9 @@ void DisplayBillboard(int _addmessageflag, char* _nickname, char* _message) {
     // set infrastructure
     pax_background(gfx, WHITE);
     pax_draw_text(gfx, BLACK, font, 18, 80, 0, "The billboard");
-    DisplaySwitchesBox(SWITCH_1);
+    AddSwitchesBoxtoBuffer(SWITCH_1);
     pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 8, 116, "Exit");
-    DisplaySwitchesBox(SWITCH_5);
+    AddSwitchesBoxtoBuffer(SWITCH_5);
     pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 247, 116, "Send");
 
     int messageoffsetx = 1;
@@ -108,7 +218,7 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
     event_t kbsettings = {
         .type                                     = event_control_keyboard,
         .args_control_keyboard.enable_typing      = false,
-        .args_control_keyboard.enable_actions     = {true, true, false, false, true},
+        .args_control_keyboard.enable_actions     = {true, true, true, true, true},
         .args_control_keyboard.enable_leds        = true,
         .args_control_keyboard.enable_relay       = true,
         kbsettings.args_control_keyboard.capslock = false,
@@ -160,6 +270,8 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
     // pax_outline_rect(gfx, BLACK, textboxoffestx, textboxoffesty + textboxheight * 0, textboxwidth, textboxheight);
     // pax_outline_rect(gfx, BLACK, textboxoffestx, textboxoffesty + textboxheight * 1, textboxwidth, textboxheight);
     // pax_outline_rect(gfx, BLACK, textboxoffestx, textboxoffesty + textboxheight * 2, textboxwidth, textboxheight);
+
+    receive_str();
     for (int i = 0; i < nbmessages; i++) {
         strcpy(nicknamearray[i], "");
         strcpy(messagearray[i], "");
@@ -186,7 +298,7 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
 
                             break;
                         case SWITCH_3: break;
-                        case SWITCH_4: break;
+                        case SWITCH_4: send_str(); break;
                         case SWITCH_5:
                             char playermessage[64];
                             strcpy(playermessage, "Banana bread");
