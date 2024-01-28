@@ -100,6 +100,7 @@ void app_main(void) {
         return;
     }
 
+<<<<<<< Updated upstream
     // Test application
     /*while (1) {
         event_t event = {0};
@@ -107,6 +108,35 @@ void app_main(void) {
             switch (event.type) {
                 case event_input_button:
                     printf("Button input: %u / %u\n", event.args_input_button.button, event.args_input_button.state);
+=======
+    // Main application
+    screen_t current_screen = screen_test;
+    while (1) {
+        switch (current_screen) {
+            case screen_mascots:
+                {
+                    current_screen = screen_mascots_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_home:
+                {
+                    current_screen = screen_home_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_settings:
+                {
+                    current_screen = screen_settings_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_battleship:
+                {
+                    current_screen = screen_battleship_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_shades:
+                {
+                    current_screen = screen_shades_entry(application_event_queue, keyboard_event_queue);
+>>>>>>> Stashed changes
                     break;
                 case event_input_keyboard:
                     if (event.args_input_keyboard.action >= 0) {
@@ -115,8 +145,18 @@ void app_main(void) {
                         printf("Keyboard input:  %c\n", event.args_input_keyboard.character);
                     }
                     break;
+<<<<<<< Updated upstream
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
             }
+=======
+                }
+            case screen_test:
+                {
+                    current_screen = screen_test_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            default: current_screen = screen_home;
+>>>>>>> Stashed changes
         }
     }*/
 
