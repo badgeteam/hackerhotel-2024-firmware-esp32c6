@@ -104,7 +104,7 @@ void receive_str(void) {
         badge_message_str* ts = (badge_message_str*)message.data;
 
         // show we got a message, and its contents
-        ESP_LOGI(TAG, "Got a string: %d \n", ts->messagestr);
+        ESP_LOGI(TAG, "Got a string: %s \n", ts->messagestr);
 
         // receive 3 timestamps
         i++;
@@ -124,7 +124,7 @@ void receive_str(void) {
 void send_str(void) {
     // first we create a struct with the data, as we would like to receive on the other side
     badge_message_str data = {
-        .messagestr = 'd'  // add the system timestamp to the message
+        .messagestr = "banana bread"  // add the system timestamp to the message
     };
 
     // then we wrap the data in something to send over the comms bus
@@ -270,13 +270,12 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
     // pax_outline_rect(gfx, BLACK, textboxoffestx, textboxoffesty + textboxheight * 0, textboxwidth, textboxheight);
     // pax_outline_rect(gfx, BLACK, textboxoffestx, textboxoffesty + textboxheight * 1, textboxwidth, textboxheight);
     // pax_outline_rect(gfx, BLACK, textboxoffestx, textboxoffesty + textboxheight * 2, textboxwidth, textboxheight);
-
+    DisplayBillboard(0, "", "");
     receive_str();
     for (int i = 0; i < nbmessages; i++) {
         strcpy(nicknamearray[i], "");
         strcpy(messagearray[i], "");
     }
-    DisplayBillboard(0, "", "");
     while (1) {
         event_t event = {0};
         if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {

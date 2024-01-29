@@ -22,6 +22,6 @@ static_assert(
 );
 
 typedef struct {
-    char messagestr;
+    char messagestr[40];
 } badge_message_str;
 static_assert(sizeof(badge_message_str) < BADGE_COMMS_USER_DATA_MAX_LEN, "badge_message_timestamp_t is too big");
