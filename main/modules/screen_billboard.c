@@ -30,57 +30,17 @@ char nicknamearray[nbmessages][sizenickname];
 char messagearray[nbmessages][sizemessages];
 int  messagecursor = 0;
 
-void receive_timestamp(void) {
-    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
-    QueueHandle_t timestamp_queue = badge_comms_add_listener(MESSAGE_TYPE_TIMESTAMP, sizeof(badge_message_timestamp_t));
-    // check if an error occurred (check logs for the reason)
-    if (timestamp_queue == NULL) {
-        ESP_LOGE(TAG, "Failed to add listener");
-        return;
-    }
-
-    uint32_t i = 0;
-
-    while (true) {
-        // variable for the queue to store the message in
-        badge_comms_message_t message;
-        xQueueReceive(timestamp_queue, &message, portMAX_DELAY);
-
-        // typecast the message data to the expected message type
-        badge_message_timestamp_t* ts = (badge_message_timestamp_t*)message.data;
-
-        // show we got a message, and its contents
-        ESP_LOGI(TAG, "Got a timestamp: %lld (%08llX)\n", ts->unix_time, ts->unix_time);
-
-        // receive 3 timestamps
-        i++;
-        if (i >= 3) {
-
-            // to clean up a listener, call the remove listener
-            // this free's the queue from heap
-            esp_err_t err = badge_comms_remove_listener(timestamp_queue);
-
-            // show the result of the listener removal
-            ESP_LOGI(TAG, "unsubscription result: %s", esp_err_to_name(err));
-            return;
-        }
-    }
-}
-
-void send_timestamp(void) {
-    // first we create a struct with the data, as we would like to receive on the other side
-    badge_message_timestamp_t data = {
-        .unix_time = time(NULL)  // add the system timestamp to the message
+static void configure_keyboard(QueueHandle_t keyboard_event_queue) {
+    // update the keyboard event handler settings
+    event_t kbsettings = {
+        .type                                     = event_control_keyboard,
+        .args_control_keyboard.enable_typing      = false,
+        .args_control_keyboard.enable_actions     = {true, true, true, true, true},
+        .args_control_keyboard.enable_leds        = true,
+        .args_control_keyboard.enable_relay       = true,
+        kbsettings.args_control_keyboard.capslock = false,
     };
-
-    // then we wrap the data in something to send over the comms bus
-    badge_comms_message_t message = {0};
-    message.message_type          = MESSAGE_TYPE_TIMESTAMP;
-    message.data_len_to_send      = sizeof(data);
-    memcpy(message.data, &data, message.data_len_to_send);
-
-    // send the message over the comms bus
-    badge_comms_send_message(&message);
+    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 }
 
 void receive_str(void) {
@@ -104,7 +64,8 @@ void receive_str(void) {
         badge_message_str* ts = (badge_message_str*)message.data;
 
         // show we got a message, and its contents
-        ESP_LOGI(TAG, "Got a string: %s \n", ts->messagestr);
+        ESP_LOGI(TAG, "Got a string: %s \n", ts->nickname);
+        ESP_LOGI(TAG, "Got a string: %s \n", ts->payload);
 
         // receive 3 timestamps
         i++;
@@ -121,11 +82,11 @@ void receive_str(void) {
     }
 }
 
-void send_str(void) {
+void send_str(char _nickname[64], char _payload[30]) {
     // first we create a struct with the data, as we would like to receive on the other side
-    badge_message_str data = {
-        .messagestr = "banana bread"  // add the system timestamp to the message
-    };
+    badge_message_str data;
+    strcpy(data.nickname, _nickname);
+    strcpy(data.payload, _payload);
 
     // then we wrap the data in something to send over the comms bus
     badge_comms_message_t message = {0};
@@ -136,7 +97,6 @@ void send_str(void) {
     // send the message over the comms bus
     badge_comms_send_message(&message);
 }
-
 
 static esp_err_t nvs_get_str_wrapped(char const * namespace, char const * key, char* buffer, size_t buffer_size) {
     nvs_handle_t handle;
@@ -213,79 +173,50 @@ void DisplayBillboard(int _addmessageflag, char* _nickname, char* _message) {
 }
 
 screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
-
-    // update the keyboard event handler settings
-    event_t kbsettings = {
-        .type                                     = event_control_keyboard,
-        .args_control_keyboard.enable_typing      = false,
-        .args_control_keyboard.enable_actions     = {true, true, true, true, true},
-        .args_control_keyboard.enable_leds        = true,
-        .args_control_keyboard.enable_relay       = true,
-        kbsettings.args_control_keyboard.capslock = false,
-    };
-    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
-
-    // set screen font and buffer
-    // pax_font_t const * font = pax_font_sky;
-    // pax_buf_t*         gfx  = bsp_get_gfx_buffer();
-
-    // // memory
-    // nvs_handle_t handle;
-    // esp_err_t    res = nvs_open("owner", NVS_READWRITE, &handle);
-
-    // // read nickname from memory
-    // char   nickname[64] = {0};
-    // size_t size         = 0;
-    // res                 = nvs_get_str(handle, "nickname", NULL, &size);
-    // if ((res == ESP_OK) && (size <= sizeof(nickname) - 1)) {
-    //     res = nvs_get_str(handle, "nickname", nickname, &size);
-    //     if (res != ESP_OK || strlen(nickname) < 1) {
-    //         sprintf(nickname, "No nickname configured");
-    //     }
-    // }
-
-    // nvs_close(handle);
-
-    // // scale the nickame to fit the screen and display(I think)
-    // pax_vec1_t dims = {
-    //     .x = 999,
-    //     .y = 999,
-    // };
-    // float scale = 100;
-    // while (scale > 1) {
-    //     dims = pax_text_size(font, scale, nickname);
-    //     if (dims.x <= 296 && dims.y <= 100)
-    //         break;
-    //     scale -= 0.2;
-    // }
-    // ESP_LOGW(TAG, "Scale: %f", scale);
-    // pax_draw_text(gfx, BLACK, font, 18, 80, 50, "The cake is a lie The cake is a lie The cake is a lie");
-    //  pax_insert_png_buf(gfx, homescreen_png_start, homescreen_png_end - homescreen_png_start, 0, gfx->width - 24, 0);
-
-
-    // pax_draw_text(gfx, BLACK, font, fontsize, messageoffsetx, messageoffsety, billboardline);
-    // pax_draw_text(gfx, BLACK, font, fontsize, messageoffsetx, messageoffsety + textboxheight, nicknamearray[1]);
-    // pax_draw_text(gfx, BLACK, font, fontsize, messageoffsetx, messageoffsety + textboxheight * 2, nicknamearray[2]);
-
-    // pax_outline_rect(gfx, BLACK, textboxoffestx, textboxoffesty + textboxheight * 0, textboxwidth, textboxheight);
-    // pax_outline_rect(gfx, BLACK, textboxoffestx, textboxoffesty + textboxheight * 1, textboxwidth, textboxheight);
-    // pax_outline_rect(gfx, BLACK, textboxoffestx, textboxoffesty + textboxheight * 2, textboxwidth, textboxheight);
+    configure_keyboard(keyboard_event_queue);
     DisplayBillboard(0, "", "");
-    receive_str();
+
     for (int i = 0; i < nbmessages; i++) {
         strcpy(nicknamearray[i], "");
         strcpy(messagearray[i], "");
     }
+
+    char nickname[64]      = "";
+    char playermessage[30] = "";
+
+    // init broadcast receive
+    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
+    QueueHandle_t str_queue = badge_comms_add_listener(MESSAGE_TYPE_STRING, sizeof(badge_message_str));
+    // check if an error occurred (check logs for the reason)
+    if (str_queue == NULL) {
+        ESP_LOGE(TAG, "Failed to add listener");
+    }
+    ESP_LOGI(TAG, "listening");
+    badge_comms_message_t message;
+
     while (1) {
         event_t event = {0};
+
+        // upon receiving a message
+        if (xQueueReceive(str_queue, &message, pdMS_TO_TICKS(1)) == pdTRUE) {
+            badge_message_str* ts = (badge_message_str*)message.data;
+            ESP_LOGI(TAG, "Got a string: %s \n", ts->nickname);
+            ESP_LOGI(TAG, "Got a string: %s \n", ts->payload);
+            DisplayBillboard(1, ts->nickname, ts->payload);
+            vTaskDelay(pdMS_TO_TICKS(2000));
+        }
         if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
             switch (event.type) {
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
-                        case SWITCH_1: return screen_home; break;
+                        case SWITCH_1:  // when exiting, remove the billboard channel listener
+                            esp_err_t err = badge_comms_remove_listener(str_queue);
+                            ESP_LOGI(TAG, "unsubscription result: %s", esp_err_to_name(err));
+                            return screen_home;
+                            break;
 
-                        case SWITCH_2:
+                        case SWITCH_2:  // display dummy text, only locally
                             char dummynickname[3][sizenickname] = {"Zero Cool", "Acid Burn", "Cereal Killer"};
                             char dummymessage[3][sizemessages]  = {
                                 "Hack the Planet!",
@@ -296,22 +227,25 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
                             DisplayBillboard(1, dummynickname[i], dummymessage[i]);
 
                             break;
-                        case SWITCH_3: break;
-                        case SWITCH_4: send_str(); break;
+                        case SWITCH_3:
+                            DisplayBillboard(0, nickname, playermessage);
+                            break;  // refresh the display, it's bodge to remove
+                        case SWITCH_4: break;
                         case SWITCH_5:
-                            char playermessage[64];
-                            strcpy(playermessage, "Banana bread");
-                            // Using textedit here works until you press "ok", then crashes
-                            // textedit(
-                            //     "Type your message to broadcast:",
-                            //     application_event_queue,
-                            //     keyboard_event_queue,
-                            //     playermessage,
-                            //     sizeof(playermessage)
-                            // );
-                            char nickname[64] = "";
-                            nvs_get_str_wrapped("owner", "nickname", nickname, sizeof(nickname));
-                            DisplayBillboard(1, nickname, playermessage);
+                            if (textedit(
+                                    "Type your message to broadcast:",
+                                    application_event_queue,
+                                    keyboard_event_queue,
+                                    playermessage,
+                                    sizeof(playermessage)
+                                )) {
+                                nvs_get_str_wrapped("owner", "nickname", nickname, sizeof(nickname));
+                                DisplayBillboard(1, nickname, playermessage);
+                                send_str(nickname, playermessage);
+                            } else
+                                DisplayBillboard(0, nickname, playermessage);  // no new messages
+                            configure_keyboard(keyboard_event_queue);
+
                             break;
                         default: break;
                     }
