@@ -54,17 +54,87 @@ static char const * TAG = "testscreen";
 
 int playerboard[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 int ennemyboard[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-int telegraph_X[20] = {0, -8, 8, -16, 0, 16, -24, -8, 8, 24, -24, -8, 8, 24, -16, 0, 16, -8, 8, 0};
-int telegraph_Y[20] = {12, 27, 27, 42, 42, 42, 57, 57, 57, 57, 71, 71, 71, 71, 86, 86, 86, 101, 101, 116};
-int playership[6]   = {-1, -1, -1, -1, -1, -1};
-int ennemyship[6]   = {-1, -1, -1, -1, -1, -1};
+
+int playership[6] = {-1, -1, -1, -1, -1, -1};
+int ennemyship[6] = {-1, -1, -1, -1, -1, -1};
 int _position[20];
+
+int const telegraph_X[20] = {0, -8, 8, -16, 0, 16, -24, -8, 8, 24, -24, -8, 8, 24, -16, 0, 16, -8, 8, 0};
+int const telegraph_Y[20] = {12, 27, 27, 42, 42, 42, 57, 57, 57, 57, 71, 71, 71, 71, 86, 86, 86, 101, 101, 116};
 
 screen_t screen_battleship_placeships(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
 screen_t screen_battleship_battle(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
 screen_t screen_battleship_victory(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int _victoryflag
 );
+
+void AddShiptoBuffer(int _shiplenght, int _shiporientation, int _x, int _y) {
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+
+    // horizontal ship coordonates orientation east
+    int of[13][2] = {
+        {-8, -4},
+        {-8, 5},
+        {-7, -5},
+        {-7, 6},
+        {-6, -6},
+        {5 + 16 * (_shiplenght - 1), -6},
+        {-6, 7},
+        {5 + 16 * (_shiplenght - 1), 7},
+        {5 + 16 * (_shiplenght - 1), -6},
+        {11 + 16 * (_shiplenght - 1), 0},
+        {5 + 16 * (_shiplenght - 1), 7},
+        {11 + 16 * (_shiplenght - 1), 1},
+        {16, 0}
+    };
+
+    // diagonal ship coordonates orientation southeasty
+    int od[10][2] = {
+        {8, 15},
+        {-6, 5},
+        {-8, -1},
+        {-7, -4},
+        {0, -9},
+        {4, -8},
+        {6, -6},
+        {9 + 8 * (_shiplenght - 1), 2 + 15 * (_shiplenght - 1)},
+        {6 + 8 * (_shiplenght - 1), 11 + 15 * (_shiplenght - 1)},
+        {-3 + 8 * (_shiplenght - 1), 8 + 15 * (_shiplenght - 1)}
+    };
+
+    switch (_shiporientation) {
+        case west:
+        case east:
+            if (_shiporientation == west)  // flip on y axis if west
+                for (int i = 0; i < 13; i++) of[i][0] = -of[i][0];
+            for (int i = 0; i < _shiplenght; i++) AddBlocktoBuffer(_x + i * of[12][0], _y);
+            _y--;
+
+            pax_draw_line(gfx, BLACK, _x + of[0][0], _y + of[0][1], _x + of[1][0], _y + of[1][1]);
+            pax_set_pixel(gfx, BLACK, _x + of[2][0] - 1, _y + of[2][1]);
+            pax_set_pixel(gfx, BLACK, _x + of[3][0] - 1, _y + of[3][1]);
+
+            pax_draw_line(gfx, BLACK, _x + of[4][0], _y + of[4][1], _x + of[5][0], _y + of[5][1]);
+            pax_draw_line(gfx, BLACK, _x + of[6][0], _y + of[6][1], _x + of[7][0], _y + of[7][1]);
+
+            pax_draw_line(gfx, BLACK, _x + of[8][0], _y + of[8][1], _x + of[9][0], _y + of[9][1]);
+            pax_draw_line(gfx, BLACK, _x + of[10][0], _y + of[10][1], _x + of[11][0], _y + of[11][1]);
+            break;
+
+        default:
+            if (_shiporientation == southwest || _shiporientation == northwest)  // flip on y axis if west
+                for (int i = 0; i < 10; i++) od[i][0] = -od[i][0];
+            if (_shiporientation == northeast || _shiporientation == northwest)  // flip on x axis if north
+                for (int i = 0; i < 10; i++) od[i][1] = -od[i][1];
+            for (int i = 0; i < _shiplenght; i++) AddBlocktoBuffer(_x + i * od[0][0], _y + i * od[0][1]);
+
+            for (int i = 1; i < 9; i++)
+                pax_draw_line(gfx, BLACK, _x + od[i][0], _y + od[i][1], _x + od[i + 1][0], _y + od[i + 1][1]);
+            pax_draw_line(gfx, BLACK, _x + od[9][0], _y + od[9][1], _x + od[1][0], _y + od[1][1]);  // last line from 0
+                                                                                                    // to 8
+            break;
+    }
+}
 
 void Display_battleship_placeships(int _shipplaced, int _flagstart);
 void Display_battleship_battle(char _nickname[64], char _ennemyname[64], int _turn);
@@ -505,16 +575,20 @@ int TelegraphtoBlock(char _inputletter) {
     }
 }
 
-void Displayblockstatus(int _offset_x, int _block, int _status) {
+void AddBlockStatustoBuffer(int _x, int _y, int _status) {
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     switch (_status) {
         case water: break;
-        case missedshot: pax_outline_circle(gfx, BLACK, _offset_x + telegraph_X[_block], telegraph_Y[_block], 3); break;
-        case boat: pax_draw_circle(gfx, BLACK, _offset_x + telegraph_X[_block], telegraph_Y[_block], 3); break;
-        case boathit: pax_draw_circle(gfx, RED, _offset_x + telegraph_X[_block], telegraph_Y[_block], 3); break;
-        case boatdestroyed: pax_draw_circle(gfx, RED, _offset_x + telegraph_X[_block], telegraph_Y[_block], 5); break;
+        case missedshot: pax_outline_circle(gfx, BLACK, _x, _y, 3); break;
+        case boat: pax_draw_circle(gfx, BLACK, _x, _y, 3); break;
+        case boathit: pax_draw_circle(gfx, RED, _x, _y, 3); break;
+        case boatdestroyed: pax_draw_circle(gfx, RED, _x, _y, 5); break;
         default: break;
     }
+}
+
+void AddTelegraphBlockStatustoBuffer(int _offset_x, int _block, int _status) {
+    AddBlockStatustoBuffer(_offset_x + telegraph_X[_block], telegraph_Y[_block], _status);
 }
 
 screen_t screen_test_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
@@ -532,9 +606,7 @@ screen_t screen_test_entry(QueueHandle_t application_event_queue, QueueHandle_t 
     };
     xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 
-    // configure_keyboard(keyboard_event_queue);
-
-    bsp_apply_lut(lut_1s);
+    bsp_apply_lut(lut_4s);
     pax_background(gfx, WHITE);
     pax_insert_png_buf(gfx, caronl_png_start, caronl_png_end - caronl_png_start, 0, 0, 0);
     AddSwitchesBoxtoBuffer(SWITCH_1);
@@ -546,11 +618,7 @@ screen_t screen_test_entry(QueueHandle_t application_event_queue, QueueHandle_t 
     AddSwitchesBoxtoBuffer(SWITCH_5);
     pax_draw_text(gfx, BLACK, font, 9, 8 + SWITCH_5 * 62, 116, "Online");
 
-    // Addborder2toBuffer();
     bsp_display_flush();
-
-
-
     while (1) {
         event_t event = {0};
         if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
@@ -706,10 +774,6 @@ void Display_battleship_placeships(int _shipplaced, int _flagstart) {
     pax_buf_t*         gfx  = bsp_get_gfx_buffer();
 
     ESP_LOGE(TAG, "ship placed: %d", _shipplaced);
-    debugboardstatus(playerboard);
-    debugshipstatus(playership);
-
-    CheckforShipPlacement(playership, _shipplaced, 0);
 
     switch (_shipplaced) {
         // case 0: CheckforShipPlacement(2, playership, 0, 1); break;
@@ -724,10 +788,13 @@ void Display_battleship_placeships(int _shipplaced, int _flagstart) {
         default: break;
     }
 
+    debugboardstatus(playerboard);
+    debugshipstatus(playership);
+
+
     ESP_LOGE(TAG, "position");
     debugboardstatus(_position);
 
-    bsp_apply_lut(lut_1s);
     pax_background(gfx, WHITE);
     DisplayTelegraph(BLACK, telegraph_x);
     AddSwitchesBoxtoBuffer(SWITCH_1);
@@ -748,20 +815,66 @@ void Display_battleship_placeships(int _shipplaced, int _flagstart) {
     pax_draw_text(gfx, BLACK, font, fontsize, text_x, text_y + fontsize, "the telegraph to enter");
     pax_draw_text(gfx, BLACK, font, fontsize, text_x + 15, text_y + fontsize * 2, "its coordinates");
 
-    // additional contextual instructions
-    // if (_shipplaced >= 2) {
     pax_outline_circle(gfx, BLACK, text_x + 10, text_y + 8 + gapinstruction_y, 3);
-    pax_outline_circle(gfx, BLACK, text_x + 10, text_y + 8 + gapinstruction_y, 6);
+    AddBlocktoBuffer(text_x + 10, text_y + 8 + gapinstruction_y);
     pax_draw_text(gfx, BLACK, font, fontsize, text_x + 20, text_y + gapinstruction_y, "Shows where the ");
     pax_draw_text(gfx, BLACK, font, fontsize, text_x + 20, text_y + gapinstruction_y + fontsize, "ships can be placed");
-    // }
 
-    for (int i = 0; i < 20; i++) {
-        Displayblockstatus(telegraph_x, i, playerboard[i]);
-        Displayblockstatus(telegraph_x, i, _position[i]);
+    // ship placed on the left
+    int leftship_x     = 15;
+    int leftship_x_gap = 16;
+    int leftship_y     = 25;
+    int leftship_y_gap = 25;
+
+    AddShiptoBuffer(1, east, leftship_x, leftship_y);
+    if (_shipplaced == 0)
+        AddBlockStatustoBuffer(leftship_x, leftship_y, missedshot);
+    if (_shipplaced > 0) {
+        AddBlockStatustoBuffer(leftship_x, leftship_y, boat);
+        AddShiptoBuffer(1, 2, telegraph_x + telegraph_X[playership[0]], telegraph_Y[playership[0]]);
     }
 
-    // Addborder2toBuffer();
+    AddShiptoBuffer(2, east, leftship_x, leftship_y + leftship_y_gap);
+    if (_shipplaced == 1)
+        AddBlockStatustoBuffer(leftship_x, leftship_y + leftship_y_gap, missedshot);
+    if (_shipplaced > 1)
+        AddBlockStatustoBuffer(leftship_x, leftship_y + leftship_y_gap, boat);
+    if (_shipplaced == 2)
+        AddBlockStatustoBuffer(leftship_x + leftship_x_gap, leftship_y + leftship_y_gap, missedshot);
+    if (_shipplaced > 2) {
+        AddBlockStatustoBuffer(leftship_x + leftship_x_gap, leftship_y + leftship_y_gap, boat);
+        AddShiptoBuffer(
+            2,
+            CheckforShipPlacement(playership, _shipplaced, 2),
+            telegraph_x + telegraph_X[playership[1]],
+            telegraph_Y[playership[1]]
+        );
+    }
+
+    AddShiptoBuffer(3, east, leftship_x, leftship_y + leftship_y_gap * 2);
+    if (_shipplaced == 3)
+        AddBlockStatustoBuffer(leftship_x, leftship_y + leftship_y_gap * 2, missedshot);
+    if (_shipplaced > 3)
+        AddBlockStatustoBuffer(leftship_x, leftship_y + leftship_y_gap * 2, boat);
+    if (_shipplaced == 5)
+        AddBlockStatustoBuffer(leftship_x + leftship_x_gap * 2, leftship_y + leftship_y_gap * 2, missedshot);
+    if (_shipplaced > 5) {
+        AddBlockStatustoBuffer(leftship_x + leftship_x_gap, leftship_y + leftship_y_gap * 2, boat);
+        AddBlockStatustoBuffer(leftship_x + leftship_x_gap * 2, leftship_y + leftship_y_gap * 2, boat);
+        AddShiptoBuffer(
+            3,
+            CheckforShipPlacement(playership, _shipplaced, 3),
+            telegraph_x + telegraph_X[playership[3]],
+            telegraph_Y[playership[3]]
+        );
+    }
+
+    CheckforShipPlacement(playership, _shipplaced, 0);  // adds free positions for next run
+
+    for (int i = 0; i < 20; i++) {
+        AddTelegraphBlockStatustoBuffer(telegraph_x, i, playerboard[i]);
+        AddTelegraphBlockStatustoBuffer(telegraph_x, i, _position[i]);
+    }
     bsp_display_flush();
 }
 
@@ -894,7 +1007,6 @@ void Display_battleship_battle(char _nickname[64], char _ennemyname[64], int _tu
     int text_y            = 35;
     int text_fontsize     = 9;
 
-    bsp_apply_lut(lut_1s);
     pax_background(gfx, WHITE);
 
     DisplayTelegraph(BLACK, telegraphplayer_x);
@@ -915,19 +1027,51 @@ void Display_battleship_battle(char _nickname[64], char _ennemyname[64], int _tu
     // instructions
     pax_draw_text(gfx, BLACK, font, text_fontsize, text_x, text_y, "Miss");
     pax_outline_circle(gfx, BLACK, text_x - 10, text_y + 5, 3);
-    pax_outline_circle(gfx, BLACK, text_x - 10, text_y + 5, 6);
+    AddBlocktoBuffer(text_x - 10, text_y + 5);
     pax_draw_text(gfx, BLACK, font, text_fontsize, text_x, text_y + text_fontsize * 2, "Hit");
     pax_draw_circle(gfx, RED, text_x - 10, text_y + text_fontsize * 2 + 5, 3);
-    pax_outline_circle(gfx, BLACK, text_x - 10, text_y + text_fontsize * 2 + 5, 6);
+    AddBlocktoBuffer(text_x - 10, text_y + text_fontsize * 2 + 5);
     pax_draw_text(gfx, BLACK, font, text_fontsize, text_x, text_y + text_fontsize * 4, "Sunken");
     pax_draw_circle(gfx, RED, text_x - 10, text_y + text_fontsize * 4 + 5, 5);
-    pax_outline_circle(gfx, BLACK, text_x - 10, text_y + text_fontsize * 4 + 5, 6);
+    AddBlocktoBuffer(text_x - 10, text_y + text_fontsize * 4 + 5);
 
+    //  add the player ships to buffer
+    AddShiptoBuffer(1, 2, telegraphplayer_x + telegraph_X[playership[0]], telegraph_Y[playership[0]]);
+    AddShiptoBuffer(
+        2,
+        CheckforShipPlacement(playership, 0, 2),
+        telegraphplayer_x + telegraph_X[playership[1]],
+        telegraph_Y[playership[1]]
+    );
+    AddShiptoBuffer(
+        3,
+        CheckforShipPlacement(playership, 0, 3),
+        telegraphplayer_x + telegraph_X[playership[3]],
+        telegraph_Y[playership[3]]
+    );
+
+    //  add the ennemy ships to buffer
+    if (ennemyboard[ennemyship[0]] == boatdestroyed)
+        AddShiptoBuffer(1, 2, telegraphennemy_x + telegraph_X[ennemyship[0]], telegraph_Y[ennemyship[0]]);
+    if (ennemyboard[ennemyship[1]] == boatdestroyed)
+        AddShiptoBuffer(
+            2,
+            CheckforShipPlacement(ennemyship, 0, 2),
+            telegraphennemy_x + telegraph_X[ennemyship[1]],
+            telegraph_Y[ennemyship[1]]
+        );
+    if (ennemyboard[ennemyship[3]] == boatdestroyed)
+        AddShiptoBuffer(
+            3,
+            CheckforShipPlacement(ennemyship, 0, 3),
+            telegraphennemy_x + telegraph_X[ennemyship[3]],
+            telegraph_Y[ennemyship[3]]
+        );
 
     for (int i = 0; i < 20; i++) {
-        Displayblockstatus(telegraphplayer_x, i, playerboard[i]);
+        AddTelegraphBlockStatustoBuffer(telegraphplayer_x, i, playerboard[i]);
         // if (ennemyboard[i] != boat)
-        Displayblockstatus(telegraphennemy_x, i, ennemyboard[i]);
+        AddTelegraphBlockStatustoBuffer(telegraphennemy_x, i, ennemyboard[i]);
     }
 
     bsp_display_flush();
@@ -949,14 +1093,12 @@ screen_t screen_battleship_victory(
     pax_font_t const * font = pax_font_sky;
     pax_buf_t*         gfx  = bsp_get_gfx_buffer();
 
-    bsp_apply_lut(lut_4s);
     pax_background(gfx, WHITE);
     if (_victoryflag == victory)
         pax_insert_png_buf(gfx, caronv_png_start, caronv_png_end - caronv_png_start, 0, 0, 0);
     if (_victoryflag == defeat)
         pax_insert_png_buf(gfx, carond_png_start, carond_png_end - carond_png_start, 0, 0, 0);
     bsp_display_flush();
-    bsp_apply_lut(lut_1s);
 
     while (1) {
         event_t event = {0};

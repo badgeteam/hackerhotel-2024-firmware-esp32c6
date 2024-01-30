@@ -123,7 +123,7 @@ void app_main(void) {
     }
 
     // Main application
-    screen_t current_screen = screen_billboard;
+    screen_t current_screen = screen_test;
     while (1) {
         switch (current_screen) {
             case screen_mascots:

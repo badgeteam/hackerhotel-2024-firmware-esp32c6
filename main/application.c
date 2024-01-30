@@ -385,6 +385,22 @@ void DisplayblockstatusBS(int _position, int _block, int _status) {
     }
 }
 
+
+void AddBlocktoBuffer(int _x, int _y) {
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    _y--;
+    pax_draw_line(gfx, BLACK, _x + 5, _y + -1, _x + 5, _y + 2);
+    pax_draw_line(gfx, BLACK, _x + 5, _y + 2, _x + 2, _y + 5);
+
+    pax_draw_line(gfx, BLACK, _x + 2, _y + 5, _x + -1, _y + 5);
+    pax_draw_line(gfx, BLACK, _x + -1, _y + 5, _x + -4, _y + 2);
+
+    pax_draw_line(gfx, BLACK, _x + -4, _y + 2, _x + -4, _y + -1);
+    pax_draw_line(gfx, BLACK, _x + -4, _y + -1, _x + -1, _y + -4);
+
+    pax_draw_line(gfx, BLACK, _x + -1, _y + -4, _x + 2, _y + -4);
+    pax_draw_line(gfx, BLACK, _x + 2, _y + -4, _x + 5, _y + -1);
+}
 // Position is the X coordinate of the center/left (since it's even) pixel
 void DisplayTelegraph(int _colour, int _position) {
     pax_buf_t* gfx = bsp_get_gfx_buffer();
@@ -399,7 +415,8 @@ void DisplayTelegraph(int _colour, int _position) {
 
     // Letter circles
 
-    for (int i = 0; i < 20; i++) pax_outline_circle(gfx, _colour, _position + telegraphX[i], telegraphY[i], 6);
+    for (int i = 0; i < 20; i++) AddBlocktoBuffer(_position + telegraphX[i], telegraphY[i]);
+    // pax_outline_circle(gfx, _colour, _position + telegraphX[i], telegraphY[i], 6);
 
     // pax_outline_circle(gfx, _colour, _position, 12, 6);
 

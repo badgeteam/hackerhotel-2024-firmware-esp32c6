@@ -19,6 +19,7 @@
 
 void Addborder1toBuffer(void);
 void Addborder2toBuffer(void);
+void AddBlocktoBuffer(int _x, int _y);
 
 void DisplayWallofTextWords(
     int  _fontsize,

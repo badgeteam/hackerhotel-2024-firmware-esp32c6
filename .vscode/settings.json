@@ -70,7 +70,9 @@
         "esp_wifi_types.h": "c",
         "esp_log.h": "c",
         "esp_random.h": "c",
-        "screen_test.h": "c"
+        "screen_test.h": "c",
+        "menu.h": "c",
+        "stdio.h": "c"
     },
     "editor.formatOnType": false,
     "editor.formatOnSave": true,
