@@ -1,4 +1,5 @@
 #include "screen_settings.h"
+#include "application.h"
 #include "bsp.h"
 #include "esp_err.h"
 #include "esp_log.h"
@@ -107,7 +108,7 @@ static esp_err_t nvs_set_u8_wrapped(char const * namespace, char const * key, ui
 }
 
 static void edit_nickname(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
-    char nickname[64] = {0};
+    char nickname[nicknamelenght] = {0};
     nvs_get_str_wrapped("owner", "nickname", nickname, sizeof(nickname));
     bool res =
         textedit("What is your name?", application_event_queue, keyboard_event_queue, nickname, sizeof(nickname));
@@ -186,9 +187,9 @@ static bool edit_network_type(wifi_auth_mode_t* network_type) {
         }
     }
 
-//    bool               render = true;
-//    menu_wifi_action_t action = ACTION_NONE;
-    wifi_auth_mode_t   pick   = *network_type;
+    //    bool               render = true;
+    //    menu_wifi_action_t action = ACTION_NONE;
+    wifi_auth_mode_t pick = *network_type;
 
     // action = (menu_wifi_action_t)menu_get_callback_args(menu, menu_get_position(menu));
     // menu_render(pax_buffer, menu, 0, 0, pax_buffer->width, 220);
@@ -273,7 +274,8 @@ static void draw_wifi_defaults() {
         18,
         5,
         5,
-        "WiFi:\nButton 1&2: Return\nButton 3: Manual enterprise\nButton 4: Default settings\nButton 5: Manual WPA2-PSK configuration"
+        "WiFi:\nButton 1&2: Return\nButton 3: Manual enterprise\nButton 4: Default settings\nButton 5: Manual WPA2-PSK "
+        "configuration"
     );
     bsp_display_flush();
 }
@@ -306,19 +308,19 @@ int wifi_defaults(QueueHandle_t application_event_queue, QueueHandle_t keyboard_
 
 
 static void edit_wifi(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
-    char             ssid[33]     = {0};
-    char             password[65] = {0};
-    char             username[65] = {0};
-    char             identity[65] = {0};
+    char ssid[33]     = {0};
+    char password[65] = {0};
+    char username[65] = {0};
+    char identity[65] = {0};
     bool res;
 
     int d = wifi_defaults(application_event_queue, keyboard_event_queue);
 
     switch (d) {
-        case 1: // set hackerhotel defaults
+        case 1:  // set hackerhotel defaults
             wifi_set_defaults();
             return;
-        case 2: // set custom WPA2_PSK network
+        case 2:  // set custom WPA2_PSK network
             nvs_get_str_wrapped("system", "wifi.ssid", ssid, sizeof(ssid));
             nvs_get_str_wrapped("system", "wifi.password", password, sizeof(password));
 
@@ -373,7 +375,7 @@ static void edit_wifi(QueueHandle_t application_event_queue, QueueHandle_t keybo
 
             configure_keyboard(keyboard_event_queue);
             return;
-        default: // cancel
+        default:  // cancel
             return;
     }
 }

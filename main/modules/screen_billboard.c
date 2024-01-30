@@ -20,15 +20,14 @@
 #include <esp_random.h>
 #include <string.h>
 
-#define nbmessages   9
-#define sizenickname 64
-#define sizemessages 64
+#define nbmessages 9
 
 static char const * TAG = "billboard";
 
-char nicknamearray[nbmessages][sizenickname];
-char messagearray[nbmessages][sizemessages];
+char nicknamearray[nbmessages][nicknamelenght];
+char messagearray[nbmessages][messagelenght];
 int  messagecursor = 0;
+int  initflag      = 0;
 
 static void configure_keyboard(QueueHandle_t keyboard_event_queue) {
     // update the keyboard event handler settings
@@ -41,6 +40,24 @@ static void configure_keyboard(QueueHandle_t keyboard_event_queue) {
         kbsettings.args_control_keyboard.capslock = false,
     };
     xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+}
+static esp_err_t nvs_get_str_wrapped(char const * namespace, char const * key, char* buffer, size_t buffer_size) {
+    nvs_handle_t handle;
+    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+    if (res == ESP_OK) {
+        size_t size = 0;
+        res         = nvs_get_str(handle, key, NULL, &size);
+        if ((res == ESP_OK) && (size <= buffer_size - 1)) {
+            res = nvs_get_str(handle, key, buffer, &size);
+            if (res != ESP_OK) {
+                buffer[0] = '\0';
+            }
+        }
+    } else {
+        buffer[0] = '\0';
+    }
+    nvs_close(handle);
+    return res;
 }
 
 void receive_str(void) {
@@ -82,7 +99,7 @@ void receive_str(void) {
     }
 }
 
-void send_str(char _nickname[64], char _payload[30]) {
+void send_str(char _nickname[nicknamelenght], char _payload[messagelenght]) {
     // first we create a struct with the data, as we would like to receive on the other side
     badge_message_str data;
     strcpy(data.nickname, _nickname);
@@ -98,25 +115,6 @@ void send_str(char _nickname[64], char _payload[30]) {
     badge_comms_send_message(&message);
 }
 
-static esp_err_t nvs_get_str_wrapped(char const * namespace, char const * key, char* buffer, size_t buffer_size) {
-    nvs_handle_t handle;
-    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
-    if (res == ESP_OK) {
-        size_t size = 0;
-        res         = nvs_get_str(handle, key, NULL, &size);
-        if ((res == ESP_OK) && (size <= buffer_size - 1)) {
-            res = nvs_get_str(handle, key, buffer, &size);
-            if (res != ESP_OK) {
-                buffer[0] = '\0';
-            }
-        }
-    } else {
-        buffer[0] = '\0';
-    }
-    nvs_close(handle);
-    return res;
-}
-
 void DisplayBillboard(int _addmessageflag, char* _nickname, char* _message) {
     // set screen font and buffer
     pax_font_t const * font = pax_font_sky;
@@ -124,7 +122,7 @@ void DisplayBillboard(int _addmessageflag, char* _nickname, char* _message) {
 
     // set infrastructure
     pax_background(gfx, WHITE);
-    pax_draw_text(gfx, BLACK, font, 18, 80, 0, "The billboard");
+    pax_draw_text(gfx, BLACK, font, 18, 70, 0, "The billboard");
     AddSwitchesBoxtoBuffer(SWITCH_1);
     pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 8, 116, "Exit");
     AddSwitchesBoxtoBuffer(SWITCH_5);
@@ -141,48 +139,65 @@ void DisplayBillboard(int _addmessageflag, char* _nickname, char* _message) {
 
     int fontsize = 9;
 
-    char billboardline[64];
+    char billboardline[128];
 
     // if the add message flag is raised
     if (_addmessageflag) {
-        // clear board if full and reset cursor
-        if (messagecursor >= nbmessages) {
-            for (int i = 0; i < nbmessages; i++) {
-                strcpy(nicknamearray[i], "");
-                strcpy(messagearray[i], "");
-                messagecursor = 0;
-            }
-        }
         // add message to the board
         strcpy(nicknamearray[messagecursor], _nickname);
         strcpy(messagearray[messagecursor], _message);
+
+        // increment or reset cursor
+        if (messagecursor >= nbmessages) {
+            messagecursor = 0;
+        }
         messagecursor++;
     }
 
-
     for (int i = 0; i < nbmessages; i++) {
-        strcpy(billboardline, nicknamearray[i]);
-        if (strlen(nicknamearray[i]) != 0)
+        int j = 0 - i;
+        if (j < 0)
+            j = nbmessages - i;
+        strcpy(billboardline, nicknamearray[j]);
+        if (strlen(nicknamearray[j]) != 0)  // don't put the colon if there is no message
             strcat(billboardline, ": ");
-        strcat(billboardline, messagearray[i]);
+        strcat(billboardline, messagearray[j]);
 
-        pax_draw_text(gfx, BLACK, font, fontsize, messageoffsetx, messageoffsety + textboxheight * i, billboardline);
-        pax_outline_rect(gfx, BLACK, textboxoffestx, textboxoffesty + textboxheight * i, textboxwidth, textboxheight);
+        int shift = (i + messagecursor + nbmessages - 1) % nbmessages;
+
+        pax_draw_text(
+            gfx,
+            BLACK,
+            font,
+            fontsize,
+            messageoffsetx,
+            messageoffsety + textboxheight * shift,
+            billboardline
+        );
+        pax_outline_rect(
+            gfx,
+            BLACK,
+            textboxoffestx,
+            textboxoffesty + textboxheight * shift,
+            textboxwidth,
+            textboxheight
+        );
     }
     bsp_display_flush();
 }
 
 screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     configure_keyboard(keyboard_event_queue);
-    DisplayBillboard(0, "", "");
 
-    for (int i = 0; i < nbmessages; i++) {
-        strcpy(nicknamearray[i], "");
-        strcpy(messagearray[i], "");
-    }
+    if (!initflag)
+        for (int i = 0; i < nbmessages; i++) {
+            strcpy(nicknamearray[i], "");
+            strcpy(messagearray[i], "");
+            initflag = 1;
+        }
 
-    char nickname[64]      = "";
-    char playermessage[30] = "";
+    char nickname[nicknamelenght]     = "";
+    char playermessage[messagelenght] = "";
 
     // init broadcast receive
     // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
@@ -194,6 +209,8 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
     ESP_LOGI(TAG, "listening");
     badge_comms_message_t message;
 
+    DisplayBillboard(0, "", "");  // Draw billboard without adding message
+
     while (1) {
         event_t event = {0};
 
@@ -203,9 +220,12 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
             ESP_LOGI(TAG, "Got a string: %s \n", ts->nickname);
             ESP_LOGI(TAG, "Got a string: %s \n", ts->payload);
             DisplayBillboard(1, ts->nickname, ts->payload);
-            vTaskDelay(pdMS_TO_TICKS(2000));
+            bsp_set_addressable_led(LED_PURPLE);
+            vTaskDelay(pdMS_TO_TICKS(100));
+            bsp_set_addressable_led(LED_OFF);
         }
-        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+
+        if (xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE) {
             switch (event.type) {
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
@@ -216,20 +236,8 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
                             return screen_home;
                             break;
 
-                        case SWITCH_2:  // display dummy text, only locally
-                            char dummynickname[3][sizenickname] = {"Zero Cool", "Acid Burn", "Cereal Killer"};
-                            char dummymessage[3][sizemessages]  = {
-                                "Hack the Planet!",
-                                "Mess with the best, die like the rest",
-                                "1337"
-                            };
-                            int i = esp_random() % 3;
-                            DisplayBillboard(1, dummynickname[i], dummymessage[i]);
-
-                            break;
-                        case SWITCH_3:
-                            DisplayBillboard(0, nickname, playermessage);
-                            break;  // refresh the display, it's bodge to remove
+                        case SWITCH_2: break;
+                        case SWITCH_3: break;
                         case SWITCH_4: break;
                         case SWITCH_5:
                             if (textedit(
@@ -242,10 +250,14 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
                                 nvs_get_str_wrapped("owner", "nickname", nickname, sizeof(nickname));
                                 DisplayBillboard(1, nickname, playermessage);
                                 send_str(nickname, playermessage);
+                                strcpy(playermessage, "");
+
+                                bsp_set_addressable_led(LED_GREEN);
+                                vTaskDelay(pdMS_TO_TICKS(100));
+                                bsp_set_addressable_led(LED_OFF);
                             } else
                                 DisplayBillboard(0, nickname, playermessage);  // no new messages
                             configure_keyboard(keyboard_event_queue);
-
                             break;
                         default: break;
                     }

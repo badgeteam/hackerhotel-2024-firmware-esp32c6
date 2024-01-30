@@ -98,10 +98,6 @@ int     popboat          = 0;
 
 esp_err_t TextInputTelegraph(void);
 
-void debug_(void) {
-    bsp_set_addressable_led(0xFF0000);
-}
-
 void Addborder1toBuffer(void) {
 
     pax_insert_png_buf(bsp_get_gfx_buffer(), border1_png_start, border1_png_end - border1_png_start, 0, 0, 0);
