@@ -59,9 +59,6 @@ screen_t screen_battleship_entry(QueueHandle_t application_event_queue, QueueHan
     }*/
 
 
-
-    app_thread_entry(application_event_queue);
-
     bsp_apply_lut(lut_1s);
 
     return screen_home;

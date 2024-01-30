@@ -47,6 +47,5 @@ void Justify_right_text(
     pax_buf_t* buf, pax_col_t color, pax_font_t const * font, float font_size, float x, float y, char const * text
 );
 int  DisplayExitConfirmation(char _prompt[128], QueueHandle_t keyboard_event_queue);
-void app_thread_entry(QueueHandle_t event_queue);
 void AddSwitchesBoxtoBuffer(int _switch);
 void DisplayTelegraph(int _colour, int _position);
