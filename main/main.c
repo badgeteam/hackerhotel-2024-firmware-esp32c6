@@ -25,7 +25,6 @@
 #include "pax_gfx.h"
 #include "resources.h"
 #include "riscv/rv_utils.h"
-#include "screen_battleship.h"
 #include "screen_billboard.h"
 #include "screen_home.h"
 #include "screen_mascots.h"
@@ -141,11 +140,6 @@ void app_main(void) {
                     current_screen = screen_settings_entry(application_event_queue, keyboard_event_queue);
                     break;
                 }
-            case screen_battleship:
-                {
-                    current_screen = screen_battleship_entry(application_event_queue, keyboard_event_queue);
-                    break;
-                }
             case screen_shades:
                 {
                     current_screen = screen_shades_entry(application_event_queue, keyboard_event_queue);
@@ -156,9 +150,9 @@ void app_main(void) {
                     current_screen = screen_billboard_entry(application_event_queue, keyboard_event_queue);
                     break;
                 }
-            case screen_test:
+            case screen_battleship:
                 {
-                    current_screen = screen_test_entry(application_event_queue, keyboard_event_queue);
+                    current_screen = screen_battleship_entry(application_event_queue, keyboard_event_queue);
                     break;
                 }
             default: current_screen = screen_home;

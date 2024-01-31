@@ -1,4 +1,5 @@
 #include "application.h"
+#include "badge_messages.h"
 #include "bsp.h"
 #include "esp_err.h"
 #include "esp_log.h"
@@ -25,16 +26,13 @@ extern uint8_t const caronv_png_end[] asm("_binary_caronv_png_end");
 extern uint8_t const carond_png_start[] asm("_binary_carond_png_start");
 extern uint8_t const carond_png_end[] asm("_binary_carond_png_end");
 
-#define nbmessages   9
-#define sizenickname 64
-#define sizemessages 64
-
 #define water         0
 #define boat          1
 #define missedshot    2
 #define boathit       3
 #define boatdestroyed 4
 
+#define playing 0
 #define victory 1
 #define defeat  2
 
@@ -52,17 +50,26 @@ extern uint8_t const carond_png_end[] asm("_binary_carond_png_end");
 
 static char const * TAG = "testscreen";
 
-int playerboard[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-int ennemyboard[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-int playership[6] = {-1, -1, -1, -1, -1, -1};
-int ennemyship[6] = {-1, -1, -1, -1, -1, -1};
-int _position[20];
-
-screen_t screen_battleship_placeships(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
-screen_t screen_battleship_battle(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
+screen_t screen_battleship_splash(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
+screen_t screen_battleship_placeships(
+    QueueHandle_t application_event_queue,
+    QueueHandle_t keyboard_event_queue,
+    int           playerboard[20],
+    int           _position[20],
+    int           playership[6]
+);
+screen_t screen_battleship_battle(
+    QueueHandle_t application_event_queue,
+    QueueHandle_t keyboard_event_queue,
+    int           playerboard[20],
+    int           ennemyboard[20],
+    int           _position[20],
+    int*          victoryflag,
+    int           playership[6],
+    int           ennemyship[6]
+);
 screen_t screen_battleship_victory(
-    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int _victoryflag
+    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int* victoryflag
 );
 
 void AddShiptoBuffer(int _shiplenght, int _shiporientation, int _x, int _y) {
@@ -133,8 +140,19 @@ void AddShiptoBuffer(int _shiplenght, int _shiporientation, int _x, int _y) {
     }
 }
 
-void Display_battleship_placeships(int _shipplaced, int _flagstart);
-void Display_battleship_battle(char _nickname[64], char _ennemyname[64], int _turn);
+void Display_battleship_placeships(
+    int playerboard[20], int _shipplaced, int _flagstart, int _position[20], int playership[6]
+);
+void Display_battleship_battle(
+    int  playerboard[20],
+    int  ennemyboard[20],
+    char _nickname[nicknamelenght],
+    char _ennemyname[nicknamelenght],
+    int  _turn,
+    int  _position[20],
+    int  playership[6],
+    int  ennemyship[6]
+);
 void debugboardstatus(int board[20]) {
     ESP_LOGE(TAG, "      %d", board[0]);
     ESP_LOGE(TAG, "    %d - %d", board[1], board[2]);
@@ -154,7 +172,7 @@ void debugshipstatus(int ships[6]) {
 // either return the possible blocks for the front of the ship, or the back
 // _FB for which part of the boat to place, if front (first part) _FB = 1, back is 0
 // _blockfrontship show the block off the front of the ship, only relevant if _FB = 0
-int CheckforShipPlacement(int _ships[6], int _shipplaced, int _misc) {
+int CheckforShipPlacement(int _ships[6], int _shipplaced, int _misc, int _position[20]) {
 
     for (int i = 0; i < 20; i++) _position[i] = 0;                                                    // reset position
     int validlines[24][4] = {{0, 1, 3, 6},     {2, 4, 7, -1},    {5, 8, -1, -1},   {-1, -1, -1, -1},  //
@@ -163,13 +181,6 @@ int CheckforShipPlacement(int _ships[6], int _shipplaced, int _misc) {
                              {-1, -1, -1, -1}, {11, 14, -1, -1}, {12, 15, 17, -1}, {13, 16, 18, 19},  //
                              {10, 14, 17, 19}, {11, 15, 18, -1}, {12, 16, -1, -1}, {-1, -1, -1, -1},  //
                              {10, 11, 12, 13}, {14, 15, 16, -1}, {17, 18, -1, -1}, {-1, -1, -1, -1}};
-
-    // int validlines[24][4] = {{0, 1, 3, 6},     {2, 4, 7, -1},    {5, 8, -1, -1},   {-1, -1, -1, -1}, {0, 2, 5, 9},
-    //                          {1, 4, 8, -1},    {3, 7, -1, -1},   {-1, -1, -1, -1}, {-1, -1, -1, -1}, {1, 2, -1, -1},
-    //                          {3, 4, 5, -1},    {6, 7, 8, 9},     {-1, -1, -1, -1}, {14, 11, -1, -1}, {17, 15, 12,
-    //                          -1}, {19, 18, 16, 13}, {19, 17, 14, 10}, {18, 15, 11, -1}, {16, 12, -1, -1}, {-1, -1,
-    //                          -1, -1}, {10, 11, 12, 13}, {14, 15, 16, -1}, {17, 18, -1, -1}, {-1, -1, -1, -1}};
-    int shipbase;
 
     int _blockfrontship = 0;
     int _FB             = 0;
@@ -250,10 +261,10 @@ int CheckforShipPlacement(int _ships[6], int _shipplaced, int _misc) {
                         {
                             // if front rotate 180 degree
                             if (validlines[j][i] == _ships[1]) {
-                                ESP_LOGE(TAG, "orienation is : %d", ((orientation + 3) % 6));
+                                ESP_LOGE(TAG, "orienation for 2 long ship is : %d", ((orientation + 3) % 6));
                                 return ((orientation + 3) % 6);
                             } else if (validlines[j][i] == _ships[2]) {
-                                ESP_LOGE(TAG, "orienation is : %d", orientation);
+                                ESP_LOGE(TAG, "orienation for 2 long ship is : %d", orientation);
                                 return orientation;
                             }
                         }
@@ -263,6 +274,8 @@ int CheckforShipPlacement(int _ships[6], int _shipplaced, int _misc) {
             break;
 
         case 3:  // returns the orientation of the 3 long ship
+            ESP_LOGE(TAG, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+
             for (int j = 0; j < 24; j++) {
                 streakvalid = 0;
                 for (int i = 0; i < 4; i++) {
@@ -311,10 +324,10 @@ int CheckforShipPlacement(int _ships[6], int _shipplaced, int _misc) {
                         {
                             // if front rotate 180 degree
                             if (validlines[j][i] == _ships[3]) {
-                                ESP_LOGE(TAG, "orienation is : %d", ((orientation + 3) % 6));
+                                ESP_LOGE(TAG, "orienation for 3 long ship is : %d", ((orientation + 3) % 6));
                                 return ((orientation + 3) % 6);
                             } else if (validlines[j][i] == _ships[5]) {
-                                ESP_LOGE(TAG, "orienation is : %d", orientation);
+                                ESP_LOGE(TAG, "orienation for 3 long ship is : %d", orientation);
                                 return orientation;
                             }
                         }
@@ -434,26 +447,26 @@ int CheckforShipPlacement(int _ships[6], int _shipplaced, int _misc) {
     return 1;
 }
 
-void AIplaceShips(void) {
+void AIplaceShips(int ennemyboard[20], int _position[20], int ennemyship[6]) {
     ennemyship[0] = esp_random() % 20;
     int attemptblock;
-    CheckforShipPlacement(ennemyship, 1, 0);
+    CheckforShipPlacement(ennemyship, 1, 0, _position);
     do attemptblock = esp_random() % 20;
     while (_position[attemptblock] == 0);
     ennemyship[1] = attemptblock;
-    CheckforShipPlacement(ennemyship, 2, 0);
+    CheckforShipPlacement(ennemyship, 2, 0, _position);
     do attemptblock = esp_random() % 20;
     while (_position[attemptblock] == 0);
     ennemyship[2] = attemptblock;
-    CheckforShipPlacement(ennemyship, 3, 0);
+    CheckforShipPlacement(ennemyship, 3, 0, _position);
     do attemptblock = esp_random() % 20;
     while (_position[attemptblock] == 0);
     ennemyship[3] = attemptblock;
-    CheckforShipPlacement(ennemyship, 5, 0);
+    CheckforShipPlacement(ennemyship, 5, 0, _position);
     do attemptblock = esp_random() % 20;
     while (_position[attemptblock] == 0);
     ennemyship[5] = attemptblock;
-    ennemyship[4] = CheckforShipPlacement(ennemyship, 5, 1);
+    ennemyship[4] = CheckforShipPlacement(ennemyship, 5, 1, _position);
     for (int i = 0; i < 6; i++) ennemyboard[ennemyship[i]] = boat;
     ESP_LOGE(TAG, "ennemyboard:");
 
@@ -461,7 +474,7 @@ void AIplaceShips(void) {
     debugshipstatus(ennemyship);
 }
 
-void CheckforDestroyedShips(void) {
+void CheckforDestroyedShips(int playerboard[20], int ennemyboard[20], int playership[6], int ennemyship[6]) {
     if (playerboard[playership[0]] == boathit)
         playerboard[playership[0]] = boatdestroyed;
     if (playerboard[playership[1]] == boathit && playerboard[playership[2]] == boathit) {
@@ -489,24 +502,24 @@ void CheckforDestroyedShips(void) {
     }
 }
 
-int CheckforVictory(void) {
+int CheckforVictory(int playerboard[20], int ennemyboard[20]) {
     // check for player victory
-    int flagvictory = 1;
+    int _victoryflag = 1;
     for (int i = 0; i < 20; i++)
         if (ennemyboard[i] == boat) {
-            flagvictory = 0;
+            _victoryflag = 0;
         }
 
-    if (flagvictory)
+    if (_victoryflag)
         return 1;
 
     // check for player defeat
-    flagvictory = 1;
+    _victoryflag = 1;
     for (int i = 0; i < 20; i++)
         if (playerboard[i] == boat) {
-            flagvictory = 0;
+            _victoryflag = 0;
         }
-    if (flagvictory)
+    if (_victoryflag)
         return 2;
 
     // if no one lost
@@ -588,8 +601,75 @@ void AddTelegraphBlockStatustoBuffer(int _offset_x, int _block, int _status) {
     AddBlockStatustoBuffer(_offset_x + telegraph_X[_block], telegraph_Y[_block], _status);
 }
 
-screen_t screen_test_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+screen_t screen_battleship_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+    int playerboard[20];
+    int ennemyboard[20];
 
+    int playership[6];
+    int ennemyship[6];
+
+    int _position[20];
+    int victoryflag;
+
+    screen_t current_screen_BS = screen_BS_splash;
+    while (1) {
+        switch (current_screen_BS) {
+            case screen_BS_splash:
+                {
+                    for (int i = 0; i < 20; i++) {
+                        playerboard[i] = 0;
+                        ennemyboard[i] = 0;
+                    }
+
+                    for (int i = 0; i < 6; i++) {
+                        playership[i] = -1;
+                        ennemyship[i] = -1;
+                    }
+                    victoryflag       = playing;
+                    current_screen_BS = screen_battleship_splash(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_BS_placeships:
+                {
+                    current_screen_BS = screen_battleship_placeships(
+                        application_event_queue,
+                        keyboard_event_queue,
+                        playerboard,
+                        _position,
+                        playership
+                    );
+                    break;
+                }
+            case screen_BS_battle:
+                {
+                    ESP_LOGE(TAG, "entry");
+                    debugboardstatus(playerboard);
+                    debugshipstatus(playership);
+                    current_screen_BS = screen_battleship_battle(
+                        application_event_queue,
+                        keyboard_event_queue,
+                        playerboard,
+                        ennemyboard,
+                        _position,
+                        &victoryflag,
+                        playership,
+                        ennemyship
+                    );
+                    break;
+                }
+            case screen_BS_victory:
+                {
+                    current_screen_BS =
+                        screen_battleship_victory(application_event_queue, keyboard_event_queue, &victoryflag);
+                    break;
+                }
+            case screen_home:
+            default: return screen_home; break;
+        }
+    }
+}
+
+screen_t screen_battleship_splash(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     pax_font_t const * font = pax_font_sky;
     pax_buf_t*         gfx  = bsp_get_gfx_buffer();
 
@@ -624,9 +704,7 @@ screen_t screen_test_entry(QueueHandle_t application_event_queue, QueueHandle_t 
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
                         case SWITCH_1: return screen_home; break;
-                        case SWITCH_2:
-                            return screen_battleship_placeships(application_event_queue, keyboard_event_queue);
-                            break;
+                        case SWITCH_2: return screen_BS_placeships; break;
                         case SWITCH_3: break;
                         case SWITCH_4: bsp_set_addressable_led(0xFF0000); break;  // replay, to implement
                         case SWITCH_5: break;                                     // online, to implement
@@ -639,7 +717,13 @@ screen_t screen_test_entry(QueueHandle_t application_event_queue, QueueHandle_t 
     }
 }
 
-screen_t screen_battleship_placeships(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+screen_t screen_battleship_placeships(
+    QueueHandle_t application_event_queue,
+    QueueHandle_t keyboard_event_queue,
+    int           playerboard[20],
+    int           _position[20],
+    int           playership[6]
+) {
 
     event_t kbsettings = {
         .type                                     = event_control_keyboard,
@@ -662,14 +746,8 @@ screen_t screen_battleship_placeships(QueueHandle_t application_event_queue, Que
         11,
         12,
     };
-    // for (int i = 0; i < 20; i++) {
-    //     _position[i] = 0;
-    // }
-    //  CheckforShipPlacement(3, playershipdummy, playershipdummy[1], 1);
-    // for (int i = 0; i < 20; i++) {
-    //     ESP_LOGE(TAG, "_position: %d", _position[i]);
-    // }
-    Display_battleship_placeships(shipplaced, flagstart);
+
+    Display_battleship_placeships(playerboard, shipplaced, flagstart, _position, playership);
 
     while (1) {
         event_t event = {0};
@@ -682,12 +760,12 @@ screen_t screen_battleship_placeships(QueueHandle_t application_event_queue, Que
                             //  undo instead of exit
                             if (shipplaced > 0) {
                                 shipplaced--;
-                                playerboard[playership[shipplaced]] = water;
-                                playership[shipplaced]              = -1;
+                                // playerboard[playership[shipplaced]] = water;
+                                playership[shipplaced] = -1;
 
                                 if (shipplaced == 5 || shipplaced == 4) {
-                                    playerboard[playership[shipplaced - 1]] = water;
-                                    playership[shipplaced - 1]              = -1;
+                                    // playerboard[playership[shipplaced - 1]] = water;
+                                    playership[shipplaced - 1] = -1;
                                 }
                                 // skip the middle of the 3 long ship
                                 if (shipplaced == 4) {
@@ -706,7 +784,13 @@ screen_t screen_battleship_placeships(QueueHandle_t application_event_queue, Que
                                     };
                                     xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
                                 }
-                                Display_battleship_placeships(shipplaced, flagstart);
+                                Display_battleship_placeships(
+                                    playerboard,
+                                    shipplaced,
+                                    flagstart,
+                                    _position,
+                                    playership
+                                );
 
                             } else {
                                 if (exitconf)
@@ -721,23 +805,38 @@ screen_t screen_battleship_placeships(QueueHandle_t application_event_queue, Que
                         case SWITCH_5:
                             if (exitconf) {
                                 exitconf = 0;
-                                Display_battleship_placeships(shipplaced, flagstart);
+                                Display_battleship_placeships(
+                                    playerboard,
+                                    shipplaced,
+                                    flagstart,
+                                    _position,
+                                    playership
+                                );
                             } else
-                                return screen_battleship_battle(application_event_queue, keyboard_event_queue);
+                                return screen_BS_battle;
                             break;
                         default: break;
                     }
                     if (event.args_input_keyboard.character != '\0') {
 
                         if (_position[TelegraphtoBlock(event.args_input_keyboard.character)]) {
-                            playership[shipplaced]              = TelegraphtoBlock(event.args_input_keyboard.character);
-                            playerboard[playership[shipplaced]] = boat;
+
+                            playership[shipplaced] = TelegraphtoBlock(event.args_input_keyboard.character);
+                            // playerboard[playership[shipplaced]] = boat;
+                            debugboardstatus(playerboard);
+                            debugshipstatus(playership);
                             shipplaced++;
+                            if (shipplaced == 6) {
+                                playership[4] = CheckforShipPlacement(playership, shipplaced, 1, _position);
+                                // playerboard[playership[4]] = boat;
+                            }
 
                             // skip the middle of the 3 long ship
                             if (shipplaced == 4)
                                 shipplaced++;
                             // enable the input to press start
+
+
                             if (shipplaced >= 6) {
                                 flagstart          = 1;
                                 event_t kbsettings = {
@@ -750,7 +849,8 @@ screen_t screen_battleship_placeships(QueueHandle_t application_event_queue, Que
                                 };
                                 xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
                             }
-                            Display_battleship_placeships(shipplaced, flagstart);
+
+                            Display_battleship_placeships(playerboard, shipplaced, flagstart, _position, playership);
                         }
                     }
                     break;
@@ -760,7 +860,9 @@ screen_t screen_battleship_placeships(QueueHandle_t application_event_queue, Que
     }
 }
 
-void Display_battleship_placeships(int _shipplaced, int _flagstart) {
+void Display_battleship_placeships(
+    int playerboard[20], int _shipplaced, int _flagstart, int _position[20], int playership[6]
+) {
     int telegraph_x      = 100;
     int text_x           = 150;
     int text_y           = 20;
@@ -772,25 +874,20 @@ void Display_battleship_placeships(int _shipplaced, int _flagstart) {
 
     ESP_LOGE(TAG, "ship placed: %d", _shipplaced);
 
-    switch (_shipplaced) {
-        // case 0: CheckforShipPlacement(2, playership, 0, 1); break;
-        // case 1: CheckforShipPlacement(2, playership, 0, 1); break;
-        // case 2: CheckforShipPlacement(2, playership, playership[1], 0); break;
-        case 3: CheckforShipPlacement(playership, _shipplaced, 2); break;
-        case 6:
-            playership[4]              = CheckforShipPlacement(playership, _shipplaced, 1);
-            playerboard[playership[4]] = boat;
-            CheckforShipPlacement(playership, _shipplaced, 3);  // orientation 3 long ship
-            break;
-        default: break;
+    for (int i = 0; i < 6; i++) {
+        if (playership[i] != -1)
+            playerboard[playership[i]] = boat;
+        else
+            playerboard[playership[i]] = water;
     }
 
-    debugboardstatus(playerboard);
-    debugshipstatus(playership);
 
+
+    // debugboardstatus(playerboard);
+    // debugshipstatus(playership);
 
     ESP_LOGE(TAG, "position");
-    debugboardstatus(_position);
+    // debugboardstatus(_position);
 
     pax_background(gfx, WHITE);
     DisplayTelegraph(BLACK, telegraph_x);
@@ -842,7 +939,7 @@ void Display_battleship_placeships(int _shipplaced, int _flagstart) {
         AddBlockStatustoBuffer(leftship_x + leftship_x_gap, leftship_y + leftship_y_gap, boat);
         AddShiptoBuffer(
             2,
-            CheckforShipPlacement(playership, _shipplaced, 2),
+            CheckforShipPlacement(playership, _shipplaced, 2, _position),
             telegraph_x + telegraph_X[playership[1]],
             telegraph_Y[playership[1]]
         );
@@ -860,22 +957,37 @@ void Display_battleship_placeships(int _shipplaced, int _flagstart) {
         AddBlockStatustoBuffer(leftship_x + leftship_x_gap * 2, leftship_y + leftship_y_gap * 2, boat);
         AddShiptoBuffer(
             3,
-            CheckforShipPlacement(playership, _shipplaced, 3),
+            CheckforShipPlacement(playership, _shipplaced, 3, _position),
             telegraph_x + telegraph_X[playership[3]],
             telegraph_Y[playership[3]]
         );
     }
 
-    CheckforShipPlacement(playership, _shipplaced, 0);  // adds free positions for next run
+    CheckforShipPlacement(playership, _shipplaced, 0, _position);  // adds free positions for next run
 
     for (int i = 0; i < 20; i++) {
         AddTelegraphBlockStatustoBuffer(telegraph_x, i, playerboard[i]);
         AddTelegraphBlockStatustoBuffer(telegraph_x, i, _position[i]);
     }
+    ESP_LOGE(TAG, "before display");
+    debugboardstatus(playerboard);
+    debugshipstatus(playership);
     bsp_display_flush();
 }
 
-screen_t screen_battleship_battle(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+screen_t screen_battleship_battle(
+    QueueHandle_t application_event_queue,
+    QueueHandle_t keyboard_event_queue,
+    int           playerboard[20],
+    int           ennemyboard[20],
+    int           _position[20],
+    int*          victoryflag,
+    int           playership[6],
+    int           ennemyship[6]
+) {
+    ESP_LOGE(TAG, "enter battle");
+    debugboardstatus(playerboard);
+    debugshipstatus(playership);
     event_t kbsettings = {
         .type                                     = event_control_keyboard,
         .args_control_keyboard.enable_typing      = true,
@@ -886,20 +998,22 @@ screen_t screen_battleship_battle(QueueHandle_t application_event_queue, QueueHa
     };
     xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 
-    int  exitconf        = 0;
-    char exitprompt[128] = "Do you want to exit and declare forfeit";
-    int  turn            = ennemy;
-    char nickname[64]    = "";
-    char ennemyname[64]  = "AI";
+    int  exitconf                   = 0;
+    char exitprompt[128]            = "Do you want to exit and declare forfeit";
+    int  turn                       = ennemy;
+    char nickname[nicknamelenght]   = "";
+    char ennemyname[nicknamelenght] = "AI";
 
     for (int i = 0; i < 6; i++) {
         ennemyboard[ennemyship[i]] = boat;
     }
 
     nvs_get_str_wrapped("owner", "nickname", nickname, sizeof(nickname));
-    AIplaceShips();
-    Display_battleship_battle(nickname, ennemyname, turn);
-
+    AIplaceShips(ennemyboard, _position, ennemyship);
+    ESP_LOGE(TAG, "just before display test");
+    debugboardstatus(playerboard);
+    debugshipstatus(playership);
+    Display_battleship_battle(playerboard, ennemyboard, nickname, ennemyname, turn, _position, playership, ennemyship);
 
     while (1) {
         event_t event = {0};
@@ -918,13 +1032,7 @@ screen_t screen_battleship_battle(QueueHandle_t application_event_queue, QueueHa
                         case SWITCH_2: break;
                         case SWITCH_3: break;
                         case SWITCH_4: break;
-                        case SWITCH_5:
-                            if (exitconf) {
-                                exitconf = 0;
-                                Display_battleship_battle(nickname, ennemyname, turn);
-                            } else
-                                screen_battleship_battle(application_event_queue, keyboard_event_queue);
-                            break;
+                        case SWITCH_5: break;
                         default: break;
                     }
                     if (event.args_input_keyboard.character != '\0') {
@@ -935,8 +1043,17 @@ screen_t screen_battleship_battle(QueueHandle_t application_event_queue, QueueHa
                         if (ennemyboard[hitlocation] == boat)
                             ennemyboard[hitlocation] = boathit;
                         ESP_LOGE(TAG, "player shot");
-                        CheckforDestroyedShips();
-                        Display_battleship_battle(nickname, ennemyname, turn);
+                        CheckforDestroyedShips(playerboard, ennemyboard, playership, ennemyship);
+                        Display_battleship_battle(
+                            playerboard,
+                            ennemyboard,
+                            nickname,
+                            ennemyname,
+                            turn,
+                            _position,
+                            playership,
+                            ennemyship
+                        );
                         for (int i = 0; i < 20; i++) {
                             ESP_LOGE(TAG, "ennemyboard: %d is %d", i, ennemyboard[i]);
                         }
@@ -944,14 +1061,12 @@ screen_t screen_battleship_battle(QueueHandle_t application_event_queue, QueueHa
                             ESP_LOGE(TAG, "playerboard: %d is %d", i, playerboard[i]);
                         }
 
-                        if (CheckforVictory()) {
+                        if (CheckforVictory(playerboard, ennemyboard)) {
                             ESP_LOGE(TAG, "enter victroy");
                             vTaskDelay(pdMS_TO_TICKS(1000));
-                            return screen_battleship_victory(
-                                application_event_queue,
-                                keyboard_event_queue,
-                                CheckforVictory()
-                            );
+                            *victoryflag = CheckforVictory(playerboard, ennemyboard);
+                            ESP_LOGE(TAG, "Victory flag: %d", *victoryflag);
+                            return screen_BS_victory;
                         }
 
                         vTaskDelay(pdMS_TO_TICKS(1000));
@@ -974,16 +1089,23 @@ screen_t screen_battleship_battle(QueueHandle_t application_event_queue, QueueHa
                         }
 
 
-                        CheckforDestroyedShips();
-                        Display_battleship_battle(nickname, ennemyname, turn);
-                        if (CheckforVictory()) {
+                        CheckforDestroyedShips(playerboard, ennemyboard, playership, ennemyship);
+                        Display_battleship_battle(
+                            playerboard,
+                            ennemyboard,
+                            nickname,
+                            ennemyname,
+                            turn,
+                            _position,
+                            playership,
+                            ennemyship
+                        );
+                        if (CheckforVictory(playerboard, ennemyboard)) {
                             ESP_LOGE(TAG, "enter victroy");
                             vTaskDelay(pdMS_TO_TICKS(1000));
-                            return screen_battleship_victory(
-                                application_event_queue,
-                                keyboard_event_queue,
-                                CheckforVictory()
-                            );
+                            *victoryflag = CheckforVictory(playerboard, ennemyboard);
+                            ESP_LOGE(TAG, "Victory flag: %d", *victoryflag);
+                            return screen_BS_victory;
                         }
                     }
                     break;
@@ -994,7 +1116,16 @@ screen_t screen_battleship_battle(QueueHandle_t application_event_queue, QueueHa
     }
 }
 
-void Display_battleship_battle(char _nickname[64], char _ennemyname[64], int _turn) {
+void Display_battleship_battle(
+    int  playerboard[20],
+    int  ennemyboard[20],
+    char _nickname[nicknamelenght],
+    char _ennemyname[nicknamelenght],
+    int  _turn,
+    int  _position[20],
+    int  playership[6],
+    int  ennemyship[6]
+) {
     pax_font_t const * font = pax_font_sky;
     pax_buf_t*         gfx  = bsp_get_gfx_buffer();
 
@@ -1003,6 +1134,10 @@ void Display_battleship_battle(char _nickname[64], char _ennemyname[64], int _tu
     int text_x            = 20;
     int text_y            = 35;
     int text_fontsize     = 9;
+
+    ESP_LOGE(TAG, "battle test");
+    debugboardstatus(playerboard);
+    debugshipstatus(playership);
 
     pax_background(gfx, WHITE);
 
@@ -1013,13 +1148,12 @@ void Display_battleship_battle(char _nickname[64], char _ennemyname[64], int _tu
     pax_draw_text(gfx, BLACK, font, 9, 8 + SWITCH_1 * 62, 116, "Exit");
 
     pax_draw_text(gfx, BLACK, font, 14, 0, 0, _nickname);
-    if (_turn == ennemy)  // counter intuitive, but it is waiting on next player so it's inverted
-        pax_draw_text(gfx, BLACK, font, text_fontsize, 0, 15, "your turn");
     Justify_right_text(gfx, BLACK, font, 14, 0, 0, _ennemyname);
 
+    if (_turn == ennemy)  // counter intuitive, but it is waiting on next player so it's inverted
+        pax_draw_text(gfx, BLACK, font, text_fontsize, 0, 15, "your turn");
     if (_turn == player)
         Justify_right_text(gfx, BLACK, font, text_fontsize, 0, 15, "your turn");
-
 
     // instructions
     pax_draw_text(gfx, BLACK, font, text_fontsize, text_x, text_y, "Miss");
@@ -1036,13 +1170,13 @@ void Display_battleship_battle(char _nickname[64], char _ennemyname[64], int _tu
     AddShiptoBuffer(1, 2, telegraphplayer_x + telegraph_X[playership[0]], telegraph_Y[playership[0]]);
     AddShiptoBuffer(
         2,
-        CheckforShipPlacement(playership, 0, 2),
+        CheckforShipPlacement(playership, 0, 2, _position),
         telegraphplayer_x + telegraph_X[playership[1]],
         telegraph_Y[playership[1]]
     );
     AddShiptoBuffer(
         3,
-        CheckforShipPlacement(playership, 0, 3),
+        CheckforShipPlacement(playership, 0, 3, _position),
         telegraphplayer_x + telegraph_X[playership[3]],
         telegraph_Y[playership[3]]
     );
@@ -1053,14 +1187,14 @@ void Display_battleship_battle(char _nickname[64], char _ennemyname[64], int _tu
     if (ennemyboard[ennemyship[1]] == boatdestroyed)
         AddShiptoBuffer(
             2,
-            CheckforShipPlacement(ennemyship, 0, 2),
+            CheckforShipPlacement(ennemyship, 0, 2, _position),
             telegraphennemy_x + telegraph_X[ennemyship[1]],
             telegraph_Y[ennemyship[1]]
         );
     if (ennemyboard[ennemyship[3]] == boatdestroyed)
         AddShiptoBuffer(
             3,
-            CheckforShipPlacement(ennemyship, 0, 3),
+            CheckforShipPlacement(ennemyship, 0, 3, _position),
             telegraphennemy_x + telegraph_X[ennemyship[3]],
             telegraph_Y[ennemyship[3]]
         );
@@ -1075,8 +1209,9 @@ void Display_battleship_battle(char _nickname[64], char _ennemyname[64], int _tu
 }
 
 screen_t screen_battleship_victory(
-    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int _victoryflag
+    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int* victoryflag
 ) {
+
     event_t kbsettings = {
         .type                                     = event_control_keyboard,
         .args_control_keyboard.enable_typing      = true,
@@ -1089,11 +1224,11 @@ screen_t screen_battleship_victory(
 
     pax_font_t const * font = pax_font_sky;
     pax_buf_t*         gfx  = bsp_get_gfx_buffer();
-
+    ESP_LOGE(TAG, "Victory flag: %d", *victoryflag);
     pax_background(gfx, WHITE);
-    if (_victoryflag == victory)
+    if (*victoryflag == victory)
         pax_insert_png_buf(gfx, caronv_png_start, caronv_png_end - caronv_png_start, 0, 0, 0);
-    if (_victoryflag == defeat)
+    if (*victoryflag == defeat)
         pax_insert_png_buf(gfx, carond_png_start, carond_png_end - carond_png_start, 0, 0, 0);
     bsp_display_flush();
 
@@ -1104,11 +1239,11 @@ screen_t screen_battleship_victory(
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
-                        case SWITCH_1: return screen_home; break;
-                        case SWITCH_2: return screen_home; break;
-                        case SWITCH_3: return screen_home; break;
-                        case SWITCH_4: return screen_home; break;
-                        case SWITCH_5: return screen_home; break;
+                        case SWITCH_1: return screen_BS_splash; break;
+                        case SWITCH_2: return screen_BS_splash; break;
+                        case SWITCH_3: return screen_BS_splash; break;
+                        case SWITCH_4: return screen_BS_splash; break;
+                        case SWITCH_5: return screen_BS_splash; break;
                         default: break;
                     }
                     break;

@@ -20,7 +20,7 @@
 
 static char const * TAG = "battleship";
 
-screen_t screen_battleship_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+screen_t screen_placeholder_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
 
     event_t kbsettings = {
         .type                                     = event_control_keyboard,

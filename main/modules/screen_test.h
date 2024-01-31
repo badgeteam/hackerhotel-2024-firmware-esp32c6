@@ -4,4 +4,4 @@
 #include "freertos/queue.h"
 #include "screens.h"
 
-screen_t screen_test_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
+screen_t screen_battleship_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
