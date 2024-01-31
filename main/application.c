@@ -47,6 +47,11 @@ extern uint8_t const border1_png_start[] asm("_binary_border1_png_start");
 extern uint8_t const border1_png_end[] asm("_binary_border1_png_end");
 extern uint8_t const border2_png_start[] asm("_binary_border2_png_start");
 extern uint8_t const border2_png_end[] asm("_binary_border2_png_end");
+extern uint8_t const switchframe1_png_start[] asm("_binary_switchframe1_png_start");
+extern uint8_t const switchframe1_png_end[] asm("_binary_switchframe1_png_end");
+extern uint8_t const switchframe2_png_start[] asm("_binary_switchframe2_png_start");
+extern uint8_t const switchframe2_png_end[] asm("_binary_switchframe2_png_end");
+
 
 int const telegraph_X[20] = {0, -8, 8, -16, 0, 16, -24, -8, 8, 24, -24, -8, 8, 24, -16, 0, 16, -8, 8, 0};
 int const telegraph_Y[20] = {12, 27, 27, 42, 42, 42, 57, 57, 57, 57, 71, 71, 71, 71, 86, 86, 86, 101, 101, 116};
@@ -57,9 +62,36 @@ void Addborder1toBuffer(void) {
 
     pax_insert_png_buf(bsp_get_gfx_buffer(), border1_png_start, border1_png_end - border1_png_start, 0, 0, 0);
 }
+
 void Addborder2toBuffer(void) {
 
     pax_insert_png_buf(bsp_get_gfx_buffer(), border2_png_start, border2_png_end - border2_png_start, 0, 0, 0);
+}
+
+void AddSWborder1toBuffer(void) {
+
+    Addborder1toBuffer();
+    pax_insert_png_buf(
+        bsp_get_gfx_buffer(),
+        switchframe1_png_start,
+        switchframe1_png_end - switchframe1_png_start,
+        0,
+        127 - 11,
+        0
+    );
+}
+
+void AddSWborder2toBuffer(void) {
+
+    Addborder2toBuffer();
+    pax_insert_png_buf(
+        bsp_get_gfx_buffer(),
+        switchframe2_png_start,
+        switchframe2_png_end - switchframe2_png_start,
+        0,
+        127 - 12,
+        0
+    );
 }
 
 void Justify_right_text(

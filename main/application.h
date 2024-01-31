@@ -18,6 +18,8 @@ extern int const telegraph_Y[20];
 
 void Addborder1toBuffer(void);
 void Addborder2toBuffer(void);
+void AddSWborder1toBuffer(void);
+void AddSWborder2toBuffer(void);
 void AddBlocktoBuffer(int _x, int _y);
 
 // Parse _message[] into an array of _nbwords
