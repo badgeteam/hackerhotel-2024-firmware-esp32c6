@@ -48,61 +48,15 @@ extern uint8_t const border1_png_end[] asm("_binary_border1_png_end");
 extern uint8_t const border2_png_start[] asm("_binary_border2_png_start");
 extern uint8_t const border2_png_end[] asm("_binary_border2_png_end");
 
-#define MainMenuhub          0
-#define MainMenubattleship   1
-#define MainMenuBadgetag     2
-#define MainMenuSettings     3
-#define MainMenuCredits      4
-#define Gamescreenbattleship 5
-#define Gameendbattleship    6
+int const telegraph_X[20] = {0, -8, 8, -16, 0, 16, -24, -8, 8, 24, -24, -8, 8, 24, -16, 0, 16, -8, 8, 0};
+int const telegraph_Y[20] = {12, 27, 27, 42, 42, 42, 57, 57, 57, 57, 71, 71, 71, 71, 86, 86, 86, 101, 101, 116};
 
-#define BSplaceboat  0
-#define playerturn   1
-#define opponentturn 2
-
-#define menuinputdelay 500
-
-#define water         0
-#define boat          1
-#define missedshot    2
-#define boathit       3
-#define boatdestroyed 4
-
-static char const * TAG = "app";
-
-uint8_t buttons[5];
-// int     delaySM                      = 1;
-// int     delaySMflag                  = 0;
-// int     delayLED                     = 0;
-// int     delayLEDflag                 = 0;
-// int     delayMISC                    = 0;
-// int     delayMISCflag                = 0;
-// int     MainMenustatemachine         = MainMenubattleship;
-// int     Battleshipstatemachine       = BSplaceboat;
-// int     MainMenuchangeflag           = 1;
-// char    inputletter                  = NULL;
-// char    playername[30]               = "";
-// char    opponent[30]                 = "";
-// int     specialcharacterselect       = 0;
-// char    specialcharactersicon[4][20] = {"A/!", "CAPS", "!?", "<|>"};
-// int     BSplayerboard[20]            = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-// int     BSopponentboard[20]          = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-int     telegraphX[20] = {0, -8, 8, -16, 0, 16, -24, -8, 8, 24, -24, -8, 8, 24, -16, 0, 16, -8, 8, 0};
-int     telegraphY[20] = {12, 27, 27, 42, 42, 42, 57, 57, 57, 57, 71, 71, 71, 71, 86, 86, 86, 101, 101, 116};
-// int     BSvictory        = 0;
-// int     AIshotsfired[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-// int     playerboats[6]   = {0, 0, 0, 0, 0, 0};
-// int     opponentboats[6] = {0, 0, 0, 0, 0, 0};
-// int     popboat          = 0;
-
-
-esp_err_t TextInputTelegraph(void);
+static char const * TAG = "application utilities";
 
 void Addborder1toBuffer(void) {
 
     pax_insert_png_buf(bsp_get_gfx_buffer(), border1_png_start, border1_png_end - border1_png_start, 0, 0, 0);
 }
-
 void Addborder2toBuffer(void) {
 
     pax_insert_png_buf(bsp_get_gfx_buffer(), border2_png_start, border2_png_end - border2_png_start, 0, 0, 0);
@@ -150,7 +104,9 @@ int DisplayExitConfirmation(char _prompt[128], QueueHandle_t keyboard_event_queu
     return 1;
 }
 
-// PARSE STRING INTO WORDS, AND MAKES INTO UP TO maxnblines LINES WITH THEM THAT ARE maxlinelenght pixel long
+// Parse _message[] into an array of _nbwords
+// and makes them into up to _maxnblines which are _maxlinelenght pixel long
+// can be centered if the _centered flag is high
 void DisplayWallofTextWords(
     int  _fontsize,
     int  _maxlinelenght,
@@ -240,7 +196,9 @@ void DisplayWallofTextWords(
     bsp_display_flush();
 }
 
-// PARSE STRING INTO WORDS, AND MAKES INTO UP TO maxnblines LINES WITH THEM THAT ARE maxlinelenght pixel long
+// Parse _message[] into lines
+// and makes them into up to _maxnblines which are _maxlinelenght pixel long
+// can be centered if the _centered flag is high
 void DisplayWallofText(
     int  _fontsize,
     int  _maxlinelenght,
@@ -333,23 +291,6 @@ void AddSwitchesBoxtoBuffer(int _switch)  // in black
     pax_outline_rect(gfx, 1, 61 * _switch, 114, 50, 12);
 }
 
-void DisplayblockstatusBS(int _position, int _block, int _status) {
-    pax_buf_t* gfx = bsp_get_gfx_buffer();
-    switch (_status) {
-        case water:
-            // do nothing
-            break;
-
-        case missedshot: pax_outline_circle(gfx, BLACK, _position + telegraphX[_block], telegraphY[_block], 3); break;
-        case boat: pax_draw_circle(gfx, BLACK, _position + telegraphX[_block], telegraphY[_block], 3); break;
-        case boathit: pax_draw_circle(gfx, RED, _position + telegraphX[_block], telegraphY[_block], 3); break;
-        case boatdestroyed: pax_draw_circle(gfx, RED, _position + telegraphX[_block], telegraphY[_block], 5); break;
-
-        default: break;
-    }
-}
-
-
 void AddBlocktoBuffer(int _x, int _y) {
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     _y--;
@@ -379,5 +320,5 @@ void DisplayTelegraph(int _colour, int _position) {
 
     // Letter circles
 
-    for (int i = 0; i < 20; i++) AddBlocktoBuffer(_position + telegraphX[i], telegraphY[i]);
+    for (int i = 0; i < 20; i++) AddBlocktoBuffer(_position + telegraph_X[i], telegraph_Y[i]);
 }

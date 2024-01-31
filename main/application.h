@@ -4,9 +4,6 @@
 #include "freertos/queue.h"
 #include "pax_types.h"
 
-#define nicknamelenght 32
-#define messagelenght  67
-
 #define LED_OFF       0x000000
 #define LED_RED       0xFF0000
 #define LED_GREEN     0x00FF00
@@ -16,11 +13,16 @@
 #define LED_PURPLE    0xFF00FF
 #define LED_WHITE     0xFFFFFF
 
+extern int const telegraph_X[20];
+extern int const telegraph_Y[20];
 
 void Addborder1toBuffer(void);
 void Addborder2toBuffer(void);
 void AddBlocktoBuffer(int _x, int _y);
 
+// Parse _message[] into an array of _nbwords
+// and makes them into up to _maxnblines which are _maxlinelenght pixel long
+// can be centered if the _centered flag is high
 void DisplayWallofTextWords(
     int  _fontsize,
     int  _maxlinelenght,
@@ -32,6 +34,9 @@ void DisplayWallofTextWords(
     int  _centered
 );
 
+// Parse _message[] into lines
+// and makes them into up to _maxnblines which are _maxlinelenght pixel long
+// can be centered if the _centered flag is high
 void DisplayWallofText(
     int  _fontsize,
     int  _maxlinelenght,

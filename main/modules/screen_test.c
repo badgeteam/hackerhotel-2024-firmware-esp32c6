@@ -59,9 +59,6 @@ int playership[6] = {-1, -1, -1, -1, -1, -1};
 int ennemyship[6] = {-1, -1, -1, -1, -1, -1};
 int _position[20];
 
-int const telegraph_X[20] = {0, -8, 8, -16, 0, 16, -24, -8, 8, 24, -24, -8, 8, 24, -16, 0, 16, -8, 8, 0};
-int const telegraph_Y[20] = {12, 27, 27, 42, 42, 42, 57, 57, 57, 57, 71, 71, 71, 71, 86, 86, 86, 101, 101, 116};
-
 screen_t screen_battleship_placeships(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
 screen_t screen_battleship_battle(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
 screen_t screen_battleship_victory(
