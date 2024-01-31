@@ -28,6 +28,7 @@
 #include "screen_billboard.h"
 #include "screen_home.h"
 #include "screen_mascots.h"
+#include "screen_pointclick.h"
 #include "screen_settings.h"
 #include "screen_shades.h"
 #include "screen_test.h"
@@ -122,7 +123,7 @@ void app_main(void) {
     }
 
     // Main application
-    screen_t current_screen = screen_test;
+    screen_t current_screen = screen_pointclick;
     while (1) {
         switch (current_screen) {
             case screen_mascots:
@@ -153,6 +154,11 @@ void app_main(void) {
             case screen_battleship:
                 {
                     current_screen = screen_battleship_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_pointclick:
+                {
+                    current_screen = screen_pointclick_entry(application_event_queue, keyboard_event_queue);
                     break;
                 }
             default: current_screen = screen_home;

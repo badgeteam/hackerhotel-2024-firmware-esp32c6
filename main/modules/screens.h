@@ -10,8 +10,15 @@ typedef enum _screen {
     screen_shades,
     screen_test,
     screen_billboard,
+    screen_pointclick,
+
     screen_BS_splash,
     screen_BS_placeships,
     screen_BS_battle,
-    screen_BS_victory
+    screen_BS_victory,
+
+    screen_PC_dock1,
+    screen_PC_dock2,
+    screen_PC_dune1,
+    screen_PC_dune2
 } screen_t;

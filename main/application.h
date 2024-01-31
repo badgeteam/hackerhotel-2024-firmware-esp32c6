@@ -54,3 +54,4 @@ void Justify_right_text(
 int  DisplayExitConfirmation(char _prompt[128], QueueHandle_t keyboard_event_queue);
 void AddSwitchesBoxtoBuffer(int _switch);
 void DisplayTelegraph(int _colour, int _position);
+void configure_keyboard_guru(QueueHandle_t keyboard_event_queue, bool SW1, bool SW2, bool SW3, bool SW4, bool SW5);

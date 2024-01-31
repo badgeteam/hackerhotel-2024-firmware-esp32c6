@@ -322,3 +322,15 @@ void DisplayTelegraph(int _colour, int _position) {
 
     for (int i = 0; i < 20; i++) AddBlocktoBuffer(_position + telegraph_X[i], telegraph_Y[i]);
 }
+void configure_keyboard_guru(QueueHandle_t keyboard_event_queue, bool SW1, bool SW2, bool SW3, bool SW4, bool SW5) {
+    // update the keyboard event handler settings
+    event_t kbsettings = {
+        .type                                     = event_control_keyboard,
+        .args_control_keyboard.enable_typing      = false,
+        .args_control_keyboard.enable_actions     = {SW1, SW2, SW3, SW4, SW5},
+        .args_control_keyboard.enable_leds        = true,
+        .args_control_keyboard.enable_relay       = true,
+        kbsettings.args_control_keyboard.capslock = false,
+    };
+    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+}

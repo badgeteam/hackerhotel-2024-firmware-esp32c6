@@ -26,4 +26,16 @@ idf_component_register(
                 ${project_dir}/resources/caronl.png
                 ${project_dir}/resources/caronv.png
                 ${project_dir}/resources/carond.png
+                ${project_dir}/resources/pointclick/dock1n.png
+                ${project_dir}/resources/pointclick/dock1e.png
+                ${project_dir}/resources/pointclick/dock1s.png
+                ${project_dir}/resources/pointclick/dock1w.png
+                ${project_dir}/resources/pointclick/dock2n.png
+                ${project_dir}/resources/pointclick/dock2e.png
+                ${project_dir}/resources/pointclick/dock2s.png
+                ${project_dir}/resources/pointclick/dock2w.png
+                ${project_dir}/resources/pointclick/dune1n.png
+                ${project_dir}/resources/pointclick/dune1s.png
+                ${project_dir}/resources/pointclick/dune2n.png
+                ${project_dir}/resources/pointclick/dune2s.png
 )
