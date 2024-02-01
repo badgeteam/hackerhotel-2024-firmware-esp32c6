@@ -178,14 +178,14 @@ int Screen_Confirmation(char _prompt[128], QueueHandle_t application_event_queue
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, false, false, false, true);
 
-    int text_x        = 50;
-    int text_y        = 20;
+    int text_x        = 0;
+    int text_y        = 40;
     int text_fontsize = 18;
 
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
     AddSWtoBuffer("yes", "", "", "", "no");
-    pax_center_text(gfx, BLACK, font1, fontsizeS, text_x, text_y, _prompt);
+    pax_center_text(gfx, BLACK, font1, fontsizeS, gfx->height, text_y, _prompt);
     bsp_display_flush();
 
     while (1) {

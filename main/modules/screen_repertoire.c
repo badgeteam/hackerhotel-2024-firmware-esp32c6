@@ -23,14 +23,135 @@
 
 static char const * TAG = "repertoire";
 
+static esp_err_t nvs_get_u8_wrapped(char const * namespace, char const * key, uint8_t* value) {
+    nvs_handle_t handle;
+    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+    if (res != ESP_OK) {
+        return res;
+    }
+    res = nvs_get_u8(handle, key, value);
+    nvs_close(handle);
+    return res;
+}
+
+static esp_err_t nvs_set_u8_wrapped(char const * namespace, char const * key, uint8_t value) {
+    nvs_handle_t handle;
+    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+    if (res != ESP_OK) {
+        return res;
+    }
+    res = nvs_set_u8(handle, key, value);
+    nvs_commit(handle);
+    nvs_close(handle);
+    return res;
+}
+
+static esp_err_t nvs_get_u8_blob_wrapped(char const * namespace, char const * key, uint8_t* value, size_t length) {
+    nvs_handle_t handle;
+    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+    if (res != ESP_OK) {
+        return res;
+    }
+    res = nvs_get_blob(handle, key, NULL, &length);
+    if (res != ESP_OK) {
+        value[0] = NULL;
+        return res;
+    }
+
+    nvs_close(handle);
+    return res;
+    // size_t size = sizeof(value);
+    // nvs_get_blob(handle, key, value, &size);
+    // // res = nvs_get_u8(handle, key, value);
+    // nvs_close(handle);
+    // return res;
+}
+
+static esp_err_t nvs_set_u8_blob_wrapped(char const * namespace, char const * key, uint8_t* value, size_t length) {
+    nvs_handle_t handle;
+    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+    if (res == ESP_OK) {
+        res = nvs_set_blob(handle, key, value, length);
+    }
+    nvs_commit(handle);
+    nvs_close(handle);
+    return res;
+}
+
+// esp_err_t nvs_get_str_wrapped(char const * namespace, char const * key, char* buffer, size_t buffer_size) {
+//     nvs_handle_t handle;
+//     esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+//     if (res == ESP_OK) {
+//         size_t size = 0;
+//         res         = nvs_get_str(handle, key, NULL, &size);
+//         if ((res == ESP_OK) && (size <= buffer_size - 1)) {
+//             res = nvs_get_str(handle, key, buffer, &size);
+//             if (res != ESP_OK) {
+//                 buffer[0] = '\0';
+//             }
+//         }
+//     } else {
+//         buffer[0] = '\0';
+//     }
+//     nvs_close(handle);
+//     return res;
+// }
+
+// esp_err_t nvs_set_str_wrapped(char const * namespace, char const * key, char* buffer) {
+//     nvs_handle_t handle;
+//     esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+//     if (res == ESP_OK) {
+//         res = nvs_set_str(handle, key, buffer);
+//     }
+//     nvs_commit(handle);
+//     nvs_close(handle);
+//     return res;
+// }
+
+
+void StoreRepertoire(char _repertoryIDlist[maxIDrepertoire][nicknamelenght], uint8_t _nbrepertoryID) {
+    nvs_set_u8_wrapped("Repertoire", "IDcount", _nbrepertoryID);
+
+    for (int i = 0; i < _nbrepertoryID; i++) {
+        char strnick[15] = "nickname";
+        char strmac[15]  = "MAC";
+        char nb[15];
+        snprintf(nb, 15, "%d", i);
+        strcat(strnick, nb);
+        strcat(strmac, nb);
+        ESP_LOGE(TAG, "key: %s", strnick);
+        ESP_LOGE(TAG, "nickname: %s", _repertoryIDlist[i]);
+        ESP_LOGE(TAG, "MAC: %s", strmac);
+        nvs_set_str_wrapped("Repertoire", strnick, _repertoryIDlist[i]);
+    }
+}
+
+void GetRepertoire(char _repertoryIDlist[maxIDrepertoire][nicknamelenght], uint8_t* _nbrepertoryID) {
+    nvs_get_u8_wrapped("Repertoire", "IDcount", _nbrepertoryID);
+    // bool res =
+    //     textedit("What is your name?", application_event_queue, keyboard_event_queue, nickname, sizeof(nickname));
+    // for (int i = 0; i < _nbrepertoryID; i++) {
+    //     char strnick[15] = "nickname";
+    //     char strmac[15]  = "MAC";
+    //     char nb[15];
+    //     snprintf(nb, 15, "%d", i);
+    //     strcat(strnick, nb);
+    //     strcat(strmac, nb);
+    //     ESP_LOGE(TAG, "key: %s", strnick);
+    //     ESP_LOGE(TAG, "nickname: %s", _repertoryIDlist[i]);
+    //     ESP_LOGE(TAG, "MAC: %s", strmac);
+    //     nvs_set_str_wrapped("Repertoire", strnick, _repertoryIDlist[i]);
+    // }
+}
+
 void Display_repertoire(
-    int  _cursor_x,
-    int  _cursor_y,
-    int  _nbrepertoryID,
-    int  _nbsurroundingID,
-    int  _max_y,
-    char _repertoryIDlist[maxIDrepertoire][nicknamelenght],
-    char _surroundingIDlist[maxIDrepertoire][nicknamelenght]
+    int     _cursor_x,
+    int     _cursor_y,
+    uint8_t _nbrepertoryID,
+    int     _nbsurroundingID,
+    int     _max_y,
+    char    _repertoryIDlist[maxIDrepertoire][nicknamelenght],
+    char    _surroundingIDlist[maxIDrepertoire][nicknamelenght]
 ) {
     pax_buf_t* gfx = bsp_get_gfx_buffer();
 
@@ -119,42 +240,57 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
     for (int i = 0; i < maxIDrepertoire; i++) strcpy(repertoryIDlist[i], "");
     char surroundingIDlist[maxIDrepertoire][nicknamelenght];
     for (int i = 0; i < maxIDrepertoire; i++) strcpy(surroundingIDlist[i], "");
-
     strcpy(repertoryIDlist[0], "George");
     strcpy(repertoryIDlist[1], "Michael");
     strcpy(surroundingIDlist[0], "Florian");
     strcpy(surroundingIDlist[1], "Clown");
-    int nbrepertoryID   = 2;
-    int nbsurroundingID = 1;
-    int max_y           = 2;
-    int cursor_x        = 0;
-    int cursor_y        = 0;
-    int exit            = 0;
+    uint8_t nbrepertoryID   = 2;
+    int     nbsurroundingID = 1;
+    int     max_y           = 2;
+    int     cursor_x        = 0;
+    int     cursor_y        = 0;
+    int     exit            = 0;
+    GetRepertoire(repertoryIDlist, &nbrepertoryID);
+    ESP_LOGE(TAG, "nbrepertoryID: %d", nbrepertoryID);
 
+    uint8_t test[2] = {46, 98};
+    if (nvs_set_u8_blob_wrapped("Repertoire", "ID3", test, 2) != ESP_OK)
+        ESP_LOGE(TAG, "error set: ");
+    test[0] = 29;
+    test[1] = 3;
+    if (nvs_get_u8_blob_wrapped("Repertoire", "ID3", &test, 2) != ESP_OK)
+        ESP_LOGE(TAG, "error get: ");
 
-    if (nbsurroundingID)
-        configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_2, true);
-    else
-        configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_2, false);
+    ESP_LOGE(TAG, "test: %d", test[0]);
+    ESP_LOGE(TAG, "test: %d", test[1]);
 
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, false, false, false, true);
-    if (nbsurroundingID)
+    if (nbsurroundingID > 0 && nbsurroundingID > 0)
         configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_2, true);
     else
         configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_2, false);
-    configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, true);
+    if (nbrepertoryID == 0)
+        cursor_x = 1;
+    if (max_y)
+        configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, true);
+    else
+        configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, false);
+
     DebugKeyboardSettings();
+
     Display_repertoire(cursor_x, cursor_y, nbrepertoryID, nbsurroundingID, max_y, repertoryIDlist, surroundingIDlist);
 
     while (1) {
         event_t event = {0};
-        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+        if ((xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE)) {
+
             switch (event.type) {
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
                         case SWITCH_1:
+                            StoreRepertoire(repertoryIDlist, nbrepertoryID);
                             configure_keyboard_rotate_disable(keyboard_event_queue);
                             return screen_home;
                             break;
@@ -221,10 +357,18 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
                     if (nbrepertoryID < nbsurroundingID)
                         max_y = nbsurroundingID;
                     // disable x navigation if nothing in range
-                    if (nbsurroundingID)
+                    if (nbsurroundingID > 0 && nbsurroundingID > 0)
                         configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_2, true);
                     else
                         configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_2, false);
+                    if (max_y)
+                        configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, true);
+                    else
+                        configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, false);
+                    if (nbrepertoryID == 0)
+                        cursor_x = 1;
+                    if (nbsurroundingID == 0)
+                        cursor_x = 0;
                     Display_repertoire(
                         cursor_x,
                         cursor_y,
@@ -235,6 +379,7 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
                         surroundingIDlist
                     );
                     break;
+
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
             }
         }
