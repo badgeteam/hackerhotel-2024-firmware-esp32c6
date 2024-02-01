@@ -34,8 +34,8 @@ void keyboard_handle_input(keyboard_state_t* state, coprocessor_input_message_t*
         case SWITCH_PRESS: state->button_state_press |= 1 << input->button; break;
     }
 
-    uint32_t leds              = 0;
-    int      character_entered = 0;
+    uint32_t leds          = 0;
+    int      led_line_flag = 0;
 
     if (state->wait_for_release) {
         if (((!state->button_state_left) || (!state->button_state_right)) && (!state->button_state_press)) {
@@ -48,7 +48,9 @@ void keyboard_handle_input(keyboard_state_t* state, coprocessor_input_message_t*
     } else if (state->button_state_press || ((state->button_state_left || state->button_state_right) && state->enable_rot_action)) {
         // Action
         if (1) {
-            int action = -1;
+            int action    = -1;
+            int rotation  = -1;
+            led_line_flag = 1;
             switch (state->button_state_press) {
                 case (1 << 0): action = SWITCH_1; break;
                 case (1 << 1): action = SWITCH_2; break;
@@ -56,24 +58,25 @@ void keyboard_handle_input(keyboard_state_t* state, coprocessor_input_message_t*
                 case (1 << 3): action = SWITCH_4; break;
                 case (1 << 4): action = SWITCH_5; break;
             }
+
             switch (state->button_state_left) {
-                case (1 << 0): action = SWITCH_L1; break;
-                case (1 << 1): action = SWITCH_L2; break;
-                case (1 << 2): action = SWITCH_L3; break;
-                case (1 << 3): action = SWITCH_L4; break;
-                case (1 << 4): action = SWITCH_L5; break;
+                case (1 << 0): rotation = SWITCH_L1; break;
+                case (1 << 1): rotation = SWITCH_L2; break;
+                case (1 << 2): rotation = SWITCH_L3; break;
+                case (1 << 3): rotation = SWITCH_L4; break;
+                case (1 << 4): rotation = SWITCH_L5; break;
             }
 
             switch (state->button_state_right) {
-                case (1 << 0): action = SWITCH_R1; break;
-                case (1 << 1): action = SWITCH_R2; break;
-                case (1 << 2): action = SWITCH_R3; break;
-                case (1 << 3): action = SWITCH_R4; break;
-                case (1 << 4): action = SWITCH_R5; break;
+                case (1 << 0): rotation = SWITCH_R1; break;
+                case (1 << 1): rotation = SWITCH_R2; break;
+                case (1 << 2): rotation = SWITCH_R3; break;
+                case (1 << 3): rotation = SWITCH_R4; break;
+                case (1 << 4): rotation = SWITCH_R5; break;
             }
 
             if ((action >= 0 && state->enable_actions[action]) ||
-                (action >= 0 && state->enable_rotations[action - NUM_SWITCHES])) {
+                (rotation >= 0 && state->enable_rotations[rotation - NUM_SWITCHES])) {
                 if (state->enable_relay) {
                     bsp_set_relay(true);
                 }
@@ -82,7 +85,10 @@ void keyboard_handle_input(keyboard_state_t* state, coprocessor_input_message_t*
                 event_t event;
                 event.type                          = event_input_keyboard;
                 event.args_input_keyboard.character = '\0';
-                event.args_input_keyboard.action    = action;
+                if (action >= 0)
+                    event.args_input_keyboard.action = action;
+                if (rotation >= 0)
+                    event.args_input_keyboard.action = rotation;
                 xQueueSend(output_queue, &event, 0);
             }
         }
@@ -206,7 +212,7 @@ void keyboard_handle_input(keyboard_state_t* state, coprocessor_input_message_t*
         }
 
         if (character != 0 && state->enable_typing) {
-            character_entered = 1;
+            led_line_flag = 1;
             if (state->enable_relay) {
                 bsp_set_relay(true);
             }
@@ -219,7 +225,7 @@ void keyboard_handle_input(keyboard_state_t* state, coprocessor_input_message_t*
         }
     }
 
-    if (!character_entered) {
+    if (!led_line_flag) {
         // Select row
         if (state->button_state_left & 0x01)
             leds |= LED_A | LED_B | LED_E | LED_H;

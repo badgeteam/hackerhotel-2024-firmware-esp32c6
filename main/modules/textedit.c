@@ -1,4 +1,5 @@
 #include "textedit.h"
+#include "application.h"
 #include "bsp.h"
 #include "esp_err.h"
 #include "esp_log.h"
@@ -36,27 +37,30 @@ void flush_event_queue(QueueHandle_t queue) {
 }
 
 void disable_keyboard(QueueHandle_t keyboard_event_queue) {
-    event_t kbsettings = {
-        .type                                 = event_control_keyboard,
-        .args_control_keyboard.enable_typing  = false,
-        .args_control_keyboard.enable_actions = {false, false, false, false, false},
-        .args_control_keyboard.enable_leds    = true,
-        .args_control_keyboard.enable_relay   = true,
-        .args_control_keyboard.capslock       = false,
-    };
-    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+    InitKeyboard(keyboard_event_queue);
+    // event_t kbsettings = {
+    //     .type                                 = event_control_keyboard,
+    //     .args_control_keyboard.enable_typing  = false,
+    //     .args_control_keyboard.enable_actions = {false, false, false, false, false},
+    //     .args_control_keyboard.enable_leds    = true,
+    //     .args_control_keyboard.enable_relay   = true,
+    //     .args_control_keyboard.capslock       = false,
+    // };
+    // xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 }
 
 void configure_keyboard(QueueHandle_t keyboard_event_queue, bool capslock) {
-    event_t kbsettings = {
-        .type                                 = event_control_keyboard,
-        .args_control_keyboard.enable_typing  = true,
-        .args_control_keyboard.enable_actions = {true, true, true, true, true},
-        .args_control_keyboard.enable_leds    = true,
-        .args_control_keyboard.enable_relay   = true,
-    };
-    kbsettings.args_control_keyboard.capslock = capslock;
-    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+    configure_keyboard_caps(keyboard_event_queue, capslock);
+    configure_keyboard_typing(keyboard_event_queue, true);
+    // event_t kbsettings = {
+    //     .type                                 = event_control_keyboard,
+    //     .args_control_keyboard.enable_typing  = true,
+    //     .args_control_keyboard.enable_actions = {true, true, true, true, true},
+    //     .args_control_keyboard.enable_leds    = true,
+    //     .args_control_keyboard.enable_relay   = true,
+    // };
+    // kbsettings.args_control_keyboard.capslock = capslock;
+    // xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 }
 
 void textedit_draw(char const * title, char* value, bool capslock) {
@@ -185,16 +189,16 @@ void special_character(
     char*         output,
     size_t        output_size
 ) {
-
-    event_t kbsettings = {
-        .type                                 = event_control_keyboard,
-        .args_control_keyboard.enable_typing  = true,
-        .args_control_keyboard.enable_actions = {false, true, true, true, true},
-        .args_control_keyboard.enable_leds    = true,
-        .args_control_keyboard.enable_relay   = true,
-        .args_control_keyboard.capslock       = false,
-    };
-    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+    configure_keyboard_presses(keyboard_event_queue, false, true, true, true, true);
+    //  event_t kbsettings = {
+    //     .type                                 = event_control_keyboard,
+    //     .args_control_keyboard.enable_typing  = true,
+    //     .args_control_keyboard.enable_actions = {false, true, true, true, true},
+    //     .args_control_keyboard.enable_leds    = true,
+    //     .args_control_keyboard.enable_relay   = true,
+    //     .args_control_keyboard.capslock       = false,
+    // };
+    // xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 
     uint8_t page = 0;
     special_draw(title, output, page);

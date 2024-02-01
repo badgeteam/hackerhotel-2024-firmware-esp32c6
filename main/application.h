@@ -1,10 +1,9 @@
 #pragma once
 
+#include "events.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
-// #include "pax_fonts.h"
 #include "pax_gfx.h"
-
 
 #define LED_OFF       0x000000
 #define LED_RED       0xFF0000
@@ -15,10 +14,14 @@
 #define LED_PURPLE    0xFF00FF
 #define LED_WHITE     0xFFFFFF
 
+#define left  0
+#define right 5
+
 extern int const telegraph_X[20];
 extern int const telegraph_Y[20];
 
-#define font1 (&PRIVATE_pax_font_sky)
+#define font1     (&PRIVATE_pax_font_sky)
+#define fontsizeS 9
 
 void Addborder1toBuffer(void);
 void Addborder2toBuffer(void);
@@ -61,7 +64,24 @@ void Justify_right_text(
     pax_buf_t* buf, pax_col_t color, pax_font_t const * font, float font_size, float x, float y, char const * text
 );
 int  DisplayExitConfirmation(char _prompt[128], QueueHandle_t keyboard_event_queue);
+int  Screen_Confirmation(char _prompt[128], QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
 void AddSwitchesBoxtoBuffer(int _switch);
 void AddOneTextSWtoBuffer(int _SW, char const * SWstr);
 void DisplayTelegraph(int _colour, int _position);
 void configure_keyboard_guru(QueueHandle_t keyboard_event_queue, bool SW1, bool SW2, bool SW3, bool SW4, bool SW5);
+void InitKeyboard(QueueHandle_t keyboard_event_queue);
+void configure_keyboard_kb(QueueHandle_t keyboard_event_queue, event_t _kbsettings);
+void configure_keyboard_typing(QueueHandle_t keyboard_event_queue, bool _typing);
+void configure_keyboard_character(QueueHandle_t keyboard_event_queue, int _pos, bool _character);
+void configure_keyboard_press(QueueHandle_t keyboard_event_queue, int _pos, bool _state);
+void configure_keyboard_presses(QueueHandle_t keyboard_event_queue, bool SW1, bool SW2, bool SW3, bool SW4, bool SW5);
+void configure_keyboard_rotate(QueueHandle_t keyboard_event_queue, int _SW, int _LR, bool _state);
+void configure_keyboard_rotate_both(QueueHandle_t keyboard_event_queue, int _SW, bool _state);
+void configure_keyboard_rotate_disable(QueueHandle_t keyboard_event_queue);
+void configure_keyboard_caps(QueueHandle_t keyboard_event_queue, bool _caps);
+void DebugKeyboardSettings(void);
+int  Increment(int _num, int _max);
+int  Decrement(int _num, int _max);
+void AddDiamondSelecttoBuf(int _x, int _y, int _gap);
+esp_err_t nvs_get_str_wrapped(char const * namespace, char const * key, char* buffer, size_t buffer_size);
+esp_err_t nvs_set_str_wrapped(char const * namespace, char const * key, char* buffer);

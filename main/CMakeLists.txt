@@ -28,6 +28,8 @@ idf_component_register(
                 ${project_dir}/resources/carond.png
                 ${project_dir}/resources/switchframe1.png
                 ${project_dir}/resources/switchframe2.png
+                ${project_dir}/resources/diamondl.png
+                ${project_dir}/resources/diamondr.png
                 ${project_dir}/resources/pointclick/dock1n.png
                 ${project_dir}/resources/pointclick/dock1e.png
                 ${project_dir}/resources/pointclick/dock1s.png

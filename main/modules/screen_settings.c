@@ -28,15 +28,8 @@ extern uint8_t const settings_png_end[] asm("_binary_settings_png_end");
 static char const * TAG = "settings";
 
 static void configure_keyboard(QueueHandle_t keyboard_event_queue) {
-    event_t kbsettings = {
-        .type                                     = event_control_keyboard,
-        .args_control_keyboard.enable_typing      = false,
-        .args_control_keyboard.enable_actions     = {true, true, true, true, true},
-        .args_control_keyboard.enable_leds        = true,
-        .args_control_keyboard.enable_relay       = true,
-        kbsettings.args_control_keyboard.capslock = false,
-    };
-    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
 }
 
 static void ota_update_wrapped(QueueHandle_t keyboard_event_queue, bool nightly) {
@@ -55,35 +48,35 @@ static void ota_update_wrapped(QueueHandle_t keyboard_event_queue, bool nightly)
     configure_keyboard(keyboard_event_queue);
 }
 
-static esp_err_t nvs_get_str_wrapped(char const * namespace, char const * key, char* buffer, size_t buffer_size) {
-    nvs_handle_t handle;
-    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
-    if (res == ESP_OK) {
-        size_t size = 0;
-        res         = nvs_get_str(handle, key, NULL, &size);
-        if ((res == ESP_OK) && (size <= buffer_size - 1)) {
-            res = nvs_get_str(handle, key, buffer, &size);
-            if (res != ESP_OK) {
-                buffer[0] = '\0';
-            }
-        }
-    } else {
-        buffer[0] = '\0';
-    }
-    nvs_close(handle);
-    return res;
-}
+// static esp_err_t nvs_get_str_wrapped(char const * namespace, char const * key, char* buffer, size_t buffer_size) {
+//     nvs_handle_t handle;
+//     esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+//     if (res == ESP_OK) {
+//         size_t size = 0;
+//         res         = nvs_get_str(handle, key, NULL, &size);
+//         if ((res == ESP_OK) && (size <= buffer_size - 1)) {
+//             res = nvs_get_str(handle, key, buffer, &size);
+//             if (res != ESP_OK) {
+//                 buffer[0] = '\0';
+//             }
+//         }
+//     } else {
+//         buffer[0] = '\0';
+//     }
+//     nvs_close(handle);
+//     return res;
+// }
 
-static esp_err_t nvs_set_str_wrapped(char const * namespace, char const * key, char* buffer) {
-    nvs_handle_t handle;
-    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
-    if (res == ESP_OK) {
-        res = nvs_set_str(handle, key, buffer);
-    }
-    nvs_commit(handle);
-    nvs_close(handle);
-    return res;
-}
+// static esp_err_t nvs_set_str_wrapped(char const * namespace, char const * key, char* buffer) {
+//     nvs_handle_t handle;
+//     esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+//     if (res == ESP_OK) {
+//         res = nvs_set_str(handle, key, buffer);
+//     }
+//     nvs_commit(handle);
+//     nvs_close(handle);
+//     return res;
+// }
 
 static esp_err_t nvs_get_u8_wrapped(char const * namespace, char const * key, uint8_t* value) {
     nvs_handle_t handle;

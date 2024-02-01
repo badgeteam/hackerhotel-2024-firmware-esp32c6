@@ -1,5 +1,6 @@
 #include "application.h"
 #include "application_settings.h"
+#include "badge_messages.h"
 #include "bsp.h"
 #include "driver/dedic_gpio.h"
 #include "driver/gpio.h"
@@ -23,9 +24,14 @@
 #include "pax_types.h"
 #include "resources.h"
 #include "riscv/rv_utils.h"
+#include "screen_home.h"
+#include "screen_pointclick.h"
+#include "screen_repertoire.h"
+#include "screens.h"
 #include "sdkconfig.h"
 #include "sdmmc_cmd.h"
 #include "soc/gpio_struct.h"
+#include "textedit.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <esp_err.h>
@@ -52,6 +58,13 @@ extern uint8_t const switchframe1_png_end[] asm("_binary_switchframe1_png_end");
 extern uint8_t const switchframe2_png_start[] asm("_binary_switchframe2_png_start");
 extern uint8_t const switchframe2_png_end[] asm("_binary_switchframe2_png_end");
 
+extern uint8_t const diamondl_png_start[] asm("_binary_diamondl_png_start");
+extern uint8_t const diamondl_png_end[] asm("_binary_diamondl_png_end");
+extern uint8_t const diamondr_png_start[] asm("_binary_diamondr_png_start");
+extern uint8_t const diamondr_png_end[] asm("_binary_diamondr_png_end");
+
+
+event_t kbsettings;
 
 int const telegraph_X[20] = {0, -8, 8, -16, 0, 16, -24, -8, 8, 24, -24, -8, 8, 24, -16, 0, 16, -8, 8, 0};
 int const telegraph_Y[20] = {12, 27, 27, 42, 42, 42, 57, 57, 57, 57, 71, 71, 71, 71, 86, 86, 86, 101, 101, 116};
@@ -160,6 +173,46 @@ int DisplayExitConfirmation(char _prompt[128], QueueHandle_t keyboard_event_queu
     return 1;
 }
 
+int Screen_Confirmation(char _prompt[128], QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+    event_t tempkbsettings = kbsettings;
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, true, false, false, false, true);
+
+    int text_x        = 50;
+    int text_y        = 20;
+    int text_fontsize = 18;
+
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_background(gfx, WHITE);
+    AddSWtoBuffer("yes", "", "", "", "no");
+    pax_center_text(gfx, BLACK, font1, fontsizeS, text_x, text_y, _prompt);
+    bsp_display_flush();
+
+    while (1) {
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1:
+                            configure_keyboard_kb(keyboard_event_queue, tempkbsettings);
+                            return 1;
+                            break;
+                        case SWITCH_2: break;
+                        case SWITCH_3: break;
+                        case SWITCH_4: break;
+                        case SWITCH_5:
+                            configure_keyboard_kb(keyboard_event_queue, tempkbsettings);
+                            return 0;
+                            break;
+                        default: break;
+                    }
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
 // Parse _message[] into an array of _nbwords
 // and makes them into up to _maxnblines which are _maxlinelenght pixel long
 // can be centered if the _centered flag is high
@@ -383,11 +436,10 @@ void configure_keyboard_guru(QueueHandle_t keyboard_event_queue, bool SW1, bool 
     event_t kbsettings = {
         .type                                = event_control_keyboard,
         .args_control_keyboard.enable_typing = true,
-        // .args_control_keyboard.enable_rotations = {true, true, false, true, true, true, false, false, false, true},
         .args_control_keyboard
             .enable_rotations = {false, false, false, false, false, false, false, false, false, false},
-        .args_control_keyboard.enable_characters  = {true,  false, true,  false, false, false, false, false, false,
-                                                     false, false, false, false, false, false, false, false, false,
+        .args_control_keyboard.enable_characters  = {true,  true,  true,  true,  true,  true,  true,  true,  true,
+                                                     true,  true,  false, false, false, false, false, false, false,
                                                      false, false, false, false, false, false, false, false},
         .args_control_keyboard.enable_actions     = {SW1, SW2, SW3, SW4, SW5},
         .args_control_keyboard.enable_leds        = true,
@@ -395,4 +447,173 @@ void configure_keyboard_guru(QueueHandle_t keyboard_event_queue, bool SW1, bool 
         kbsettings.args_control_keyboard.capslock = false,
     };
     xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+}
+
+void InitKeyboard(QueueHandle_t keyboard_event_queue) {
+    kbsettings.type                                = event_control_keyboard;
+    kbsettings.args_control_keyboard.enable_typing = false;
+    for (int i = 0; i < NUM_ROTATION; i++) kbsettings.args_control_keyboard.enable_rotations[i] = false;
+    for (int i = 0; i < NUM_LETTER; i++) kbsettings.args_control_keyboard.enable_characters[i] = true;
+    for (int i = 0; i < NUM_SWITCHES; i++) kbsettings.args_control_keyboard.enable_actions[i] = false;
+    kbsettings.args_control_keyboard.enable_leds  = true;
+    kbsettings.args_control_keyboard.enable_relay = true;
+    kbsettings.args_control_keyboard.capslock     = false;
+    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+}
+
+void configure_keyboard_kb(QueueHandle_t keyboard_event_queue, event_t _kbsettings) {
+    kbsettings = _kbsettings;
+    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+}
+
+void configure_keyboard_typing(QueueHandle_t keyboard_event_queue, bool _typing) {
+    kbsettings.args_control_keyboard.enable_typing = _typing;
+    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+}
+
+void configure_keyboard_character(QueueHandle_t keyboard_event_queue, int _SW, bool _character) {
+    kbsettings.args_control_keyboard.enable_characters[_SW] = _character;
+    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+}
+
+void configure_keyboard_press(QueueHandle_t keyboard_event_queue, int _SW, bool _state) {
+    kbsettings.args_control_keyboard.enable_actions[_SW] = _state;
+    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+}
+
+void configure_keyboard_presses(QueueHandle_t keyboard_event_queue, bool SW1, bool SW2, bool SW3, bool SW4, bool SW5) {
+    kbsettings.args_control_keyboard.enable_actions[0] = SW1;
+    kbsettings.args_control_keyboard.enable_actions[1] = SW2;
+    kbsettings.args_control_keyboard.enable_actions[2] = SW3;
+    kbsettings.args_control_keyboard.enable_actions[3] = SW4;
+    kbsettings.args_control_keyboard.enable_actions[4] = SW5;
+    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+}
+
+void configure_keyboard_rotate(QueueHandle_t keyboard_event_queue, int _SW, int _LR, bool _state) {
+    kbsettings.args_control_keyboard.enable_rotations[_SW + _LR] = _state;
+    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+}
+
+void configure_keyboard_rotate_both(QueueHandle_t keyboard_event_queue, int _SW, bool _state) {
+    kbsettings.args_control_keyboard.enable_rotations[_SW]                = _state;  // left
+    kbsettings.args_control_keyboard.enable_rotations[_SW + NUM_SWITCHES] = _state;  // right
+    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+}
+
+void configure_keyboard_rotate_disable(QueueHandle_t keyboard_event_queue) {
+    for (int i = 0; i < NUM_ROTATION; i++) kbsettings.args_control_keyboard.enable_rotations[i] = false;
+    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+}
+
+void configure_keyboard_caps(QueueHandle_t keyboard_event_queue, bool _caps) {
+    kbsettings.args_control_keyboard.capslock = _caps;
+    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+}
+
+void DebugKeyboardSettings(void) {
+    ESP_LOGE(TAG, "enable_typing: %d", kbsettings.args_control_keyboard.enable_typing);
+    ESP_LOGE(TAG, "enable_rotations:");
+    for (int i = 0; i < NUM_ROTATION; i++)
+        ESP_LOGE(TAG, "%d: %d", i, kbsettings.args_control_keyboard.enable_rotations[i]);
+    ESP_LOGE(TAG, "enable_characters:");
+    for (int i = 0; i < NUM_LETTER; i++)
+        ESP_LOGE(TAG, "%d: %d", i, kbsettings.args_control_keyboard.enable_characters[i]);
+    ESP_LOGE(TAG, "enable_actions:");
+    for (int i = 0; i < NUM_SWITCHES; i++)
+        ESP_LOGE(TAG, "%d: %d", i, kbsettings.args_control_keyboard.enable_actions[i]);
+    ESP_LOGE(TAG, "enable_leds: %d", kbsettings.args_control_keyboard.enable_leds);
+    ESP_LOGE(TAG, "enable_relay: %d", kbsettings.args_control_keyboard.enable_relay);
+    ESP_LOGE(TAG, "capslock: %d", kbsettings.args_control_keyboard.capslock);
+}
+
+
+int Increment(int _num, int _max) {
+    _num++;
+    if (_num > _max)
+        _num = 0;
+    return _num;
+}
+int Decrement(int _num, int _max) {
+    _num--;
+    if (_num < 0)
+        _num = _max;
+    return _num;
+}
+
+void AddDiamondSelecttoBuf(int _x, int _y, int _gap) {
+    int x_offset   = 6;
+    _x             = _x - 3;
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_insert_png_buf(
+        bsp_get_gfx_buffer(),
+        diamondl_png_start,
+        diamondl_png_end - diamondl_png_start,
+        _x - _gap / 2 - x_offset,
+        _y,
+        0
+    );
+    pax_insert_png_buf(
+        bsp_get_gfx_buffer(),
+        diamondr_png_start,
+        diamondr_png_end - diamondr_png_start,
+        _x + _gap / 2 + x_offset,
+        _y,
+        0
+    );
+
+    // // horizontal ship coordonates orientation east
+    // int of[13][2] = {
+    //     {3, 0, 4, 0},
+    //     {2, 1, 3, 1},
+    //     {1, 2, 2, 2},
+    //     {0, 3, 1, 3},
+    //     {4, 0, 5, 0},
+    //     {4, 0, 5, 0},
+    //     {-8, 5},
+    //     {-7, -5},
+    //     {-7, 6},
+    //     {-6, -6},
+    //     {5 + 16 * (_shiplenght - 1), -6},
+    //     {-6, 7},
+    //     {5 + 16 * (_shiplenght - 1), 7},
+    //     {5 + 16 * (_shiplenght - 1), -6},
+    //     {11 + 16 * (_shiplenght - 1), 0},
+    //     {5 + 16 * (_shiplenght - 1), 7},
+    //     {11 + 16 * (_shiplenght - 1), 1},
+    //     {16, 0}
+    // };
+
+    //         for (int i = 1; i < 9; i++)
+    //             pax_draw_line(gfx, BLACK, _x + od[i][0], _y + od[i][1], _x + od[i + 1][0], _y + od[i + 1][1]);
+}
+
+esp_err_t nvs_get_str_wrapped(char const * namespace, char const * key, char* buffer, size_t buffer_size) {
+    nvs_handle_t handle;
+    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+    if (res == ESP_OK) {
+        size_t size = 0;
+        res         = nvs_get_str(handle, key, NULL, &size);
+        if ((res == ESP_OK) && (size <= buffer_size - 1)) {
+            res = nvs_get_str(handle, key, buffer, &size);
+            if (res != ESP_OK) {
+                buffer[0] = '\0';
+            }
+        }
+    } else {
+        buffer[0] = '\0';
+    }
+    nvs_close(handle);
+    return res;
+}
+
+esp_err_t nvs_set_str_wrapped(char const * namespace, char const * key, char* buffer) {
+    nvs_handle_t handle;
+    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+    if (res == ESP_OK) {
+        res = nvs_set_str(handle, key, buffer);
+    }
+    nvs_commit(handle);
+    nvs_close(handle);
+    return res;
 }

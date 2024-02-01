@@ -41,24 +41,6 @@ static void configure_keyboard(QueueHandle_t keyboard_event_queue) {
     };
     xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 }
-static esp_err_t nvs_get_str_wrapped(char const * namespace, char const * key, char* buffer, size_t buffer_size) {
-    nvs_handle_t handle;
-    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
-    if (res == ESP_OK) {
-        size_t size = 0;
-        res         = nvs_get_str(handle, key, NULL, &size);
-        if ((res == ESP_OK) && (size <= buffer_size - 1)) {
-            res = nvs_get_str(handle, key, buffer, &size);
-            if (res != ESP_OK) {
-                buffer[0] = '\0';
-            }
-        }
-    } else {
-        buffer[0] = '\0';
-    }
-    nvs_close(handle);
-    return res;
-}
 
 void receive_str(void) {
     // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
