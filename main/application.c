@@ -76,7 +76,7 @@ void AddSWborder1toBuffer(void) {
         switchframe1_png_start,
         switchframe1_png_end - switchframe1_png_start,
         0,
-        127 - 11,
+        127 - 10,
         0
     );
 }
@@ -89,9 +89,33 @@ void AddSWborder2toBuffer(void) {
         switchframe2_png_start,
         switchframe2_png_end - switchframe2_png_start,
         0,
-        127 - 12,
+        127 - 11,
         0
     );
+}
+
+void AddSWtoBuffer(
+    char const * SW1str, char const * SW2str, char const * SW3str, char const * SW4str, char const * SW5str
+) {
+    Addborder2toBuffer();
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_insert_png_buf(gfx, switchframe2_png_start, switchframe2_png_end - switchframe2_png_start, 0, 127 - 11, 0);
+    int gapx = 60;
+    int o_x  = 28;
+    int o_y  = 118;
+    pax_center_text(gfx, BLACK, font1, 9, o_x + gapx * 0, o_y, SW1str);
+    pax_center_text(gfx, BLACK, font1, 9, o_x + gapx * 1, o_y, SW2str);
+    pax_center_text(gfx, BLACK, font1, 9, o_x + gapx * 2, o_y, SW3str);
+    pax_center_text(gfx, BLACK, font1, 9, o_x + gapx * 3, o_y, SW4str);
+    pax_center_text(gfx, BLACK, font1, 9, o_x + gapx * 4, o_y, SW5str);
+}
+
+void AddOneTextSWtoBuffer(int _SW, char const * SWstr) {
+    pax_buf_t* gfx  = bsp_get_gfx_buffer();
+    int        gapx = 60;
+    int        o_x  = 28;
+    int        o_y  = 118;
+    pax_center_text(gfx, BLACK, font1, 9, o_x + gapx * _SW, o_y, SWstr);
 }
 
 void Justify_right_text(
@@ -357,8 +381,14 @@ void DisplayTelegraph(int _colour, int _position) {
 void configure_keyboard_guru(QueueHandle_t keyboard_event_queue, bool SW1, bool SW2, bool SW3, bool SW4, bool SW5) {
     // update the keyboard event handler settings
     event_t kbsettings = {
-        .type                                     = event_control_keyboard,
-        .args_control_keyboard.enable_typing      = false,
+        .type                                = event_control_keyboard,
+        .args_control_keyboard.enable_typing = true,
+        // .args_control_keyboard.enable_rotations = {true, true, false, true, true, true, false, false, false, true},
+        .args_control_keyboard
+            .enable_rotations = {false, false, false, false, false, false, false, false, false, false},
+        .args_control_keyboard.enable_characters  = {true,  false, true,  false, false, false, false, false, false,
+                                                     false, false, false, false, false, false, false, false, false,
+                                                     false, false, false, false, false, false, false, false},
         .args_control_keyboard.enable_actions     = {SW1, SW2, SW3, SW4, SW5},
         .args_control_keyboard.enable_leds        = true,
         .args_control_keyboard.enable_relay       = true,

@@ -83,7 +83,7 @@ screen_t screen_home_entry(QueueHandle_t application_event_queue, QueueHandle_t 
                         case SWITCH_1: return screen_settings; break;
                         case SWITCH_2: return screen_billboard; break;
                         case SWITCH_3: return screen_battleship; break;
-                        case SWITCH_4: return screen_shades; break;
+                        case SWITCH_4: return screen_repertoire; break;
                         case SWITCH_5: return screen_test; break;
                         default: break;
                     }

@@ -2,7 +2,9 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
-#include "pax_types.h"
+// #include "pax_fonts.h"
+#include "pax_gfx.h"
+
 
 #define LED_OFF       0x000000
 #define LED_RED       0xFF0000
@@ -16,10 +18,15 @@
 extern int const telegraph_X[20];
 extern int const telegraph_Y[20];
 
+#define font1 (&PRIVATE_pax_font_sky)
+
 void Addborder1toBuffer(void);
 void Addborder2toBuffer(void);
 void AddSWborder1toBuffer(void);
 void AddSWborder2toBuffer(void);
+void AddSWtoBuffer(
+    char const * SW1str, char const * SW2str, char const * SW3str, char const * SW4str, char const * SW5str
+);
 void AddBlocktoBuffer(int _x, int _y);
 
 // Parse _message[] into an array of _nbwords
@@ -55,5 +62,6 @@ void Justify_right_text(
 );
 int  DisplayExitConfirmation(char _prompt[128], QueueHandle_t keyboard_event_queue);
 void AddSwitchesBoxtoBuffer(int _switch);
+void AddOneTextSWtoBuffer(int _SW, char const * SWstr);
 void DisplayTelegraph(int _colour, int _position);
 void configure_keyboard_guru(QueueHandle_t keyboard_event_queue, bool SW1, bool SW2, bool SW3, bool SW4, bool SW5);

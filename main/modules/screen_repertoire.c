@@ -22,16 +22,16 @@
 
 static char const * TAG = "repertoire";
 
+void Display_repertoire(void) {
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_background(gfx, WHITE);
+    AddSWtoBuffer("Exit", "application", "dog", "bananana", "kami");
+    bsp_display_flush();
+}
+
 screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
 
     configure_keyboard_guru(keyboard_event_queue, true, true, true, false, true);
-
-    bsp_apply_lut(lut_4s);
-
-    pax_buf_t* gfx = bsp_get_gfx_buffer();
-    pax_background(gfx, WHITE);
-    AddSWborder1toBuffer();
-    bsp_display_flush();
 
     while (1) {
         event_t event = {0};
@@ -41,18 +41,19 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
                         case SWITCH_1: return screen_home; break;
-                        case SWITCH_2:
-                            pax_background(gfx, WHITE);
-                            AddSWborder2toBuffer();
-                            bsp_display_flush();
+                        case SWITCH_L2:
+                            Display_repertoire();
+                            ESP_LOGE(TAG, "L2");
                             break;
                         case SWITCH_3: break;
                         case SWITCH_4: break;
                         case SWITCH_5: break;
+                        case SWITCH_L5: ESP_LOGE(TAG, "L5"); break;
+                        case SWITCH_R5: ESP_LOGE(TAG, "R5"); break;
+                        case SWITCH_L1: ESP_LOGE(TAG, "L1"); break;
+                        case SWITCH_R1: ESP_LOGE(TAG, "R1"); break;
                         default: break;
                     }
-
-
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
             }

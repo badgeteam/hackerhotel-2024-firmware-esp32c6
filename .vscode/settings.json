@@ -72,7 +72,10 @@
         "esp_random.h": "c",
         "screen_test.h": "c",
         "menu.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "pax_gfx.h": "c",
+        "pax_types.h": "c",
+        "pax_fonts.h": "c"
     },
     "editor.formatOnType": false,
     "editor.formatOnSave": true,
