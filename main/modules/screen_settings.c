@@ -78,28 +78,28 @@ static void ota_update_wrapped(QueueHandle_t keyboard_event_queue, bool nightly)
 //     return res;
 // }
 
-static esp_err_t nvs_get_u8_wrapped(char const * namespace, char const * key, uint8_t* value) {
-    nvs_handle_t handle;
-    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
-    if (res != ESP_OK) {
-        return res;
-    }
-    res = nvs_get_u8(handle, key, value);
-    nvs_close(handle);
-    return res;
-}
+// static esp_err_t nvs_get_u8_wrapped(char const * namespace, char const * key, uint8_t* value) {
+//     nvs_handle_t handle;
+//     esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+//     if (res != ESP_OK) {
+//         return res;
+//     }
+//     res = nvs_get_u8(handle, key, value);
+//     nvs_close(handle);
+//     return res;
+// }
 
-static esp_err_t nvs_set_u8_wrapped(char const * namespace, char const * key, uint8_t value) {
-    nvs_handle_t handle;
-    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
-    if (res != ESP_OK) {
-        return res;
-    }
-    res = nvs_set_u8(handle, key, value);
-    nvs_commit(handle);
-    nvs_close(handle);
-    return res;
-}
+// static esp_err_t nvs_set_u8_wrapped(char const * namespace, char const * key, uint8_t value) {
+//     nvs_handle_t handle;
+//     esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+//     if (res != ESP_OK) {
+//         return res;
+//     }
+//     res = nvs_set_u8(handle, key, value);
+//     nvs_commit(handle);
+//     nvs_close(handle);
+//     return res;
+// }
 
 static void edit_nickname(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     char nickname[nicknamelenght] = {0};

@@ -527,19 +527,6 @@ int CheckforVictory(int playerboard[20], int ennemyboard[20]) {
     return 0;
 }
 
-static void configure_keyboard(QueueHandle_t keyboard_event_queue) {
-    // update the keyboard event handler settings
-    event_t kbsettings = {
-        .type                                     = event_control_keyboard,
-        .args_control_keyboard.enable_typing      = false,
-        .args_control_keyboard.enable_actions     = {true, true, false, true, true},
-        .args_control_keyboard.enable_leds        = true,
-        .args_control_keyboard.enable_relay       = true,
-        kbsettings.args_control_keyboard.capslock = false,
-    };
-    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
-}
-
 int TelegraphtoBlock(char _inputletter) {
     switch (_inputletter) {
         case 'a': return 0; break;
@@ -716,17 +703,10 @@ screen_t screen_battleship_placeships(
     };
     xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 
-    int  shipplaced         = 0;
-    int  exitconf           = 0;
-    char exitprompt[128]    = "Do you want to exit and declare forfeit";
-    int  flagstart          = 0;
-    int  playershipdummy[6] = {
-        4,
-        3,
-        10,
-        11,
-        12,
-    };
+    int  shipplaced      = 0;
+    int  exitconf        = 0;
+    char exitprompt[128] = "Do you want to exit and declare forfeit";
+    int  flagstart       = 0;
 
     Display_battleship_placeships(playerboard, shipplaced, flagstart, _position, playership);
 
@@ -1203,8 +1183,7 @@ screen_t screen_battleship_victory(
     };
     xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 
-    pax_font_t const * font = pax_font_sky;
-    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
     ESP_LOGE(TAG, "Victory flag: %d", *victoryflag);
     pax_background(gfx, WHITE);
     if (*victoryflag == victory)

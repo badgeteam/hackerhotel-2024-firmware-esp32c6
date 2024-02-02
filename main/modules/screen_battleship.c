@@ -18,7 +18,7 @@
 #include <esp_random.h>
 #include <string.h>
 
-static char const * TAG = "battleship";
+// static char const * TAG = "battleship";
 
 screen_t screen_placeholder_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
 
@@ -35,6 +35,7 @@ screen_t screen_placeholder_entry(QueueHandle_t application_event_queue, QueueHa
     pax_font_t const * font = pax_font_saira_regular;
     pax_buf_t*         gfx  = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
+
     pax_draw_text(gfx, RED, font, 18, 5, 5, "BATTLESHIP");
     bsp_display_flush();
 

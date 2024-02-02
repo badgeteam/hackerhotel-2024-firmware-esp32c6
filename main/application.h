@@ -85,3 +85,7 @@ int  Decrement(int _num, int _max);
 void AddDiamondSelecttoBuf(int _x, int _y, int _gap);
 esp_err_t nvs_get_str_wrapped(char const * namespace, char const * key, char* buffer, size_t buffer_size);
 esp_err_t nvs_set_str_wrapped(char const * namespace, char const * key, char* buffer);
+esp_err_t nvs_get_u8_wrapped(char const * namespace, char const * key, uint8_t* value);
+esp_err_t nvs_set_u8_wrapped(char const * namespace, char const * key, uint8_t value);
+esp_err_t nvs_get_u8_blob_wrapped(char const * namespace, char const * key, uint8_t* value, size_t length);
+esp_err_t nvs_set_u8_blob_wrapped(char const * namespace, char const * key, uint8_t* value, size_t length);

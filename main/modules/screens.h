@@ -12,6 +12,7 @@ typedef enum _screen {
     screen_billboard,
     screen_pointclick,
     screen_repertoire,
+    screen_template,
 
     screen_BS_splash,
     screen_BS_placeships,

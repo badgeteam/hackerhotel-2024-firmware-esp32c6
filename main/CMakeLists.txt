@@ -42,4 +42,6 @@ idf_component_register(
                 ${project_dir}/resources/pointclick/dune1s.png
                 ${project_dir}/resources/pointclick/dune2n.png
                 ${project_dir}/resources/pointclick/dune2s.png
+                ${project_dir}/resources/sprites/b_arrow1.png
+                ${project_dir}/resources/sprites/b_arrow2.png
 )

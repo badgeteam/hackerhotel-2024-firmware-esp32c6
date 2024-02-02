@@ -155,9 +155,9 @@ int DisplayExitConfirmation(char _prompt[128], QueueHandle_t keyboard_event_queu
     };
     xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 
-    int text_x        = 50;
-    int text_y        = 20;
-    int text_fontsize = 18;
+    int text_x = 50;
+    int text_y = 20;
+    // int text_fontsize = 18;
 
     pax_font_t const * font = pax_font_sky;
     pax_buf_t*         gfx  = bsp_get_gfx_buffer();
@@ -174,18 +174,19 @@ int DisplayExitConfirmation(char _prompt[128], QueueHandle_t keyboard_event_queu
 }
 
 int Screen_Confirmation(char _prompt[128], QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
-    event_t tempkbsettings = kbsettings;
+    event_t    tempkbsettings = kbsettings;
+    pax_buf_t* gfx            = bsp_get_gfx_buffer();
+
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, false, false, false, true);
 
-    int text_x        = 0;
-    int text_y        = 40;
-    int text_fontsize = 18;
+    int text_x = gfx->height / 2;
+    int text_y = 40;
 
-    pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
     AddSWtoBuffer("yes", "", "", "", "no");
-    pax_center_text(gfx, BLACK, font1, fontsizeS, gfx->height, text_y, _prompt);
+    ESP_LOGE(TAG, "text_x %d", text_x);
+    pax_center_text(gfx, BLACK, font1, fontsizeS, text_x, text_y, _prompt);
     bsp_display_flush();
 
     while (1) {
@@ -198,17 +199,18 @@ int Screen_Confirmation(char _prompt[128], QueueHandle_t application_event_queue
                         case SWITCH_1:
                             configure_keyboard_kb(keyboard_event_queue, tempkbsettings);
                             return 1;
-                            break;
+                            // [[fallthrough]];
                         case SWITCH_2: break;
                         case SWITCH_3: break;
                         case SWITCH_4: break;
                         case SWITCH_5:
                             configure_keyboard_kb(keyboard_event_queue, tempkbsettings);
                             return 0;
-                            break;
+                            // [[fallthrough]];
                         default: break;
                     }
-                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type); break;
             }
         }
     }
@@ -545,22 +547,8 @@ void AddDiamondSelecttoBuf(int _x, int _y, int _gap) {
     int x_offset   = 6;
     _x             = _x - 3;
     pax_buf_t* gfx = bsp_get_gfx_buffer();
-    pax_insert_png_buf(
-        bsp_get_gfx_buffer(),
-        diamondl_png_start,
-        diamondl_png_end - diamondl_png_start,
-        _x - _gap / 2 - x_offset,
-        _y,
-        0
-    );
-    pax_insert_png_buf(
-        bsp_get_gfx_buffer(),
-        diamondr_png_start,
-        diamondr_png_end - diamondr_png_start,
-        _x + _gap / 2 + x_offset,
-        _y,
-        0
-    );
+    pax_insert_png_buf(gfx, diamondl_png_start, diamondl_png_end - diamondl_png_start, _x - _gap / 2 - x_offset, _y, 0);
+    pax_insert_png_buf(gfx, diamondr_png_start, diamondr_png_end - diamondr_png_start, _x + _gap / 2 + x_offset, _y, 0);
 
     // // horizontal ship coordonates orientation east
     // int of[13][2] = {
@@ -613,6 +601,56 @@ esp_err_t nvs_set_str_wrapped(char const * namespace, char const * key, char* bu
     if (res == ESP_OK) {
         res = nvs_set_str(handle, key, buffer);
     }
+    nvs_commit(handle);
+    nvs_close(handle);
+    return res;
+}
+
+esp_err_t nvs_get_u8_wrapped(char const * namespace, char const * key, uint8_t* value) {
+    nvs_handle_t handle;
+    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+    if (res != ESP_OK) {
+        return res;
+    }
+    res = nvs_get_u8(handle, key, value);
+    nvs_close(handle);
+    return res;
+}
+
+esp_err_t nvs_set_u8_wrapped(char const * namespace, char const * key, uint8_t value) {
+    nvs_handle_t handle;
+    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+    if (res != ESP_OK) {
+        return res;
+    }
+    res = nvs_set_u8(handle, key, value);
+    nvs_commit(handle);
+    nvs_close(handle);
+    return res;
+}
+
+esp_err_t nvs_get_u8_blob_wrapped(char const * namespace, char const * key, uint8_t* value, size_t length) {
+    nvs_handle_t handle;
+    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+    if (res != ESP_OK) {
+        return res;
+    }
+    res = nvs_get_blob(handle, key, value, &length);
+    if (res != ESP_OK) {
+        value[0] = NULL;
+        return res;
+    }
+    nvs_close(handle);
+    return res;
+}
+
+esp_err_t nvs_set_u8_blob_wrapped(char const * namespace, char const * key, uint8_t* value, size_t length) {
+    nvs_handle_t handle;
+    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+    if (res != ESP_OK) {
+        return res;
+    }
+    res = nvs_set_blob(handle, key, value, length);
     nvs_commit(handle);
     nvs_close(handle);
     return res;

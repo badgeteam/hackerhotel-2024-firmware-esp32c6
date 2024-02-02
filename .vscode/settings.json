@@ -75,7 +75,8 @@
         "stdio.h": "c",
         "pax_gfx.h": "c",
         "pax_types.h": "c",
-        "pax_fonts.h": "c"
+        "pax_fonts.h": "c",
+        "application.h": "c"
     },
     "editor.formatOnType": false,
     "editor.formatOnSave": true,

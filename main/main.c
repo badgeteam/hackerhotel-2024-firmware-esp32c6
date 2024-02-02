@@ -32,6 +32,7 @@
 #include "screen_repertoire.h"
 #include "screen_settings.h"
 #include "screen_shades.h"
+#include "screen_template.h"
 #include "screen_test.h"
 #include "screens.h"
 #include "sdkconfig.h"
@@ -49,7 +50,6 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-
 
 static char const * TAG = "main";
 
@@ -165,6 +165,11 @@ void app_main(void) {
             case screen_repertoire:
                 {
                     current_screen = screen_repertoire_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_template:
+                {
+                    current_screen = screen_template_entry(application_event_queue, keyboard_event_queue);
                     break;
                 }
             default: current_screen = screen_home;
