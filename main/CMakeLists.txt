@@ -44,6 +44,16 @@ idf_component_register(
                 ${project_dir}/resources/pointclick/dune2s.png
                 ${project_dir}/resources/sprites/b_arrow1.png
                 ${project_dir}/resources/sprites/b_arrow2.png
-                ${project_dir}/resources/hangman/deibler1.png
+                ${project_dir}/resources/sprites/circl12.png
+                ${project_dir}/resources/hangman/deibler01.png
+                ${project_dir}/resources/hangman/deibler02.png
+                ${project_dir}/resources/hangman/deibler03.png
+                ${project_dir}/resources/hangman/deibler04.png
+                ${project_dir}/resources/hangman/deibler05.png
+                ${project_dir}/resources/hangman/deibler06.png
+                ${project_dir}/resources/hangman/deibler07.png
+                ${project_dir}/resources/hangman/deibler08.png
+                ${project_dir}/resources/hangman/deibler09.png
+                ${project_dir}/resources/hangman/deibler10.png
                 ${project_dir}/resources/hangman/deiblerl.png
 )

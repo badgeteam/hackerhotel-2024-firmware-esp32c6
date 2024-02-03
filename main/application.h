@@ -50,14 +50,7 @@ void DisplayWallofTextWords(
 // and makes them into up to _maxnblines which are _maxlinelenght pixel long
 // can be centered if the _centered flag is high
 void DisplayWallofText(
-    int  _fontsize,
-    int  _maxlinelenght,
-    int  _maxnblines,
-    int  _nbwords,
-    int  _xoffset,
-    int  _yoffset,
-    char _message[500],
-    int  _centered
+    int _fontsize, int _maxlinelenght, int _maxnblines, int _xoffset, int _yoffset, char _message[500], int _centered
 );
 
 void Justify_right_text(
@@ -91,3 +84,14 @@ esp_err_t nvs_get_u8_wrapped(char const * namespace, char const * key, uint8_t* 
 esp_err_t nvs_set_u8_wrapped(char const * namespace, char const * key, uint8_t value);
 esp_err_t nvs_get_u8_blob_wrapped(char const * namespace, char const * key, uint8_t* value, size_t length);
 esp_err_t nvs_set_u8_blob_wrapped(char const * namespace, char const * key, uint8_t* value, size_t length);
+
+/*  USEFUL bit of code
+Delay:
+ vTaskDelay(pdMS_TO_TICKS(100));
+
+
+
+
+
+
+*/

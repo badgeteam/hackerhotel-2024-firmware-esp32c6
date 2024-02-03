@@ -310,14 +310,7 @@ void DisplayWallofTextWords(
 // and makes them into up to _maxnblines which are _maxlinelenght pixel long
 // can be centered if the _centered flag is high
 void DisplayWallofText(
-    int  _fontsize,
-    int  _maxlinelenght,
-    int  _maxnblines,
-    int  _nbwords,
-    int  _xoffset,
-    int  _yoffset,
-    char _message[500],
-    int  _centered
+    int _fontsize, int _maxlinelenght, int _maxnblines, int _xoffset, int _yoffset, char _message[500], int _centered
 ) {
     // set screen font and buffer
     pax_font_t const * font = pax_font_sky;
