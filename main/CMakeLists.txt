@@ -56,4 +56,5 @@ idf_component_register(
                 ${project_dir}/resources/hangman/deibler09.png
                 ${project_dir}/resources/hangman/deibler10.png
                 ${project_dir}/resources/hangman/deiblerl.png
+                ${project_dir}/resources/hangman/deiblers.png
 )

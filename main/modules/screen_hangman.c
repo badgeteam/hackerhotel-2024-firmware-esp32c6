@@ -49,6 +49,9 @@ extern uint8_t const deibler10_png_end[] asm("_binary_deibler10_png_end");
 // lose imeage is x = 169 y = 63
 extern uint8_t const deiblerl_png_start[] asm("_binary_deiblerl_png_start");
 extern uint8_t const deiblerl_png_end[] asm("_binary_deiblerl_png_end");
+// splash imeage is x = 212 y = 116
+extern uint8_t const deiblers_png_start[] asm("_binary_deiblers_png_start");
+extern uint8_t const deiblers_png_end[] asm("_binary_deiblers_png_end");
 extern uint8_t const caronv_png_start[] asm("_binary_caronv_png_start");
 extern uint8_t const caronv_png_end[] asm("_binary_caronv_png_end");
 extern uint8_t const circl12_png_start[] asm("_binary_circl12_png_start");
@@ -25736,11 +25739,7 @@ void DisplayHangman(
     int text_g_x       = 14;
     int text_o_x       = text_origing_x + (290 - text_origing_x) / 2 - text_g_x * word_length / 2;
     ESP_LOGE(TAG, "text_o_x: %d", text_o_x);
-
-    char fuckme[5]     = "";
-    char debugtext[30] = "";
-    snprintf(debugtext, 30, "%d mistakes", mistake_count);
-    pax_draw_text(gfx, BLACK, font1, fontsizeS, 200, 40, debugtext);
+    char fuckme[5] = "";
 
     // Draws the already tried wrong letters
     for (int i = 0; i < mistake_count; i++) {
@@ -25895,15 +25894,8 @@ screen_t screen_hangman_splash(QueueHandle_t application_event_queue, QueueHandl
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
     AddSWtoBuffer("Exit", "offline", "", "replay", "online");
-    // lose imeage is x = 169 y = 63
-    pax_insert_png_buf(
-        gfx,
-        deiblerl_png_start,
-        deiblerl_png_end - deiblerl_png_start,
-        (gfx->height - 168) / 2,
-        (gfx->width - 64) / 2,
-        0
-    );
+    // splash imeage is x = 212 y = 116
+    pax_insert_png_buf(gfx, deiblers_png_start, deiblers_png_end - deiblers_png_start, (gfx->height - 212) / 2, 0, 0);
     bsp_display_flush();
 
     InitKeyboard(keyboard_event_queue);
@@ -25936,7 +25928,7 @@ int screen_hangman_wordtype(QueueHandle_t application_event_queue, QueueHandle_t
     AddSWtoBuffer("", "English", "", "Victorian", "");
     int text_x = gfx->height / 2;
     int text_y = 40;
-    pax_center_text(gfx, BLACK, font1, fontsizeS, text_x, text_y, "Which alphabet do you wish to pick a word from?");
+    pax_center_text(gfx, BLACK, font1, fontsizeS, text_x, text_y, "Which dictionary do you wish to pick a word from?");
     bsp_display_flush();
 
     InitKeyboard(keyboard_event_queue);
