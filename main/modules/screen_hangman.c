@@ -26,8 +26,15 @@ char const forfeitprompt[128] = "Do you want to exit and declare forfeit";
 
 extern uint8_t const deibler1_png_start[] asm("_binary_deibler1_png_start");
 extern uint8_t const deibler1_png_end[] asm("_binary_deibler1_png_end");
+// lose imeage is x = 169 y = 63
+extern uint8_t const deiblerl_png_start[] asm("_binary_deiblerl_png_start");
+extern uint8_t const deiblerl_png_end[] asm("_binary_deiblerl_png_end");
+extern uint8_t const caronv_png_start[] asm("_binary_caronv_png_start");
+extern uint8_t const caronv_png_end[] asm("_binary_caronv_png_end");
 
 static char const * TAG = "hangman";
+screen_t            screen_hangman_splash(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
+screen_t screen_hangman_victory(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int _vflag);
 
 void DisplayHangman(
     char disabled_letters[nbletters], char letters_found[longestword], int word_length, int mistake_count
@@ -70,6 +77,12 @@ void DisplayHangman(
 }
 
 screen_t screen_hangman_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+    switch (screen_hangman_splash(application_event_queue, keyboard_event_queue)) {
+        case screen_HM_playing: break;
+        case screen_home: return screen_home;
+        default: break;
+    }
+
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, false, false, false, false);
     configure_keyboard_typing(keyboard_event_queue, true);
@@ -94,6 +107,19 @@ screen_t screen_hangman_entry(QueueHandle_t application_event_queue, QueueHandle
         if (displayflag) {
             DisplayHangman(disabled_letters, letters_found, word_length, mistake_count);
             displayflag = 0;
+            // check for victory
+            if (mistake_count >= mistakesallowed) {
+                vTaskDelay(pdMS_TO_TICKS(1000));
+                return screen_hangman_victory(application_event_queue, keyboard_event_queue, 0);
+            }
+            int flagvictory = 1;
+            for (int i = 0; i < word_length; i++)
+                if (letters_found[i] == NULL)
+                    flagvictory = 0;
+            if (flagvictory) {
+                vTaskDelay(pdMS_TO_TICKS(1000));
+                return screen_hangman_victory(application_event_queue, keyboard_event_queue, 1);
+            }
         }
         event_t event = {0};
         if ((xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE)) {
@@ -115,7 +141,7 @@ screen_t screen_hangman_entry(QueueHandle_t application_event_queue, QueueHandle
                         char input = event.args_input_keyboard.character;
                         ESP_LOGE(TAG, "Input: %c", input);
                         int flagcorrectguess = 0;
-                        for (int i = 0; i < sizeof(choosen_word); i++)
+                        for (int i = 0; i < word_length; i++)
                             if (input == choosen_word[i]) {
                                 letters_found[i] = input;
                                 ESP_LOGE(TAG, "match location: %c", letters_found[i]);
@@ -132,6 +158,91 @@ screen_t screen_hangman_entry(QueueHandle_t application_event_queue, QueueHandle
                         }
                         configure_keyboard_character(keyboard_event_queue, InputtoNum(input), false);
                         displayflag = 1;
+                    }
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+
+screen_t screen_hangman_splash(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_background(gfx, WHITE);
+    AddSWtoBuffer("Exit", "offline", "", "replay", "online");
+    // lose imeage is x = 169 y = 63
+    pax_insert_png_buf(
+        gfx,
+        deiblerl_png_start,
+        deiblerl_png_end - deiblerl_png_start,
+        (gfx->height - 168) / 2,
+        (gfx->width - 64) / 2,
+        0
+    );
+    bsp_display_flush();
+
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
+
+    while (1) {
+        event_t event = {0};
+        if ((xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE)) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: return screen_home; break;
+                        case SWITCH_2: return screen_HM_playing; break;
+                        case SWITCH_3: break;
+                        case SWITCH_4: break;
+                        case SWITCH_5: break;
+                        default: break;
+                    }
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+
+screen_t screen_hangman_victory(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int _vflag) {
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_background(gfx, WHITE);
+    switch (_vflag) {
+        case 0:
+            Addborder2toBuffer();
+            // lose imeage is x = 169 y = 63
+            pax_insert_png_buf(
+                gfx,
+                deiblerl_png_start,
+                deiblerl_png_end - deiblerl_png_start,
+                (gfx->height - 168) / 2,
+                (gfx->width - 64) / 2,
+                0
+            );
+            break;
+        case 1: pax_insert_png_buf(gfx, caronv_png_start, caronv_png_end - caronv_png_start, 0, 0, 0); break;
+        default: break;
+    }
+
+    bsp_display_flush();
+
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
+
+    while (1) {
+        event_t event = {0};
+        if ((xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE)) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: return screen_home; break;
+                        case SWITCH_2: return screen_home; break;
+                        case SWITCH_3: return screen_home; break;
+                        case SWITCH_4: return screen_home; break;
+                        case SWITCH_5: return screen_home; break;
+                        default: break;
                     }
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);

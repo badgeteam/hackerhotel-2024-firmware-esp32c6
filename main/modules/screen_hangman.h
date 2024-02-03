@@ -4,8 +4,9 @@
 #include "freertos/queue.h"
 #include "screens.h"
 
-#define longestword 10
-#define nbwords     10
+#define longestword     10
+#define nbwords         10
+#define mistakesallowed 9
 
 #define nbletters 26
 

@@ -22,6 +22,10 @@ typedef enum _screen {
     screen_BS_battle,
     screen_BS_victory,
 
+    screen_HM_splash,
+    screen_HM_playing,
+    screen_HM_victory,
+
     screen_PC_dock1,
     screen_PC_dock2,
     screen_PC_dune1,

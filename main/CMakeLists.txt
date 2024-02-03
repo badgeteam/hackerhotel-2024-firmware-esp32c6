@@ -45,4 +45,5 @@ idf_component_register(
                 ${project_dir}/resources/sprites/b_arrow1.png
                 ${project_dir}/resources/sprites/b_arrow2.png
                 ${project_dir}/resources/hangman/deibler1.png
+                ${project_dir}/resources/hangman/deiblerl.png
 )
