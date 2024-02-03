@@ -29,19 +29,6 @@ char messagearray[nbmessages][messagelenght];
 int  messagecursor = 0;
 int  initflag      = 0;
 
-static void configure_keyboard(QueueHandle_t keyboard_event_queue) {
-    // update the keyboard event handler settings
-    event_t kbsettings = {
-        .type                                     = event_control_keyboard,
-        .args_control_keyboard.enable_typing      = false,
-        .args_control_keyboard.enable_actions     = {true, true, true, true, true},
-        .args_control_keyboard.enable_leds        = true,
-        .args_control_keyboard.enable_relay       = true,
-        kbsettings.args_control_keyboard.capslock = false,
-    };
-    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
-}
-
 // void receive_repertoire(void) {
 //     // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
 //     QueueHandle_t str_queue = badge_comms_add_listener(MESSAGE_TYPE_STRING, sizeof(badge_message_str));
@@ -229,8 +216,8 @@ void DisplayBillboard(int _addmessageflag, char* _nickname, char* _message) {
 }
 
 screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
-    configure_keyboard(keyboard_event_queue);
-
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, true, false, false, false, true);
     if (!initflag)
         for (int i = 0; i < nbmessages; i++) {
             strcpy(nicknamearray[i], "");
@@ -303,7 +290,9 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
                                 bsp_set_addressable_led(LED_OFF);
                             } else
                                 DisplayBillboard(0, nickname, playermessage);  // no new messages
-                            configure_keyboard(keyboard_event_queue);
+                            // refactor : due to unknown state of keyboard coming back from textedit
+                            InitKeyboard(keyboard_event_queue);
+                            configure_keyboard_presses(keyboard_event_queue, true, false, false, false, true);
                             break;
                         default: break;
                     }

@@ -33,15 +33,17 @@ static void configure_keyboard(QueueHandle_t keyboard_event_queue) {
 }
 
 static void ota_update_wrapped(QueueHandle_t keyboard_event_queue, bool nightly) {
-    event_t kbsettings = {
-        .type                                     = event_control_keyboard,
-        .args_control_keyboard.enable_typing      = false,
-        .args_control_keyboard.enable_actions     = {false, false, false, false, false},
-        .args_control_keyboard.enable_leds        = true,
-        .args_control_keyboard.enable_relay       = false,
-        kbsettings.args_control_keyboard.capslock = false,
-    };
-    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_relay(keyboard_event_queue, false);
+    // event_t kbsettings = {
+    //     .type                                     = event_control_keyboard,
+    //     .args_control_keyboard.enable_typing      = false,
+    //     .args_control_keyboard.enable_actions     = {false, false, false, false, false},
+    //     .args_control_keyboard.enable_leds        = true,
+    //     .args_control_keyboard.enable_relay       = false,
+    //     kbsettings.args_control_keyboard.capslock = false,
+    // };
+    // xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 
     ota_update(nightly);
 

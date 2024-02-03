@@ -63,7 +63,6 @@ extern uint8_t const diamondl_png_end[] asm("_binary_diamondl_png_end");
 extern uint8_t const diamondr_png_start[] asm("_binary_diamondr_png_start");
 extern uint8_t const diamondr_png_end[] asm("_binary_diamondr_png_end");
 
-
 event_t kbsettings;
 
 int const telegraph_X[20] = {0, -8, 8, -16, 0, 16, -24, -8, 8, 24, -24, -8, 8, 24, -16, 0, 16, -8, 8, 0};
@@ -433,6 +432,39 @@ void DisplayTelegraph(int _colour, int _position) {
 
     for (int i = 0; i < 20; i++) AddBlocktoBuffer(_position + telegraph_X[i], telegraph_Y[i]);
 }
+
+int InputtoNum(char _inputletter) {
+    switch (_inputletter) {
+        case 'a': return 0; break;
+        case 'b': return 1; break;
+        case 'c': return 2; break;
+        case 'd': return 3; break;
+        case 'e': return 4; break;
+        case 'f': return 5; break;
+        case 'g': return 6; break;
+        case 'h': return 7; break;
+        case 'i': return 8; break;
+        case 'j': return 9; break;
+        case 'k': return 10; break;
+        case 'l': return 11; break;
+        case 'm': return 12; break;
+        case 'n': return 13; break;
+        case 'o': return 14; break;
+        case 'p': return 15; break;
+        case 'q': return 16; break;
+        case 'r': return 17; break;
+        case 's': return 18; break;
+        case 't': return 19; break;
+        case 'u': return 20; break;
+        case 'v': return 21; break;
+        case 'w': return 22; break;
+        case 'x': return 23; break;
+        case 'y': return 24; break;
+        case 'z': return 25; break;
+        default: return 0; break;
+    }
+}
+
 void configure_keyboard_guru(QueueHandle_t keyboard_event_queue, bool SW1, bool SW2, bool SW3, bool SW4, bool SW5) {
     // update the keyboard event handler settings
     event_t kbsettings = {
@@ -508,6 +540,11 @@ void configure_keyboard_rotate_disable(QueueHandle_t keyboard_event_queue) {
     xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 }
 
+void configure_keyboard_relay(QueueHandle_t keyboard_event_queue, bool _relay) {
+    kbsettings.args_control_keyboard.enable_relay = _relay;
+    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+}
+
 void configure_keyboard_caps(QueueHandle_t keyboard_event_queue, bool _caps) {
     kbsettings.args_control_keyboard.capslock = _caps;
     xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
@@ -528,7 +565,6 @@ void DebugKeyboardSettings(void) {
     ESP_LOGE(TAG, "enable_relay: %d", kbsettings.args_control_keyboard.enable_relay);
     ESP_LOGE(TAG, "capslock: %d", kbsettings.args_control_keyboard.capslock);
 }
-
 
 int Increment(int _num, int _max) {
     _num++;

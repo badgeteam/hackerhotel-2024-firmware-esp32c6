@@ -138,71 +138,71 @@ void keyboard_handle_input(keyboard_state_t* state, coprocessor_input_message_t*
             character  = 'J';
             leds      |= LED_E + LED_F + LED_G + LED_K + LED_O + LED_R + LED_S + LED_M;
         }
-        if (state->button_state_left == 0x04 && state->button_state_right == 0x08 && state->enable_characters[11]) {
+        if (state->button_state_left == 0x04 && state->button_state_right == 0x08 && state->enable_characters[10]) {
             character  = 'K';
             leds      |= LED_K;
         }
-        if (state->button_state_left == 0x08 && state->button_state_right == 0x10 && state->enable_characters[12]) {
+        if (state->button_state_left == 0x08 && state->button_state_right == 0x10 && state->enable_characters[11]) {
             character  = 'L';
             leds      |= LED_L;
         }
-        if (state->button_state_left == 0x02 && state->button_state_right == 0x01 && state->enable_characters[13]) {
+        if (state->button_state_left == 0x02 && state->button_state_right == 0x01 && state->enable_characters[12]) {
             character  = 'M';
             leds      |= LED_M;
         }
-        if (state->button_state_left == 0x04 && state->button_state_right == 0x02 && state->enable_characters[14]) {
+        if (state->button_state_left == 0x04 && state->button_state_right == 0x02 && state->enable_characters[13]) {
             character  = 'N';
             leds      |= LED_N;
         }
-        if (state->button_state_left == 0x08 && state->button_state_right == 0x04 && state->enable_characters[15]) {
+        if (state->button_state_left == 0x08 && state->button_state_right == 0x04 && state->enable_characters[14]) {
             character  = 'O';
             leds      |= LED_O;
         }
-        if (state->button_state_left == 0x10 && state->button_state_right == 0x08 && state->enable_characters[16]) {
+        if (state->button_state_left == 0x10 && state->button_state_right == 0x08 && state->enable_characters[15]) {
             character  = 'P';
             leds      |= LED_P;
         }
         // Q
-        if (state->button_state_right == 0x18 && state->enable_characters[17]) {
+        if (state->button_state_right == 0x18 && state->enable_characters[16]) {
             character  = 'Q';
             leds      |= LED_E + LED_H + LED_M + LED_R + LED_S + LED_O + LED_K + LED_F + LED_T;
         }
-        if (state->button_state_left == 0x04 && state->button_state_right == 0x01 && state->enable_characters[18]) {
+        if (state->button_state_left == 0x04 && state->button_state_right == 0x01 && state->enable_characters[17]) {
             character  = 'R';
             leds      |= LED_R;
         }
-        if (state->button_state_left == 0x08 && state->button_state_right == 0x02 && state->enable_characters[19]) {
+        if (state->button_state_left == 0x08 && state->button_state_right == 0x02 && state->enable_characters[18]) {
             character  = 'S';
             leds      |= LED_S;
         }
-        if (state->button_state_left == 0x10 && state->button_state_right == 0x04 && state->enable_characters[20]) {
+        if (state->button_state_left == 0x10 && state->button_state_right == 0x04 && state->enable_characters[19]) {
             character  = 'T';
             leds      |= LED_T;
         }
         // U
-        if (state->button_state_right == 0x14 && state->enable_characters[21]) {
+        if (state->button_state_right == 0x14 && state->enable_characters[20]) {
             character  = 'U';
             leds      |= LED_H + LED_M + LED_R + LED_S + LED_T + LED_P + LED_L;
         }
-        if (state->button_state_left == 0x08 && state->button_state_right == 0x01 && state->enable_characters[22]) {
+        if (state->button_state_left == 0x08 && state->button_state_right == 0x01 && state->enable_characters[21]) {
             character  = 'V';
             leds      |= LED_V;
         }
-        if (state->button_state_left == 0x10 && state->button_state_right == 0x02 && state->enable_characters[23]) {
+        if (state->button_state_left == 0x10 && state->button_state_right == 0x02 && state->enable_characters[22]) {
             character  = 'W';
             leds      |= LED_W;
         }
         // X
-        if (state->button_state_right == 0x12 && state->enable_characters[24]) {
+        if (state->button_state_right == 0x12 && state->enable_characters[23]) {
             character  = 'X';
             leds      |= LED_E + LED_I + LED_G + LED_K + LED_N + LED_R + LED_O + LED_T;
         }
-        if (state->button_state_left == 0x10 && state->button_state_right == 0x01 && state->enable_characters[25]) {
+        if (state->button_state_left == 0x10 && state->button_state_right == 0x01 && state->enable_characters[24]) {
             character  = 'Y';
             leds      |= LED_Y;
         }
         // Z
-        if (state->button_state_right == 0x11 && state->enable_characters[26]) {
+        if (state->button_state_right == 0x11 && state->enable_characters[25]) {
             character  = 'Z';
             leds      |= LED_E + LED_F + LED_G + LED_K + LED_N + LED_R + LED_S + LED_T;
         }

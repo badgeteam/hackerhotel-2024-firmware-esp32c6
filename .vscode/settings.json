@@ -76,7 +76,15 @@
         "pax_gfx.h": "c",
         "pax_types.h": "c",
         "pax_fonts.h": "c",
-        "application.h": "c"
+        "application.h": "c",
+        "*.def": "c",
+        "rope": "c",
+        "fstream": "c",
+        "iomanip": "c",
+        "iosfwd": "c",
+        "sstream": "c",
+        "stdexcept": "c",
+        "streambuf": "c"
     },
     "editor.formatOnType": false,
     "editor.formatOnSave": true,

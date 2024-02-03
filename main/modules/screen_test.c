@@ -703,10 +703,10 @@ screen_t screen_battleship_placeships(
     };
     xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 
-    int  shipplaced      = 0;
-    int  exitconf        = 0;
-    char exitprompt[128] = "Do you want to exit and declare forfeit";
-    int  flagstart       = 0;
+    int        shipplaced         = 0;
+    int        exitconf           = 0;
+    char const forfeitprompt[128] = "Do you want to exit and declare forfeit";
+    int        flagstart          = 0;
 
     Display_battleship_placeships(playerboard, shipplaced, flagstart, _position, playership);
 
@@ -757,7 +757,7 @@ screen_t screen_battleship_placeships(
                                 if (exitconf)
                                     return screen_home;
                                 else
-                                    exitconf = DisplayExitConfirmation(exitprompt, keyboard_event_queue);
+                                    exitconf = DisplayExitConfirmation(forfeitprompt, keyboard_event_queue);
                             }
                             break;
                         case SWITCH_2: break;

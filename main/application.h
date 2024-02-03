@@ -68,6 +68,7 @@ int  Screen_Confirmation(char _prompt[128], QueueHandle_t application_event_queu
 void AddSwitchesBoxtoBuffer(int _switch);
 void AddOneTextSWtoBuffer(int _SW, char const * SWstr);
 void DisplayTelegraph(int _colour, int _position);
+int  InputtoNum(char _inputletter);
 void configure_keyboard_guru(QueueHandle_t keyboard_event_queue, bool SW1, bool SW2, bool SW3, bool SW4, bool SW5);
 void InitKeyboard(QueueHandle_t keyboard_event_queue);
 void configure_keyboard_kb(QueueHandle_t keyboard_event_queue, event_t _kbsettings);
@@ -78,6 +79,7 @@ void configure_keyboard_presses(QueueHandle_t keyboard_event_queue, bool SW1, bo
 void configure_keyboard_rotate(QueueHandle_t keyboard_event_queue, int _SW, int _LR, bool _state);
 void configure_keyboard_rotate_both(QueueHandle_t keyboard_event_queue, int _SW, bool _state);
 void configure_keyboard_rotate_disable(QueueHandle_t keyboard_event_queue);
+void configure_keyboard_relay(QueueHandle_t keyboard_event_queue, bool _relay);
 void configure_keyboard_caps(QueueHandle_t keyboard_event_queue, bool _caps);
 void DebugKeyboardSettings(void);
 int  Increment(int _num, int _max);

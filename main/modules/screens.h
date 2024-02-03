@@ -13,6 +13,9 @@ typedef enum _screen {
     screen_pointclick,
     screen_repertoire,
     screen_template,
+    screen_hangman,
+    screen_morse,
+    screen_scrambled,
 
     screen_BS_splash,
     screen_BS_placeships,

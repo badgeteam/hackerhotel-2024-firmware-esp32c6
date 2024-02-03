@@ -25,6 +25,9 @@
 
 static char const * TAG = "template";
 
+extern uint8_t const border1_png_start[] asm("_binary_border1_png_start");
+extern uint8_t const border1_png_end[] asm("_binary_border1_png_end");
+
 void receive_strb(void) {
     // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
     QueueHandle_t str_queue = badge_comms_add_listener(MESSAGE_TYPE_STRING, sizeof(badge_message_str));
@@ -87,6 +90,15 @@ void send_strb(void) {
     bsp_set_addressable_led(LED_GREEN);
     vTaskDelay(pdMS_TO_TICKS(100));
     bsp_set_addressable_led(LED_OFF);
+}
+
+void DisplayTemplate(void) {
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_background(gfx, WHITE);
+    pax_draw_text(gfx, BLACK, font1, fontsizeS, 0, 0, "its coordinates");
+    pax_outline_circle(gfx, BLACK, 0, 0, 3);
+    pax_insert_png_buf(gfx, border1_png_start, border1_png_end - border1_png_start, 0, 127 - 11, 0);
+    bsp_display_flush();
 }
 
 screen_t screen_template_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {

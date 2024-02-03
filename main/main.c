@@ -26,6 +26,7 @@
 #include "resources.h"
 #include "riscv/rv_utils.h"
 #include "screen_billboard.h"
+#include "screen_hangman.h"
 #include "screen_home.h"
 #include "screen_mascots.h"
 #include "screen_pointclick.h"
@@ -124,7 +125,7 @@ void app_main(void) {
     }
 
     // Main application
-    screen_t current_screen = screen_repertoire;
+    screen_t current_screen = screen_hangman;
     while (1) {
         switch (current_screen) {
             case screen_mascots:
@@ -170,6 +171,11 @@ void app_main(void) {
             case screen_template:
                 {
                     current_screen = screen_template_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_hangman:
+                {
+                    current_screen = screen_hangman_entry(application_event_queue, keyboard_event_queue);
                     break;
                 }
             default: current_screen = screen_home;
