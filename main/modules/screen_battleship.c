@@ -1,4 +1,3 @@
-#include "screen_battleship.h"
 #include "application.h"
 #include "bsp.h"
 #include "esp_err.h"
@@ -8,17 +7,20 @@
 #include "freertos/portmacro.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
+#include "nvs.h"
 #include "pax_codecs.h"
 #include "pax_gfx.h"
+#include "screen_home.h"
 #include "screens.h"
 #include "textedit.h"
 #include <inttypes.h>
 #include <stdio.h>
+#include <esp_random.h>
 #include <string.h>
 
-static char const * TAG = "battleship";
+// static char const * TAG = "battleship";
 
-screen_t screen_battleship_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+screen_t screen_placeholder_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
 
     event_t kbsettings = {
         .type                                     = event_control_keyboard,
@@ -33,6 +35,7 @@ screen_t screen_battleship_entry(QueueHandle_t application_event_queue, QueueHan
     pax_font_t const * font = pax_font_saira_regular;
     pax_buf_t*         gfx  = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
+
     pax_draw_text(gfx, RED, font, 18, 5, 5, "BATTLESHIP");
     bsp_display_flush();
 
@@ -56,9 +59,6 @@ screen_t screen_battleship_entry(QueueHandle_t application_event_queue, QueueHan
         }
     }*/
 
-
-
-    app_thread_entry(application_event_queue);
 
     bsp_apply_lut(lut_1s);
 

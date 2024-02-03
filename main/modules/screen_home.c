@@ -27,7 +27,7 @@ screen_t screen_home_entry(QueueHandle_t application_event_queue, QueueHandle_t 
     event_t kbsettings = {
         .type                                     = event_control_keyboard,
         .args_control_keyboard.enable_typing      = false,
-        .args_control_keyboard.enable_actions     = {true, true, false, true, true},
+        .args_control_keyboard.enable_actions     = {true, true, true, true, true},
         .args_control_keyboard.enable_leds        = true,
         .args_control_keyboard.enable_relay       = true,
         kbsettings.args_control_keyboard.capslock = false,
@@ -82,9 +82,9 @@ screen_t screen_home_entry(QueueHandle_t application_event_queue, QueueHandle_t 
                     switch (event.args_input_keyboard.action) {
                         case SWITCH_1: return screen_settings; break;
                         case SWITCH_2: return screen_billboard; break;
-                        case SWITCH_3: break;
-                        case SWITCH_4: return screen_shades; break;
-                        case SWITCH_5: return screen_battleship; break;
+                        case SWITCH_3: return screen_battleship; break;
+                        case SWITCH_4: return screen_repertoire; break;
+                        case SWITCH_5: return screen_template; break;
                         default: break;
                     }
                     break;

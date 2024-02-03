@@ -41,7 +41,21 @@
 #define SWITCH_4 3
 #define SWITCH_5 4
 
+#define SWITCH_L1 5
+#define SWITCH_L2 6
+#define SWITCH_L3 7
+#define SWITCH_L4 8
+#define SWITCH_L5 9
+
+#define SWITCH_R1 10
+#define SWITCH_R2 11
+#define SWITCH_R3 12
+#define SWITCH_R4 13
+#define SWITCH_R5 14
+
 #define NUM_SWITCHES 5
+#define NUM_ROTATION 10
+#define NUM_LETTER   26
 
 // Types
 typedef struct _coprocessor_input_message {

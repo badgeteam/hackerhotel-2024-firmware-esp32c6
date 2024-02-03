@@ -19,11 +19,11 @@ void menu_settings() {
         pax_background(gfx, 0);
         pax_draw_text(gfx, 1, pax_font_marker, 18, 0, 0, "Settings menu");
         pax_draw_text(gfx, 1, pax_font_marker, 18, 0, 20, "OTA update?");
-        DisplaySwitchesBox(SWITCH_1);
+        AddSwitchesBoxtoBuffer(SWITCH_1);
         pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 8, 116, "EXIT");
-        DisplaySwitchesBox(SWITCH_4);
+        AddSwitchesBoxtoBuffer(SWITCH_4);
         pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 187, 116, "DEV");
-        DisplaySwitchesBox(SWITCH_5);
+        AddSwitchesBoxtoBuffer(SWITCH_5);
         pax_draw_text(gfx, 1, pax_font_sky_mono, 10, 247, 116, "STABLE");
         bsp_display_flush();
 

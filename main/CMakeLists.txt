@@ -21,4 +21,29 @@ idf_component_register(
                 ${project_dir}/resources/shades.png
                 ${project_dir}/resources/homescreen.png
                 ${project_dir}/resources/settings.png
+                ${project_dir}/resources/border1.png
+                ${project_dir}/resources/border2.png
+                ${project_dir}/resources/caronl.png
+                ${project_dir}/resources/caronv.png
+                ${project_dir}/resources/carond.png
+                ${project_dir}/resources/switchframe1.png
+                ${project_dir}/resources/switchframe2.png
+                ${project_dir}/resources/diamondl.png
+                ${project_dir}/resources/diamondr.png
+                ${project_dir}/resources/pointclick/dock1n.png
+                ${project_dir}/resources/pointclick/dock1e.png
+                ${project_dir}/resources/pointclick/dock1s.png
+                ${project_dir}/resources/pointclick/dock1w.png
+                ${project_dir}/resources/pointclick/dock2n.png
+                ${project_dir}/resources/pointclick/dock2e.png
+                ${project_dir}/resources/pointclick/dock2s.png
+                ${project_dir}/resources/pointclick/dock2w.png
+                ${project_dir}/resources/pointclick/dune1n.png
+                ${project_dir}/resources/pointclick/dune1s.png
+                ${project_dir}/resources/pointclick/dune2n.png
+                ${project_dir}/resources/pointclick/dune2s.png
+                ${project_dir}/resources/sprites/b_arrow1.png
+                ${project_dir}/resources/sprites/b_arrow2.png
+                ${project_dir}/resources/hangman/deibler1.png
+                ${project_dir}/resources/hangman/deiblerl.png
 )

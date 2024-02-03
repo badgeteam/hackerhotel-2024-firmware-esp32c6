@@ -1,4 +1,6 @@
 #include "screen_settings.h"
+#include "application.h"
+#include "badge_messages.h"
 #include "bsp.h"
 #include "esp_err.h"
 #include "esp_log.h"
@@ -26,88 +28,83 @@ extern uint8_t const settings_png_end[] asm("_binary_settings_png_end");
 static char const * TAG = "settings";
 
 static void configure_keyboard(QueueHandle_t keyboard_event_queue) {
-    event_t kbsettings = {
-        .type                                     = event_control_keyboard,
-        .args_control_keyboard.enable_typing      = false,
-        .args_control_keyboard.enable_actions     = {true, true, true, true, true},
-        .args_control_keyboard.enable_leds        = true,
-        .args_control_keyboard.enable_relay       = true,
-        kbsettings.args_control_keyboard.capslock = false,
-    };
-    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
 }
 
 static void ota_update_wrapped(QueueHandle_t keyboard_event_queue, bool nightly) {
-    event_t kbsettings = {
-        .type                                     = event_control_keyboard,
-        .args_control_keyboard.enable_typing      = false,
-        .args_control_keyboard.enable_actions     = {false, false, false, false, false},
-        .args_control_keyboard.enable_leds        = true,
-        .args_control_keyboard.enable_relay       = false,
-        kbsettings.args_control_keyboard.capslock = false,
-    };
-    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_relay(keyboard_event_queue, false);
+    // event_t kbsettings = {
+    //     .type                                     = event_control_keyboard,
+    //     .args_control_keyboard.enable_typing      = false,
+    //     .args_control_keyboard.enable_actions     = {false, false, false, false, false},
+    //     .args_control_keyboard.enable_leds        = true,
+    //     .args_control_keyboard.enable_relay       = false,
+    //     kbsettings.args_control_keyboard.capslock = false,
+    // };
+    // xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 
     ota_update(nightly);
 
     configure_keyboard(keyboard_event_queue);
 }
 
-static esp_err_t nvs_get_str_wrapped(char const * namespace, char const * key, char* buffer, size_t buffer_size) {
-    nvs_handle_t handle;
-    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
-    if (res == ESP_OK) {
-        size_t size = 0;
-        res         = nvs_get_str(handle, key, NULL, &size);
-        if ((res == ESP_OK) && (size <= buffer_size - 1)) {
-            res = nvs_get_str(handle, key, buffer, &size);
-            if (res != ESP_OK) {
-                buffer[0] = '\0';
-            }
-        }
-    } else {
-        buffer[0] = '\0';
-    }
-    nvs_close(handle);
-    return res;
-}
+// static esp_err_t nvs_get_str_wrapped(char const * namespace, char const * key, char* buffer, size_t buffer_size) {
+//     nvs_handle_t handle;
+//     esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+//     if (res == ESP_OK) {
+//         size_t size = 0;
+//         res         = nvs_get_str(handle, key, NULL, &size);
+//         if ((res == ESP_OK) && (size <= buffer_size - 1)) {
+//             res = nvs_get_str(handle, key, buffer, &size);
+//             if (res != ESP_OK) {
+//                 buffer[0] = '\0';
+//             }
+//         }
+//     } else {
+//         buffer[0] = '\0';
+//     }
+//     nvs_close(handle);
+//     return res;
+// }
 
-static esp_err_t nvs_set_str_wrapped(char const * namespace, char const * key, char* buffer) {
-    nvs_handle_t handle;
-    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
-    if (res == ESP_OK) {
-        res = nvs_set_str(handle, key, buffer);
-    }
-    nvs_commit(handle);
-    nvs_close(handle);
-    return res;
-}
+// static esp_err_t nvs_set_str_wrapped(char const * namespace, char const * key, char* buffer) {
+//     nvs_handle_t handle;
+//     esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+//     if (res == ESP_OK) {
+//         res = nvs_set_str(handle, key, buffer);
+//     }
+//     nvs_commit(handle);
+//     nvs_close(handle);
+//     return res;
+// }
 
-static esp_err_t nvs_get_u8_wrapped(char const * namespace, char const * key, uint8_t* value) {
-    nvs_handle_t handle;
-    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
-    if (res != ESP_OK) {
-        return res;
-    }
-    res = nvs_get_u8(handle, key, value);
-    nvs_close(handle);
-    return res;
-}
+// static esp_err_t nvs_get_u8_wrapped(char const * namespace, char const * key, uint8_t* value) {
+//     nvs_handle_t handle;
+//     esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+//     if (res != ESP_OK) {
+//         return res;
+//     }
+//     res = nvs_get_u8(handle, key, value);
+//     nvs_close(handle);
+//     return res;
+// }
 
-static esp_err_t nvs_set_u8_wrapped(char const * namespace, char const * key, uint8_t value) {
-    nvs_handle_t handle;
-    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
-    if (res != ESP_OK) {
-        return res;
-    }
-    res = nvs_set_u8(handle, key, value);
-    nvs_commit(handle);
-    nvs_close(handle);
-    return res;
-}
+// static esp_err_t nvs_set_u8_wrapped(char const * namespace, char const * key, uint8_t value) {
+//     nvs_handle_t handle;
+//     esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+//     if (res != ESP_OK) {
+//         return res;
+//     }
+//     res = nvs_set_u8(handle, key, value);
+//     nvs_commit(handle);
+//     nvs_close(handle);
+//     return res;
+// }
 
 static void edit_nickname(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
-    char nickname[64] = {0};
+    char nickname[nicknamelenght] = {0};
     nvs_get_str_wrapped("owner", "nickname", nickname, sizeof(nickname));
     bool res =
         textedit("What is your name?", application_event_queue, keyboard_event_queue, nickname, sizeof(nickname));
@@ -186,9 +183,9 @@ static bool edit_network_type(wifi_auth_mode_t* network_type) {
         }
     }
 
-//    bool               render = true;
-//    menu_wifi_action_t action = ACTION_NONE;
-    wifi_auth_mode_t   pick   = *network_type;
+    //    bool               render = true;
+    //    menu_wifi_action_t action = ACTION_NONE;
+    wifi_auth_mode_t pick = *network_type;
 
     // action = (menu_wifi_action_t)menu_get_callback_args(menu, menu_get_position(menu));
     // menu_render(pax_buffer, menu, 0, 0, pax_buffer->width, 220);
@@ -273,7 +270,8 @@ static void draw_wifi_defaults() {
         18,
         5,
         5,
-        "WiFi:\nButton 1&2: Return\nButton 3: Manual enterprise\nButton 4: Default settings\nButton 5: Manual WPA2-PSK configuration"
+        "WiFi:\nButton 1&2: Return\nButton 3: Manual enterprise\nButton 4: Default settings\nButton 5: Manual WPA2-PSK "
+        "configuration"
     );
     bsp_display_flush();
 }
@@ -306,19 +304,19 @@ int wifi_defaults(QueueHandle_t application_event_queue, QueueHandle_t keyboard_
 
 
 static void edit_wifi(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
-    char             ssid[33]     = {0};
-    char             password[65] = {0};
-    char             username[65] = {0};
-    char             identity[65] = {0};
+    char ssid[33]     = {0};
+    char password[65] = {0};
+    char username[65] = {0};
+    char identity[65] = {0};
     bool res;
 
     int d = wifi_defaults(application_event_queue, keyboard_event_queue);
 
     switch (d) {
-        case 1: // set hackerhotel defaults
+        case 1:  // set hackerhotel defaults
             wifi_set_defaults();
             return;
-        case 2: // set custom WPA2_PSK network
+        case 2:  // set custom WPA2_PSK network
             nvs_get_str_wrapped("system", "wifi.ssid", ssid, sizeof(ssid));
             nvs_get_str_wrapped("system", "wifi.password", password, sizeof(password));
 
@@ -373,7 +371,7 @@ static void edit_wifi(QueueHandle_t application_event_queue, QueueHandle_t keybo
 
             configure_keyboard(keyboard_event_queue);
             return;
-        default: // cancel
+        default:  // cancel
             return;
     }
 }

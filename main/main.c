@@ -25,12 +25,15 @@
 #include "pax_gfx.h"
 #include "resources.h"
 #include "riscv/rv_utils.h"
-#include "screen_battleship.h"
 #include "screen_billboard.h"
+#include "screen_hangman.h"
 #include "screen_home.h"
 #include "screen_mascots.h"
+#include "screen_pointclick.h"
+#include "screen_repertoire.h"
 #include "screen_settings.h"
 #include "screen_shades.h"
+#include "screen_template.h"
 #include "screen_test.h"
 #include "screens.h"
 #include "sdkconfig.h"
@@ -48,7 +51,6 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-
 
 static char const * TAG = "main";
 
@@ -123,7 +125,7 @@ void app_main(void) {
     }
 
     // Main application
-    screen_t current_screen = screen_mascots;
+    screen_t current_screen = screen_hangman;
     while (1) {
         switch (current_screen) {
             case screen_mascots:
@@ -141,11 +143,6 @@ void app_main(void) {
                     current_screen = screen_settings_entry(application_event_queue, keyboard_event_queue);
                     break;
                 }
-            case screen_battleship:
-                {
-                    current_screen = screen_battleship_entry(application_event_queue, keyboard_event_queue);
-                    break;
-                }
             case screen_shades:
                 {
                     current_screen = screen_shades_entry(application_event_queue, keyboard_event_queue);
@@ -154,6 +151,31 @@ void app_main(void) {
             case screen_billboard:
                 {
                     current_screen = screen_billboard_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_battleship:
+                {
+                    current_screen = screen_battleship_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_pointclick:
+                {
+                    current_screen = screen_pointclick_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_repertoire:
+                {
+                    current_screen = screen_repertoire_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_template:
+                {
+                    current_screen = screen_template_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_hangman:
+                {
+                    current_screen = screen_hangman_entry(application_event_queue, keyboard_event_queue);
                     break;
                 }
             default: current_screen = screen_home;
