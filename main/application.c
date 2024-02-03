@@ -388,6 +388,87 @@ void DisplayWallofText(
     // bsp_display_flush();
 }
 
+void WallofText(int _yoffset, char const * _message, int _centered) {
+    // set screen font and buffer
+    pax_font_t const * font = pax_font_sky;
+    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
+
+    // to verify text lenght on buffer
+    pax_vec1_t dims = {
+        .x = 999,
+        .y = 999,
+    };
+    ESP_LOGE(TAG, "Unhandled event type %s", _message);
+    ESP_LOGE(TAG, "Unhandled event type %d", strlen(_message));
+    // char message[128]       = "The quick brown fox jumps over the lazy dog, The quick brie da";  // message to parse
+    char linetodisplay[128] = "";
+    char Words[64];  // Array of parsed words
+    int  _xoffset       = 6;
+    int  _maxlinelength = gfx->height - _xoffset * 2;
+
+    // counters
+    int nblines   = 0;
+    int j         = 0;
+    int wordcount = 0;
+
+    // pax_background(gfx, WHITE);
+
+    // goes through each character until the end of the string (unless nblines >= maxnblines)
+    for (int i = 0; i <= (strlen(_message)); i++) {
+        // If space or end of string found, process word/lines
+        if (_message[i] == ' ' || _message[i] == '\0') {
+            Words[j] = '\0';  // end of string terminate the word
+            j        = 0;
+            // pax_draw_text(gfx, BLACK, font, fontsize, xoffset, wordcount * fontsize, Words[wordcount]);//use to
+            // display words
+            strcat(linetodisplay, Words);  // add word to linetodisplay
+            strcat(linetodisplay, " ");    // and a space that was not parsed
+
+            // if longer than maxlinelenght, go to the next line
+            dims = pax_text_size(font, fontsizeS, linetodisplay);
+            if ((int)dims.x > _maxlinelength) {
+                linetodisplay[strlen(linetodisplay) - (strlen(Words) + 2)] = '\0';  // remove the last word and 2 spaces
+
+                // center the text
+                if (_centered) {
+                    dims     = pax_text_size(font, fontsizeS, linetodisplay);
+                    _xoffset = gfx->height / 2 - (int)(dims.x / 2);
+                }
+
+                pax_draw_text(
+                    gfx,
+                    BLACK,
+                    font,
+                    fontsizeS,
+                    _xoffset,
+                    _yoffset + nblines * fontsizeS,
+                    linetodisplay
+                );  // displays
+                    // the line
+                strcpy(linetodisplay,
+                       Words);  // Add the latest word that was parsed and removed to the next line
+                nblines++;
+                if (nblines >= 8) {
+                    break;
+                }
+            }
+
+            // If it is the last word of the string
+            if (_message[i] == '\0') {
+                pax_draw_text(gfx, BLACK, font, fontsizeS, _xoffset, _yoffset + nblines * fontsizeS, linetodisplay);
+            }
+            wordcount++;  // Move to the next word
+
+        } else {
+            Words[j] = _message[i];  // Store the character into newString
+            j++;                     // Move to the next character within the word
+        }
+    }
+
+    // bsp_display_flush();
+}
+
+
 void AddSwitchesBoxtoBuffer(int _switch)  // in black
 {
     pax_buf_t* gfx = bsp_get_gfx_buffer();
@@ -603,6 +684,38 @@ void AddDiamondSelecttoBuf(int _x, int _y, int _gap) {
 
     //         for (int i = 1; i < 9; i++)
     //             pax_draw_line(gfx, BLACK, _x + od[i][0], _y + od[i][1], _x + od[i + 1][0], _y + od[i + 1][1]);
+}
+
+uint32_t ChartoLED(char _letter) {
+    switch (_letter) {
+        case 'a': return LED_A; break;
+        case 'b': return LED_B; break;
+        // case 'c': return LED_; break;
+        case 'd': return LED_D; break;
+        case 'e': return LED_E; break;
+        case 'f': return LED_F; break;
+        case 'g': return LED_G; break;
+        case 'h': return LED_H; break;
+        case 'i': return LED_I; break;
+        // case 'j': return LED_; break;
+        case 'k': return LED_K; break;
+        case 'l': return LED_L; break;
+        case 'm': return LED_M; break;
+        case 'n': return LED_N; break;
+        case 'o': return LED_O; break;
+        case 'p': return LED_P; break;
+        // case 'q': return LED_; break;
+        case 'r': return LED_R; break;
+        case 's': return LED_S; break;
+        case 't': return LED_T; break;
+        // case 'u': return LED_; break;
+        case 'v': return LED_V; break;
+        case 'w': return LED_W; break;
+        // case 'x': return LED_; break;
+        case 'y': return LED_Y; break;
+        // case 'z': return LED_; break;
+        default: return 0; break;
+    }
 }
 
 esp_err_t nvs_get_str_wrapped(char const * namespace, char const * key, char* buffer, size_t buffer_size) {

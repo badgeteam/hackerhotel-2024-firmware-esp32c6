@@ -45,7 +45,7 @@ void DisplayWallofTextWords(
     char _message[200],
     int  _centered
 );
-
+void WallofText(int _yoffset, char const * _message, int _centered);
 // Parse _message[] into lines
 // and makes them into up to _maxnblines which are _maxlinelenght pixel long
 // can be centered if the _centered flag is high
@@ -78,6 +78,7 @@ void DebugKeyboardSettings(void);
 int  Increment(int _num, int _max);
 int  Decrement(int _num, int _max);
 void AddDiamondSelecttoBuf(int _x, int _y, int _gap);
+uint32_t  ChartoLED(char _letter);
 esp_err_t nvs_get_str_wrapped(char const * namespace, char const * key, char* buffer, size_t buffer_size);
 esp_err_t nvs_set_str_wrapped(char const * namespace, char const * key, char* buffer);
 esp_err_t nvs_get_u8_wrapped(char const * namespace, char const * key, uint8_t* value);

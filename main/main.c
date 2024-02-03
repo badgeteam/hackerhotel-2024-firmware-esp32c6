@@ -31,6 +31,7 @@
 #include "screen_mascots.h"
 #include "screen_pointclick.h"
 #include "screen_repertoire.h"
+#include "screen_scrambled.h"
 #include "screen_settings.h"
 #include "screen_shades.h"
 #include "screen_template.h"
@@ -125,7 +126,7 @@ void app_main(void) {
     }
 
     // Main application
-    screen_t current_screen = screen_hangman;
+    screen_t current_screen = screen_scrambled;
     while (1) {
         switch (current_screen) {
             case screen_mascots:
@@ -176,6 +177,11 @@ void app_main(void) {
             case screen_hangman:
                 {
                     current_screen = screen_hangman_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_scrambled:
+                {
+                    current_screen = screen_scrambled_entry(application_event_queue, keyboard_event_queue);
                     break;
                 }
             default: current_screen = screen_home;

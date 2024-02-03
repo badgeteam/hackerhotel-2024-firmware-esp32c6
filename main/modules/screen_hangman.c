@@ -17,7 +17,6 @@
 #include "screen_home.h"
 #include "screens.h"
 #include "textedit.h"
-#include "wordlist.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <esp_random.h>
