@@ -11,6 +11,8 @@
 
 static char const * TAG = "badge_comms";
 
+uint16_t TargetAddress = 0xFFFF;
+
 static QueueHandle_t badge_comms_receive = NULL;
 
 typedef struct {
@@ -106,9 +108,10 @@ void badge_comms_send_message(badge_comms_message_t* comms_message) {
 
     ieee802154_address_t src = {
         .mode         = ADDR_MODE_LONG,
-        .long_address = {eui64[0], eui64[1], eui64[2], eui64[3], eui64[4], eui64[5], eui64[6], eui64[7]}};
+        .long_address = {eui64[0], eui64[1], eui64[2], eui64[3], eui64[4], eui64[5], eui64[6], eui64[7]}
+    };
 
-    ieee802154_address_t dst = {.mode = ADDR_MODE_SHORT, .short_address = SHORT_BROADCAST};
+    ieee802154_address_t dst = {.mode = ADDR_MODE_SHORT, .short_address = TargetAddress};
 
     uint8_t hdr_len = ieee802154_header(&pan_id, &src, &pan_id, &dst, false, &buffer[1], sizeof(buffer) - 1);
 
@@ -140,7 +143,9 @@ void parse_message(
         from_mac[7 - i] = message[i + 8];
     }
 
-    *userdata_len = MIN(len - 16 - 2, BADGE_COMMS_USER_DATA_MAX_LEN);  // lenth - bytes till the beginning of userdata - proceeding protocol bytes
+    *userdata_len =
+        MIN(len - 16 - 2,
+            BADGE_COMMS_USER_DATA_MAX_LEN);  // lenth - bytes till the beginning of userdata - proceeding protocol bytes
     memcpy(userdata, message + 16, *userdata_len);
 
     //    uint8_t rssi = message[len-2];

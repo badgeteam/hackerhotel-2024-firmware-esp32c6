@@ -126,7 +126,7 @@ void app_main(void) {
     }
 
     // Main application
-    screen_t current_screen = screen_scrambled;
+    screen_t current_screen = screen_repertoire;
     while (1) {
         switch (current_screen) {
             case screen_mascots:

@@ -4,7 +4,9 @@
 #include "badge_messages.h"
 #include "bsp.h"
 #include "esp_err.h"
+#include "esp_ieee802154.h"
 #include "esp_log.h"
+#include "esp_mac.h"
 #include "events.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/portmacro.h"
@@ -68,7 +70,7 @@ int GetRepertoire(char _repertoryIDlist[maxIDrepertoire][nicknamelenght], uint8_
         ESP_LOGE(TAG, "nickname key: %s", strnick);
         ESP_LOGE(TAG, "nickname read: %s", _repertoryIDlist[i]);
         ESP_LOGE(TAG, "MAC key: %s", strmac);
-        for (int y = 0; y < 8; y++) ESP_LOGE(TAG, "MAC: %d", mac[i][y]);
+        for (int y = 0; y < 8; y++) ESP_LOGE(TAG, "MAC: %02x", mac[i][y]);
     }
     return value;
 }
@@ -262,6 +264,28 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
     ESP_LOGE(TAG, "nbrepertoryID main loop: %d", nbrepertoryID);
 
     // insert scan
+    ESP_LOGE(TAG, "MAC 6: %02x", repertory_mac[0][6]);
+    ESP_LOGE(TAG, "MAC 7: %02x", repertory_mac[0][7]);
+
+    uint16_t addresstarget = (repertory_mac[0][6] << 8) | repertory_mac[0][7];
+    ESP_LOGE(TAG, "addresstarget: %04x", addresstarget);
+
+    uint8_t mactest[8];
+    for (int y = 0; y < 8; y++) {
+        esp_read_mac(mactest, ESP_MAC_IEEE802154);
+        ESP_LOGE(TAG, "mac owner: %02x", mactest[y]);
+    }
+
+    uint16_t addressowner = (mactest[6] << 8) | mactest[7];
+    ESP_LOGE(TAG, "MAC address owner: %04x", addressowner);
+
+
+    esp_ieee802154_set_short_address(addressowner);
+    ESP_LOGE(TAG, "stored owner short address: %04x", esp_ieee802154_get_short_address());
+
+    TargetAddress = addresstarget;
+
+    ESP_LOGE(TAG, "message sent to: %04x", TargetAddress);
 
     // udpate max_y to be the biggest y
     max_y = nbrepertoryID;
@@ -269,7 +293,7 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
         max_y = nbsurroundingID;
 
     InitKeyboard(keyboard_event_queue);
-    configure_keyboard_presses(keyboard_event_queue, true, false, false, true, true);
+    configure_keyboard_presses(keyboard_event_queue, true, false, true, true, true);
     if (nbsurroundingID > 0 && nbsurroundingID > 0)
         configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_2, true);
     else
@@ -298,12 +322,14 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
         ESP_LOGI(TAG, "listening");
     badge_comms_message_t message;
 
-    BaseType_t   xReturned;
-    TaskHandle_t SendRegularBr_handle = NULL;
-    if (SendRegularBr_handle == NULL) {
-        xReturned = xTaskCreate(SendRegularBr, "SendRegularBr", 1024, NULL, 1, SendRegularBr_handle);
-    } else
-        ESP_LOGI(TAG, "Error");
+
+
+    // BaseType_t   xReturned;
+    // TaskHandle_t SendRegularBr_handle = NULL;
+    // if (SendRegularBr_handle == NULL) {
+    //     xReturned = xTaskCreate(SendRegularBr, "SendRegularBr", 1024, NULL, 1, SendRegularBr_handle);
+    // } else
+    //     ESP_LOGI(TAG, "Error");
 
     while (1) {
         event_t event = {0};
@@ -380,9 +406,9 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
                             StoreRepertoire(repertoryIDlist, repertory_mac, nbrepertoryID);
                             configure_keyboard_rotate_disable(keyboard_event_queue);
                             ESP_LOGI(TAG, "Exit");
-                            if (xReturned == pdPASS) {
-                                // vTaskDelete(SendRegularBr_handle);
-                            }
+                            // if (xReturned == pdPASS) {
+                            //     // vTaskDelete(SendRegularBr_handle);
+                            // }
                             vTaskDelay(pdMS_TO_TICKS(100));
                             return screen_home;
                             break;
@@ -414,7 +440,7 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
                                 cursor_y = Increment(cursor_y, nbsurroundingID - 1);
                             break;
 
-                        case SWITCH_3: break;
+                        case SWITCH_3: send_repertoire(); break;
                         case SWITCH_4: send_repertoire(); break;
                         case SWITCH_5:
                             switch (cursor_x) {

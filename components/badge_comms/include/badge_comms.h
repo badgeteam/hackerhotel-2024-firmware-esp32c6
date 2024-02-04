@@ -9,6 +9,8 @@
 
 esp_err_t init_badge_comms(void);
 
+extern uint16_t TargetAddress;
+
 typedef struct {
     badge_comms_message_type_t message_type;
     uint8_t                    from_mac[8];
