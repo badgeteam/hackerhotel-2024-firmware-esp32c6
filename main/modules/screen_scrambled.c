@@ -23,30 +23,38 @@
 
 static char const * TAG = "scrambled";
 
-// extern uint8_t const border1_png_start[] asm("_binary_border1_png_start");
-// extern uint8_t const border1_png_end[] asm("_binary_border1_png_end");
-static char const * const scrambled[] = {"to the president of the united states wgisahontn", ""};
+extern uint8_t const caronv_png_start[] asm("_binary_caronv_png_start");
+extern uint8_t const caronv_png_end[] asm("_binary_caronv_png_end");
+extern uint8_t const b_arrow1_png_start[] asm("_binary_b_arrow1_png_start");
+extern uint8_t const b_arrow1_png_end[] asm("_binary_b_arrow1_png_end");
+extern uint8_t const b_arrow1t_png_start[] asm("_binary_b_arrow1t_png_start");
+extern uint8_t const b_arrow1t_png_end[] asm("_binary_b_arrow1t_png_end");
 
-// static char const * const correct[]   = {"To the President of the United States, Washington", ""};
+static char const * const scrambled[] = {"to the president of the united", ""};
 
+screen_t screen_scrambled_victory(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
 
-
-// static char const * const scrambled1[] = {"To", "the", "President", "of", "the", "United", "States,", "Washington"};
-// static char const * const text1[]      = {"To", "the", "President", "of", "the", "United", "States,", "Wgisahontn"};
-
-void DisplayScrambled(char usertext[500]) {
-    pax_buf_t* gfx = bsp_get_gfx_buffer();
-    // strcpy(scrambled1[0], "");
+void DisplayScrambled(char usertext[500], int cursor, int cursortoggle) {
+    pax_buf_t* gfx       = bsp_get_gfx_buffer();
+    pax_vec1_t cursorloc = {
+        .x = 0,
+        .y = 0,
+    };
     pax_background(gfx, WHITE);
     AddSWtoBuffer("Exit", "Delete", "Space", "", "Finish");
-    pax_draw_text(gfx, BLACK, font1, fontsizeS, 0, 0, "its coordinates");
+    if (cursortoggle == 0)
+        pax_insert_png_buf(gfx, b_arrow1_png_start, b_arrow1_png_end - b_arrow1_png_start, 64 + 61 + 61, 118, 0);
+    else
+        pax_insert_png_buf(gfx, b_arrow1t_png_start, b_arrow1t_png_end - b_arrow1t_png_start, 64 + 61 + 61, 118, 0);
 
-    // pax_outline_circle(gfx, BLACK, 0, 0, 3);
-    WallofText(30, scrambled[0], 0);
-    WallofText(75, usertext, 0);
+    WallofText(30, scrambled[0], 0, cursor);
 
-    // DisplayWallofText(fontsizeS, 285, 4, gfx->height, 30, scrambled, 0);
-    // pax_insert_png_buf(gfx, border1_png_start, border1_png_end - border1_png_start, 0, 127 - 11, 0);
+    // draw user taxt + cursor
+    cursorloc = WallofText(75, usertext, 0, cursor);
+    pax_draw_line(gfx, BLACK, cursorloc.x + 1, cursorloc.y, cursorloc.x - 1, cursorloc.y);
+    pax_draw_line(gfx, BLACK, cursorloc.x, cursorloc.y, cursorloc.x, cursorloc.y + fontsizeS);
+    pax_draw_line(gfx, BLACK, cursorloc.x + 1, cursorloc.y + fontsizeS, cursorloc.x - 1, cursorloc.y + fontsizeS);
+
     bsp_display_flush();
 }
 
@@ -80,18 +88,17 @@ screen_t screen_scrambled_entry(QueueHandle_t application_event_queue, QueueHand
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
     configure_keyboard_typing(keyboard_event_queue, true);
-    // configure_keyboard_rotate_both(keyboard_event_queue, 4, true);
 
     int  textID        = 0;
-    char usertext[500] = "to the prqsident of tge united stases washington";
+    char usertext[500] = "to the prqsident of tge united";
     int  cursor        = 0;
     int  displayflag   = 1;
-    DisplayScrambled(usertext);
+    int  cursortoggle  = 0;
 
     while (1) {
         event_t event = {0};
         if (displayflag) {
-            DisplayScrambled(usertext);
+            DisplayScrambled(usertext, cursor, cursortoggle);
             displayflag = 0;
         }
         if ((xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE)) {
@@ -100,25 +107,82 @@ screen_t screen_scrambled_entry(QueueHandle_t application_event_queue, QueueHand
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
                         case SWITCH_1: return screen_home; break;
-                        case SWITCH_2:  // delete
-                            cursor--;
-                            usertext[cursor] = '\0';
+                        case SWITCH_2:                         // delete
+                            if (strlen(usertext) && cursor) {  // do nothing if empty
+                                cursor--;
+                                if (usertext[cursor] != '\0') {
+                                    for (int i = cursor; i < strlen(usertext); i++) usertext[i] = usertext[i + 1];
+                                } else
+                                    usertext[cursor] = '\0';
+                            }
                             break;
                         case SWITCH_3:  // space
                             usertext[cursor] = ' ';
                             cursor++;
                             break;
-                        case SWITCH_4: break;
+                        case SWITCH_4:
+                            if (!cursortoggle) {
+                                cursortoggle = 1;
+                                configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_4, true);
+                                configure_keyboard_typing(keyboard_event_queue, false);
+                            } else {
+                                cursortoggle = 0;
+                                configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_4, false);
+                                configure_keyboard_typing(keyboard_event_queue, true);
+                            }
+                            break;
+                        case SWITCH_L4:
+                            if (cursor > 0)
+                                cursor--;
+                            break;
+                        case SWITCH_R4:
+                            if (usertext[cursor] != '\0')
+                                cursor++;
+                            break;
                         case SWITCH_5:  // finish
-                            Finish(usertext, textID);
+                            if (Finish(usertext, textID))
+                                return screen_scrambled_victory(application_event_queue, keyboard_event_queue);
                             break;
                         default: break;
                     }
                     if (event.args_input_keyboard.character != '\0') {
+                        if (usertext[cursor] != '\0') {
+                            for (int i = strlen(usertext); i >= cursor; i--) usertext[i + 1] = usertext[i];
+                        }
                         usertext[cursor] = event.args_input_keyboard.character;
                         cursor++;
                     }
                     displayflag = 1;
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+
+screen_t screen_scrambled_victory(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_background(gfx, WHITE);
+    pax_insert_png_buf(gfx, caronv_png_start, caronv_png_end - caronv_png_start, 0, 0, 0);
+    bsp_display_flush();
+
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
+
+    while (1) {
+        event_t event = {0};
+        if ((xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE)) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: return screen_home; break;
+                        case SWITCH_2: return screen_home; break;
+                        case SWITCH_3: return screen_home; break;
+                        case SWITCH_4: return screen_home; break;
+                        case SWITCH_5: return screen_home; break;
+                        default: break;
+                    }
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
             }

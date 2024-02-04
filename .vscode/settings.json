@@ -84,7 +84,13 @@
         "iosfwd": "c",
         "sstream": "c",
         "stdexcept": "c",
-        "streambuf": "c"
+        "streambuf": "c",
+        "slist": "c",
+        "initializer_list": "c",
+        "ranges": "c",
+        "span": "c",
+        "stacktrace": "c",
+        "valarray": "c"
     },
     "editor.formatOnType": false,
     "editor.formatOnSave": true,

@@ -45,13 +45,13 @@ void DisplayWallofTextWords(
     char _message[200],
     int  _centered
 );
-void WallofText(int _yoffset, char const * _message, int _centered);
+pax_vec1_t WallofText(int _yoffset, char const * _message, int _centered, int _cursor);
 // Parse _message[] into lines
 // and makes them into up to _maxnblines which are _maxlinelenght pixel long
 // can be centered if the _centered flag is high
-void DisplayWallofText(
-    int _fontsize, int _maxlinelenght, int _maxnblines, int _xoffset, int _yoffset, char _message[500], int _centered
-);
+void       DisplayWallofText(
+          int _fontsize, int _maxlinelenght, int _maxnblines, int _xoffset, int _yoffset, char _message[500], int _centered
+      );
 
 void Justify_right_text(
     pax_buf_t* buf, pax_col_t color, pax_font_t const * font, float font_size, float x, float y, char const * text

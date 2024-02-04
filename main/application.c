@@ -388,28 +388,38 @@ void DisplayWallofText(
     // bsp_display_flush();
 }
 
-void WallofText(int _yoffset, char const * _message, int _centered) {
-    // set screen font and buffer
-    pax_font_t const * font = pax_font_sky;
-    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
-
-    // to verify text lenght on buffer
+pax_vec1_t WallofText(int _yoffset, char const * _message, int _centered, int _cursor) {
+    pax_buf_t* gfx  = bsp_get_gfx_buffer();
     pax_vec1_t dims = {
         .x = 999,
         .y = 999,
     };
+    pax_vec1_t cursorloc = {
+        .x = 0,
+        .y = 0,
+    };
+
+
+
     ESP_LOGE(TAG, "Unhandled event type %s", _message);
     ESP_LOGE(TAG, "Unhandled event type %d", strlen(_message));
     // char message[128]       = "The quick brown fox jumps over the lazy dog, The quick brie da";  // message to parse
     char linetodisplay[128] = "";
-    char Words[64];  // Array of parsed words
+    char Words[64];  // Parsed Word
     int  _xoffset       = 6;
     int  _maxlinelength = gfx->height - _xoffset * 2;
 
     // counters
-    int nblines   = 0;
-    int j         = 0;
-    int wordcount = 0;
+    int nblines     = 0;
+    int j           = 0;
+    int wordcount   = 0;
+    int cursorfound = 0;
+
+    if (_cursor == 0) {
+        cursorloc.x = _xoffset;
+        cursorloc.y = _yoffset;
+        cursorfound = 1;
+    }
 
     // pax_background(gfx, WHITE);
 
@@ -419,34 +429,57 @@ void WallofText(int _yoffset, char const * _message, int _centered) {
         if (_message[i] == ' ' || _message[i] == '\0') {
             Words[j] = '\0';  // end of string terminate the word
             j        = 0;
-            // pax_draw_text(gfx, BLACK, font, fontsize, xoffset, wordcount * fontsize, Words[wordcount]);//use to
-            // display words
             strcat(linetodisplay, Words);  // add word to linetodisplay
             strcat(linetodisplay, " ");    // and a space that was not parsed
 
             // if longer than maxlinelenght, go to the next line
-            dims = pax_text_size(font, fontsizeS, linetodisplay);
-            if ((int)dims.x > _maxlinelength) {
-                linetodisplay[strlen(linetodisplay) - (strlen(Words) + 2)] = '\0';  // remove the last word and 2 spaces
+            dims = pax_text_size(font1, fontsizeS, linetodisplay);
+            if ((int)dims.x > _maxlinelength || _message[i] == '\0') {
+                if (_message[i] != '\0')
+                    linetodisplay[strlen(linetodisplay) - (strlen(Words) + 2)] =
+                        '\0';  // remove the last word and 2 spaces
 
                 // center the text
                 if (_centered) {
-                    dims     = pax_text_size(font, fontsizeS, linetodisplay);
+                    dims     = pax_text_size(font1, fontsizeS, linetodisplay);
                     _xoffset = gfx->height / 2 - (int)(dims.x / 2);
                 }
+
+                ESP_LOGE(TAG, "line to display length: %d", strlen(linetodisplay));
 
                 pax_draw_text(
                     gfx,
                     BLACK,
-                    font,
+                    font1,
                     fontsizeS,
                     _xoffset,
                     _yoffset + nblines * fontsizeS,
                     linetodisplay
-                );  // displays
-                    // the line
-                strcpy(linetodisplay,
-                       Words);  // Add the latest word that was parsed and removed to the next line
+                );  // displays the line
+
+                // calculate the cursor position
+
+                if ((_cursor < strlen(linetodisplay)) && !cursorfound) {
+                    ESP_LOGE(TAG, "cursor on: %c", linetodisplay[_cursor]);
+                    linetodisplay[_cursor] = '\0';
+                    cursorloc              = pax_text_size(font1, fontsizeS, linetodisplay);
+                    cursorloc.x            = cursorloc.x + _xoffset;
+                    cursorloc.y            = _yoffset + nblines * fontsizeS;
+                    cursorfound            = 1;
+                } else {
+                    _cursor = _cursor - strlen(linetodisplay);
+                    if (!_cursor) {
+                        cursorloc.x = _xoffset;
+                        cursorloc.y = _yoffset + (nblines + 1) * fontsizeS;
+                        cursorfound = 1;
+                    }
+                }
+                ESP_LOGE(TAG, "cursor x: %f", cursorloc.x);
+                ESP_LOGE(TAG, "cursor y: %f", cursorloc.y);
+
+
+                strcpy(linetodisplay, Words);  // Add the latest word that was parsed to the next line
+                strcat(linetodisplay, " ");
                 nblines++;
                 if (nblines >= 8) {
                     break;
@@ -454,9 +487,9 @@ void WallofText(int _yoffset, char const * _message, int _centered) {
             }
 
             // If it is the last word of the string
-            if (_message[i] == '\0') {
-                pax_draw_text(gfx, BLACK, font, fontsizeS, _xoffset, _yoffset + nblines * fontsizeS, linetodisplay);
-            }
+            // if (_message[i] == '\0') {
+            //     pax_draw_text(gfx, BLACK, font1, fontsizeS, _xoffset, _yoffset + nblines * fontsizeS, linetodisplay);
+            // }
             wordcount++;  // Move to the next word
 
         } else {
@@ -464,8 +497,7 @@ void WallofText(int _yoffset, char const * _message, int _centered) {
             j++;                     // Move to the next character within the word
         }
     }
-
-    // bsp_display_flush();
+    return cursorloc;
 }
 
 
