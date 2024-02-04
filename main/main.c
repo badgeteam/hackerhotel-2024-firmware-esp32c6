@@ -126,7 +126,7 @@ void app_main(void) {
     }
 
     // Main application
-    screen_t current_screen = screen_repertoire;
+    screen_t current_screen = screen_pointclick;
     while (1) {
         switch (current_screen) {
             case screen_mascots:
