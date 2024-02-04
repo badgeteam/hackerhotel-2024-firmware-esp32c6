@@ -33,9 +33,9 @@ extern uint8_t const b_arrow2_png_start[] asm("_binary_b_arrow2_png_start");
 extern uint8_t const b_arrow2_png_end[] asm("_binary_b_arrow2_png_end");
 
 bool StoreRepertoire(
-    char _repertoryIDlist[maxIDrepertoire][nicknamelenght], uint8_t mac[maxIDrepertoire][8], uint8_t _nbrepertoryID
+    char _repertoryIDlist[maxIDrepertoire][nicknamelenght], uint8_t mac[maxIDrepertoire][8], uint16_t _nbrepertoryID
 ) {
-    bool res = nvs_set_u8_wrapped("Repertoire", "IDcount", _nbrepertoryID);
+    bool res = nvs_set_u16_wrapped("Repertoire", "IDcount", _nbrepertoryID);
     ESP_LOGE(TAG, "set _nbrepertoryID: %d", _nbrepertoryID);
     for (int i = 0; i < _nbrepertoryID; i++) {
         char strnick[15] = "nickname";
@@ -55,8 +55,8 @@ bool StoreRepertoire(
 }
 
 int GetRepertoire(char _repertoryIDlist[maxIDrepertoire][nicknamelenght], uint8_t mac[maxIDrepertoire][8]) {
-    uint8_t value = 0;
-    bool    res   = nvs_get_u8_wrapped("Repertoire", "IDcount", &value);
+    uint16_t value = 0;
+    bool     res   = nvs_get_u16_wrapped("Repertoire", "IDcount", &value);
     ESP_LOGE(TAG, "read _nbrepertoryID: %d", value);
     for (int i = 0; i < value; i++) {
         char strnick[15] = "nickname";
@@ -134,6 +134,8 @@ void send_repertoire(void) {
     bsp_set_addressable_led(LED_GREEN);
     vTaskDelay(pdMS_TO_TICKS(100));
     bsp_set_addressable_led(LED_OFF);
+    if (log)
+        ESP_LOGE(TAG, "message sent to: %04x", TargetAddress);
 }
 
 void SendRegularBr(void) {
@@ -143,88 +145,96 @@ void SendRegularBr(void) {
     }
 }
 
-
 void Display_repertoire(
-    int     _cursor_x,
-    int     _cursor_y,
-    uint8_t _nbrepertoryID,
-    int     _nbsurroundingID,
-    int     _max_y,
-    char    _repertoryIDlist[maxIDrepertoire][nicknamelenght],
-    char    _surroundingIDlist[maxIDrepertoire][nicknamelenght]
+    uint16_t        _nbrepertoryID,
+    int             _nbsurroundingID,
+    char            _repertoryIDlist[maxIDrepertoire][nicknamelenght],
+    char            _surroundingIDlist[maxIDrepertoire][nicknamelenght],
+    uint8_t         repertory_mac[maxIDrepertoire][8],
+    uint8_t         surrounding_mac[maxIDrepertoire][8],
+    struct cursor_t cursor,
+    int             show_name_or_mac
 ) {
     pax_buf_t* gfx = bsp_get_gfx_buffer();
+
+    int _max_y = _nbrepertoryID;
+    if (_nbsurroundingID > _nbrepertoryID)
+        _max_y = _nbsurroundingID;
 
     int title_o_y = 4;
 
     int maxperpage = 8;
     int box_y      = 11;
-    // int box_x      = 120;
     int box_o_y    = 20;
 
     int pagefooter_o_x = 21;
 
-    int text_rep_x = gfx->height / 4;
-    int text_sur_x = gfx->height * 3 / 4;
-    int text_cursor_x;
+    int text_rep_x    = gfx->height / 4;
+    int text_sur_x    = gfx->height * 3 / 4;
+    int text_cursor_x = 0;
 
 
     pax_background(gfx, WHITE);
     AddSWtoBuffer("Exit", "", "", "", "");
     pax_insert_png_buf(gfx, b_arrow1_png_start, b_arrow1_png_end - b_arrow1_png_start, 66, 118, 0);
     pax_insert_png_buf(gfx, b_arrow2_png_start, b_arrow2_png_end - b_arrow2_png_start, 127, 118, 0);
-    if (_cursor_x == remove) {
+    if (cursor.x == remove && _nbrepertoryID) {
         text_cursor_x = text_rep_x;
         AddOneTextSWtoBuffer(SWITCH_5, "Remove");
-    } else {
+    } else if (cursor.x == add && _nbsurroundingID) {
         text_cursor_x = text_sur_x;
         AddOneTextSWtoBuffer(SWITCH_5, "Add");
     }
+    if (!show_name_or_mac) {
+        AddOneTextSWtoBuffer(SWITCH_4, "MAC");
+    } else {
+        AddOneTextSWtoBuffer(SWITCH_4, "Name");
+    }
+
 
     pax_center_text(gfx, BLACK, font1, fontsizeS * 1.5, gfx->height / 4, title_o_y, "Repertoire");
     pax_center_text(gfx, BLACK, font1, fontsizeS * 1.5, gfx->height * 3 / 4, title_o_y, "In proximity");
-    // for (int page = 0; page < ((_max_y / maxperpage) + 1); page++) {
-    int page = _cursor_y / maxperpage;
+    int page = cursor.y / maxperpage;
     ESP_LOGE(TAG, "Page: %d", page);
-    ESP_LOGE(TAG, "Cursor x: %d", _cursor_x);
-    ESP_LOGE(TAG, "Cursor y: %d", _cursor_y);
+    ESP_LOGE(TAG, "Cursor x: %d", cursor.x);
+    ESP_LOGE(TAG, "Cursor y: %d", cursor.y);
 
+    // display repertoire and surrounding name/mac content
     for (int i = 0; i < maxperpage; i++) {
-        int text_IDs_y = box_o_y + box_y * i;
+        int  text_IDs_y                 = box_o_y + box_y * i;
+        char leftfield[nicknamelenght]  = "";
+        char rightfield[nicknamelenght] = "";
+        char buf[10]                    = "";
+        if (!show_name_or_mac) {
+            strcpy(leftfield, _repertoryIDlist[i + page * maxperpage]);
+            strcpy(rightfield, _surroundingIDlist[i + page * maxperpage]);
+        } else {
+            for (int i = 0; i < 8; i++) {
+                snprintf(buf, 10, "%02x", repertory_mac[i + page * maxperpage][i]);
+                strcat(leftfield, strcat(buf, ":"));
+                snprintf(buf, 10, "%02x", surrounding_mac[i + page * maxperpage][i]);
+                strcat(rightfield, strcat(buf, ":"));
+            }
+            leftfield[strlen(leftfield) - 1]   = '\0';  // remove last :
+            rightfield[strlen(rightfield) - 1] = '\0';  // remove last :
+        }
+
         if (_nbrepertoryID > (i + page * maxperpage)) {
-            // pax_outline_rect(gfx, BLACK, gfx->height / 2 - box_x, box_o_y + box_y * i, box_x, box_y);
-            pax_center_text(
-                gfx,
-                BLACK,
-                font1,
-                fontsizeS,
-                text_rep_x,
-                text_IDs_y,
-                _repertoryIDlist[i + page * maxperpage]
-            );
+            pax_center_text(gfx, BLACK, font1, fontsizeS, text_rep_x, text_IDs_y, leftfield);
         }
         if (_nbsurroundingID > (i + page * maxperpage)) {
-            // pax_outline_rect(gfx, BLACK, gfx->height / 2, text_IDs_y, box_x, box_y);
-            pax_center_text(
-                gfx,
-                BLACK,
-                font1,
-                fontsizeS,
-                text_sur_x,
-                text_IDs_y,
-                _surroundingIDlist[i + page * maxperpage]
-            );
+            pax_center_text(gfx, BLACK, font1, fontsizeS, text_sur_x, text_IDs_y, rightfield);
         }
         // display cursor and page number
-        if (_cursor_y == (i + page * maxperpage)) {
+        if (cursor.y == (i + page * maxperpage)) {
             pax_vec1_t dims = {
                 .x = 999,
                 .y = 999,
             };
-            if (_cursor_x == 0)
-                dims = pax_text_size(font1, fontsizeS, _repertoryIDlist[i + page * maxperpage]);
-            if (_cursor_x == 1)
-                dims = pax_text_size(font1, fontsizeS, _surroundingIDlist[i + page * maxperpage]);
+            if (cursor.x == 0)
+                dims = pax_text_size(font1, fontsizeS, leftfield);
+            if (cursor.x == 1)
+                dims = pax_text_size(font1, fontsizeS, rightfield);
             AddDiamondSelecttoBuf(text_cursor_x, text_IDs_y, dims.x);
             char pagefooter[10] = "Page";
             char str[20];
@@ -253,12 +263,17 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
         strcpy(surroundingIDlist[i], "");
         for (int y = 0; y < 8; y++) repertory_mac[i][y] = 0;
     }
+    strcpy(surroundingIDlist[0], "Florian");
+    strcpy(surroundingIDlist[1], "Dog");
+    // strcpy(surroundingIDlist[2], "Ryan");
 
-    uint8_t nbrepertoryID   = 0;
-    int     nbsurroundingID = 0;
-    int     max_y;
-    int     cursor_x = 0;
-    int     cursor_y = 0;
+    uint16_t nbrepertoryID    = 0;
+    int      nbsurroundingID  = 2;
+    int      displayflag      = 1;
+    int      show_name_or_mac = 0;
+    int      MSpassed         = 0;
+
+    struct cursor_t cursor = {.x = 0, .y = 0};
 
     nbrepertoryID = GetRepertoire(repertoryIDlist, repertory_mac);
     ESP_LOGE(TAG, "nbrepertoryID main loop: %d", nbrepertoryID);
@@ -283,33 +298,12 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
     esp_ieee802154_set_short_address(addressowner);
     ESP_LOGE(TAG, "stored owner short address: %04x", esp_ieee802154_get_short_address());
 
-    TargetAddress = addresstarget;
+    // TargetAddress = addresstarget;
 
     ESP_LOGE(TAG, "message sent to: %04x", TargetAddress);
 
-    // udpate max_y to be the biggest y
-    max_y = nbrepertoryID;
-    if (nbrepertoryID < nbsurroundingID)
-        max_y = nbsurroundingID;
-
     InitKeyboard(keyboard_event_queue);
-    configure_keyboard_presses(keyboard_event_queue, true, false, true, true, true);
-    if (nbsurroundingID > 0 && nbsurroundingID > 0)
-        configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_2, true);
-    else
-        configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_2, false);
-    if (nbrepertoryID == 0)
-        cursor_x = 1;
-    if (max_y)
-        configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, true);
-    else
-        configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, false);
-
-    // DebugKeyboardSettings();
-
-    Display_repertoire(cursor_x, cursor_y, nbrepertoryID, nbsurroundingID, max_y, repertoryIDlist, surroundingIDlist);
-    // receive_stra();
-
+    configure_keyboard_presses(keyboard_event_queue, true, false, false, true, true);
 
     // init broadcast receive
     // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
@@ -322,8 +316,6 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
         ESP_LOGI(TAG, "listening");
     badge_comms_message_t message;
 
-
-
     // BaseType_t   xReturned;
     // TaskHandle_t SendRegularBr_handle = NULL;
     // if (SendRegularBr_handle == NULL) {
@@ -332,7 +324,78 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
     //     ESP_LOGI(TAG, "Error");
 
     while (1) {
+        MSpassed += 10;
+        ESP_LOGE(TAG, "MSpassed: %d", MSpassed);
+        if (MSpassed > BroadcastInterval) {
+            send_repertoire();
+            MSpassed = 0;
+        }
         event_t event = {0};
+        if (displayflag) {
+            if (log) {
+                ESP_LOGE(TAG, "nbrepertoryID: %d", nbrepertoryID);
+                ESP_LOGE(TAG, "nbsurroundingID: %d", nbsurroundingID);
+            }
+            // update cursor
+            // check for x over/underflow/emptycolumn
+            if (nbrepertoryID == 0 || cursor.x < 0) {
+                cursor.x = 1;
+                ESP_LOGE(TAG, "underflow x");
+            }
+            if (nbsurroundingID == 0 || cursor.x > 1) {
+                cursor.x = 0;
+                ESP_LOGE(TAG, "overflow x");
+            }
+            ESP_LOGE(TAG, "nbsurroundingID: %d", nbsurroundingID);
+
+            // check for y over/underflow/empty row
+            if (cursor.x == 0 && cursor.y > (nbrepertoryID - 1)) {
+                cursor.y = 0;
+                ESP_LOGE(TAG, "repertory overflow y");
+            }
+            if (cursor.x == 1 && cursor.y > (nbsurroundingID - 1)) {
+                cursor.y = 0;
+                ESP_LOGE(TAG, "surroundingID overflow y");
+            }
+            if (cursor.x == 0 && cursor.y < 0) {
+                cursor.y = nbrepertoryID - 1;
+                ESP_LOGE(TAG, "repertory underflow y");
+            }
+            if (cursor.x == 1 && cursor.y < 0) {
+                cursor.y = nbsurroundingID - 1;
+                ESP_LOGE(TAG, "surroundingID underflow y");
+            }
+
+            // disable x navigation if nothing in range
+            if (nbrepertoryID > 0 && nbsurroundingID > 0)
+                configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_2, true);
+            else
+                configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_2, false);
+
+            // disable y navigation if nothing in range
+            if ((cursor.x == 0 && nbrepertoryID > 1) || (cursor.x == 1 && nbsurroundingID > 1))
+                configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, true);
+            else
+                configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, false);
+
+            // disable add / remove
+            if ((cursor.x == 0 && nbrepertoryID == 0) || (cursor.x == 1 && nbsurroundingID == 0))
+                configure_keyboard_press(keyboard_event_queue, SWITCH_5, false);
+            else
+                configure_keyboard_press(keyboard_event_queue, SWITCH_5, true);
+
+            Display_repertoire(
+                nbrepertoryID,
+                nbsurroundingID,
+                repertoryIDlist,
+                surroundingIDlist,
+                repertory_mac,
+                surrounding_mac,
+                cursor,
+                show_name_or_mac
+            );
+            displayflag = 0;
+        }
 
         // upon receiving a message
         if (xQueueReceive(repertoire_queue, &message, pdMS_TO_TICKS(1)) == pdTRUE) {
@@ -382,21 +445,10 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
                 for (int i = 0; i < 8; i++) surrounding_mac[nbsurroundingID][i] = _inbound_mac[i];
                 nbsurroundingID++;
             }
-
-
-            // to refactor
-            Display_repertoire(
-                cursor_x,
-                cursor_y,
-                nbrepertoryID,
-                nbsurroundingID,
-                max_y,
-                repertoryIDlist,
-                surroundingIDlist
-            );
+            displayflag = 1;
         }
 
-        if ((xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE)) {
+        if ((xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(9)) == pdTRUE)) {
             ESP_LOGE(TAG, "loop");
             switch (event.type) {
                 case event_input_button: break;  // Ignore raw button input
@@ -405,67 +457,46 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
                         case SWITCH_1:
                             StoreRepertoire(repertoryIDlist, repertory_mac, nbrepertoryID);
                             configure_keyboard_rotate_disable(keyboard_event_queue);
-                            ESP_LOGI(TAG, "Exit");
-                            // if (xReturned == pdPASS) {
-                            //     // vTaskDelete(SendRegularBr_handle);
-                            // }
                             vTaskDelay(pdMS_TO_TICKS(100));
+                            ESP_LOGI(TAG, "Exit");
                             return screen_home;
                             break;
-                        case SWITCH_L2:
-                            cursor_x = Decrement(cursor_x, 1);
-                            if (cursor_x == 0 && cursor_y > (nbrepertoryID - 1))
-                                cursor_y = nbrepertoryID - 1;
-                            if (cursor_x == 1 && cursor_y > (nbsurroundingID - 1))
-                                cursor_y = nbsurroundingID - 1;
+                        case SWITCH_L2: cursor.x--; break;
+                        case SWITCH_R2: cursor.x++; break;
+                        case SWITCH_L3: cursor.y++; break;
+                        case SWITCH_R3: cursor.y--; break;
+                        case SWITCH_3: break;
+                        case SWITCH_4:
+                            if (!show_name_or_mac)
+                                show_name_or_mac = 1;
+                            else
+                                show_name_or_mac = 0;
                             break;
-                        case SWITCH_R2:
-                            cursor_x = Increment(cursor_x, 1);
-                            if (cursor_x == 0 && cursor_y > (nbrepertoryID - 1))
-                                cursor_y = nbrepertoryID - 1;
-                            if (cursor_x == 1 && cursor_y > (nbsurroundingID - 1))
-                                cursor_y = nbsurroundingID - 1;
-                            break;
-
-                        case SWITCH_L3:
-                            if (cursor_x == 0)
-                                cursor_y = Decrement(cursor_y, nbrepertoryID - 1);
-                            if (cursor_x == 1)
-                                cursor_y = Decrement(cursor_y, nbsurroundingID - 1);
-                            break;
-                        case SWITCH_R3:
-                            if (cursor_x == 0)
-                                cursor_y = Increment(cursor_y, nbrepertoryID - 1);
-                            if (cursor_x == 1)
-                                cursor_y = Increment(cursor_y, nbsurroundingID - 1);
-                            break;
-
-                        case SWITCH_3: send_repertoire(); break;
-                        case SWITCH_4: send_repertoire(); break;
                         case SWITCH_5:
-                            switch (cursor_x) {
+                            switch (cursor.x) {
                                 case remove:
                                     char promt[128] = "Are you sure you want to remove ";
-                                    strcat(promt, repertoryIDlist[cursor_y]);
+                                    strcat(promt, repertoryIDlist[cursor.y]);
                                     strcat(promt, "?");
-                                    if (Screen_Confirmation(promt, application_event_queue, keyboard_event_queue)) {
-                                        strcpy(repertoryIDlist[cursor_y], "");
+                                    if (Screen_Confirmation(promt, application_event_queue, keyboard_event_queue) &&
+                                        nbrepertoryID) {
+                                        strcpy(repertoryIDlist[cursor.y], "");
                                         nbrepertoryID--;
-                                        for (int i = cursor_y; i < nbrepertoryID; i++) {
+                                        for (int i = cursor.y; i < nbrepertoryID; i++) {
                                             strcpy(repertoryIDlist[i], repertoryIDlist[i + 1]);
                                             for (int y = 0; y < 8; y++) repertory_mac[i][y] = repertory_mac[i + 1][y];
                                         }
-                                        if (cursor_y)
-                                            cursor_y--;
+                                        if (cursor.y)
+                                            cursor.y--;
                                     }
 
                                     break;
                                 case add:
-                                    strcpy(repertoryIDlist[nbrepertoryID], surroundingIDlist[cursor_y]);
+                                    strcpy(repertoryIDlist[nbrepertoryID], surroundingIDlist[cursor.y]);
                                     for (int i = 0; i < 8; i++)
-                                        repertory_mac[nbrepertoryID][i] = surrounding_mac[cursor_y][i];
-                                    cursor_y = nbrepertoryID;
-                                    cursor_x = 0;
+                                        repertory_mac[nbrepertoryID][i] = surrounding_mac[cursor.y][i];
+                                    cursor.y = nbrepertoryID;
+                                    cursor.x = 0;
                                     nbrepertoryID++;
                                     nbsurroundingID--;
                                     break;
@@ -473,34 +504,8 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
                             break;
                         default: break;
                     }
-                    // udpate max_y to be the biggest y
-                    max_y = nbrepertoryID;
-                    if (nbrepertoryID < nbsurroundingID)
-                        max_y = nbsurroundingID;
-                    // disable x navigation if nothing in range
-                    if (nbsurroundingID > 0 && nbsurroundingID > 0)
-                        configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_2, true);
-                    else
-                        configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_2, false);
-                    if (max_y)
-                        configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, true);
-                    else
-                        configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, false);
-                    if (nbrepertoryID == 0)
-                        cursor_x = 1;
-                    if (nbsurroundingID == 0)
-                        cursor_x = 0;
-                    Display_repertoire(
-                        cursor_x,
-                        cursor_y,
-                        nbrepertoryID,
-                        nbsurroundingID,
-                        max_y,
-                        repertoryIDlist,
-                        surroundingIDlist
-                    );
+                    displayflag = 1;
                     break;
-
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type); break;
             }
         }

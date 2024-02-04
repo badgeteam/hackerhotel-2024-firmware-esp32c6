@@ -9,4 +9,9 @@
 #define add               1
 #define BroadcastInterval 5000
 
+struct cursor_t {
+    int x;
+    int y;
+};
+
 screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);

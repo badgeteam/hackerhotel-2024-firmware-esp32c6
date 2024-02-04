@@ -113,6 +113,27 @@ void badge_comms_send_message(badge_comms_message_t* comms_message) {
 
     ieee802154_address_t dst = {.mode = ADDR_MODE_SHORT, .short_address = TargetAddress};
 
+    //     ieee802154_address_t dst = {
+    //     .mode            = ADDR_MODE_LONG,
+    //     .long_address[0] = 0x40,
+    //     .long_address[1] = 0x4c,
+    //     .long_address[2] = 0xca,
+    //     .long_address[3] = 0xff,
+    //     .long_address[4] = 0xfe,
+    //     .long_address[5] = 0x49,
+    //     .long_address[6] = 0x5c,
+    //     .long_address[7] = 0x5c
+    // };
+
+    // ESP_LOGE(TAG, "Mac sent %02x", dst.long_address[0]);
+    // ESP_LOGE(TAG, "Mac sent %02x", dst.long_address[1]);
+    // ESP_LOGE(TAG, "Mac sent %02x", dst.long_address[2]);
+    // ESP_LOGE(TAG, "Mac sent %02x", dst.long_address[3]);
+    // ESP_LOGE(TAG, "Mac sent %02x", dst.long_address[4]);
+    // ESP_LOGE(TAG, "Mac sent %02x", dst.long_address[5]);
+    // ESP_LOGE(TAG, "Mac sent %02x", dst.long_address[6]);
+    // ESP_LOGE(TAG, "Mac sent %02x", dst.long_address[7]);
+
     uint8_t hdr_len = ieee802154_header(&pan_id, &src, &pan_id, &dst, false, &buffer[1], sizeof(buffer) - 1);
 
     buffer[hdr_len + 1] = comms_message->message_type & 0xFF;

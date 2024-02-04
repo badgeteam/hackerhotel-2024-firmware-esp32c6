@@ -803,6 +803,29 @@ esp_err_t nvs_set_u8_wrapped(char const * namespace, char const * key, uint8_t v
     return res;
 }
 
+esp_err_t nvs_get_u16_wrapped(char const * namespace, char const * key, uint16_t* value) {
+    nvs_handle_t handle;
+    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+    if (res != ESP_OK) {
+        return res;
+    }
+    res = nvs_get_u16(handle, key, value);
+    nvs_close(handle);
+    return res;
+}
+
+esp_err_t nvs_set_u16_wrapped(char const * namespace, char const * key, uint16_t value) {
+    nvs_handle_t handle;
+    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+    if (res != ESP_OK) {
+        return res;
+    }
+    res = nvs_set_u16(handle, key, value);
+    nvs_commit(handle);
+    nvs_close(handle);
+    return res;
+}
+
 esp_err_t nvs_get_u8_blob_wrapped(char const * namespace, char const * key, uint8_t* value, size_t length) {
     nvs_handle_t handle;
     esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);

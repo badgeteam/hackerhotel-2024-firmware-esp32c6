@@ -17,11 +17,13 @@
 #define left  0
 #define right 5
 
-extern int const telegraph_X[20];
-extern int const telegraph_Y[20];
-
 #define font1     (&PRIVATE_pax_font_sky)
 #define fontsizeS 9
+
+#define log 1
+
+extern int const telegraph_X[20];
+extern int const telegraph_Y[20];
 
 void Addborder1toBuffer(void);
 void Addborder2toBuffer(void);
@@ -56,7 +58,7 @@ void       DisplayWallofText(
 void Justify_right_text(
     pax_buf_t* buf, pax_col_t color, pax_font_t const * font, float font_size, float x, float y, char const * text
 );
-int  DisplayExitConfirmation(char _prompt[128], QueueHandle_t keyboard_event_queue);
+int  DisplayExitConfirmation(char _psrompt[128], QueueHandle_t keyboard_event_queue);
 int  Screen_Confirmation(char _prompt[128], QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
 void AddSwitchesBoxtoBuffer(int _switch);
 void AddOneTextSWtoBuffer(int _SW, char const * SWstr);
@@ -83,6 +85,8 @@ esp_err_t nvs_get_str_wrapped(char const * namespace, char const * key, char* bu
 esp_err_t nvs_set_str_wrapped(char const * namespace, char const * key, char* buffer);
 esp_err_t nvs_get_u8_wrapped(char const * namespace, char const * key, uint8_t* value);
 esp_err_t nvs_set_u8_wrapped(char const * namespace, char const * key, uint8_t value);
+esp_err_t nvs_get_u16_wrapped(char const * namespace, char const * key, uint16_t* value);
+esp_err_t nvs_set_u16_wrapped(char const * namespace, char const * key, uint16_t value);
 esp_err_t nvs_get_u8_blob_wrapped(char const * namespace, char const * key, uint8_t* value, size_t length);
 esp_err_t nvs_set_u8_blob_wrapped(char const * namespace, char const * key, uint8_t* value, size_t length);
 
