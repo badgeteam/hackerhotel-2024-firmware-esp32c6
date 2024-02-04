@@ -7,6 +7,7 @@
 #include "esp_ieee802154.h"
 #include "esp_log.h"
 #include "esp_mac.h"
+#include "esp_timer.h"
 #include "events.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/portmacro.h"
@@ -32,47 +33,111 @@ extern uint8_t const b_arrow1_png_end[] asm("_binary_b_arrow1_png_end");
 extern uint8_t const b_arrow2_png_start[] asm("_binary_b_arrow2_png_start");
 extern uint8_t const b_arrow2_png_end[] asm("_binary_b_arrow2_png_end");
 
-bool StoreRepertoire(
-    char _repertoryIDlist[maxIDrepertoire][nicknamelenght], uint8_t mac[maxIDrepertoire][8], uint16_t _nbrepertoryID
-) {
-    bool res = nvs_set_u16_wrapped("Repertoire", "IDcount", _nbrepertoryID);
-    ESP_LOGE(TAG, "set _nbrepertoryID: %d", _nbrepertoryID);
-    for (int i = 0; i < _nbrepertoryID; i++) {
-        char strnick[15] = "nickname";
-        char strmac[15]  = "MAC";
-        char nb[15];
-        snprintf(nb, 15, "%d", i);
-        strcat(strnick, nb);
-        strcat(strmac, nb);
+
+
+// bool StoreRepertoire(
+//     char _repertoryIDlist[maxIDrepertoire][nicknamelenght], uint8_t mac[maxIDrepertoire][8], uint8_t _nbrepertoryID
+// ) {
+//     bool res = nvs_set_u8_wrapped("Repertoire", "IDcount", _nbrepertoryID);
+//     ESP_LOGE(TAG, "set _nbrepertoryID: %d", _nbrepertoryID);
+//     for (int i = 0; i < _nbrepertoryID; i++) {
+//         char strnick[15] = "nickname";
+//         char strmac[15]  = "MAC";
+//         char nb[15];
+//         snprintf(nb, 15, "%d", i);
+//         strcat(strnick, nb);
+//         strcat(strmac, nb);
+//         ESP_LOGE(TAG, "nickname key: %s", strnick);
+//         ESP_LOGE(TAG, "nickname write: %s", _repertoryIDlist[i]);
+//         ESP_LOGE(TAG, "MAC key: %s", strmac);
+//         for (int y = 0; y < 8; y++) ESP_LOGE(TAG, "MAC: %d", mac[i][y]);
+//         nvs_set_str_wrapped("Repertoire", strnick, _repertoryIDlist[i]);
+//         nvs_set_u8_blob_wrapped("Repertoire", strmac, mac[i], 8);
+//     }
+//     return res;
+// }
+
+// int GetRepertoire(char _repertoryIDlist[maxIDrepertoire][nicknamelenght], uint8_t mac[maxIDrepertoire][8]) {
+//     uint8_t value = 0;
+//     bool    res   = nvs_get_u8_wrapped("Repertoire", "IDcount", &value);
+//     ESP_LOGE(TAG, "read _nbrepertoryID: %d", value);
+//     for (int i = 0; i < value; i++) {
+//         char strnick[15] = "nickname";
+//         char strmac[15]  = "MAC";
+//         char nb[15];
+//         snprintf(nb, 15, "%d", i);
+//         strcat(strnick, nb);
+//         strcat(strmac, nb);
+//         nvs_get_str_wrapped("Repertoire", strnick, _repertoryIDlist[i], sizeof(_repertoryIDlist[i]));
+//         nvs_get_u8_blob_wrapped("Repertoire", strmac, mac[i], 8);
+//         ESP_LOGE(TAG, "nickname key: %s", strnick);
+//         ESP_LOGE(TAG, "nickname read: %s", _repertoryIDlist[i]);
+//         ESP_LOGE(TAG, "MAC key: %s", strmac);
+//         for (int y = 0; y < 8; y++) ESP_LOGE(TAG, "MAC: %d", mac[i][y]);
+//     }
+//     return value;
+// }
+
+////
+
+
+bool SettNBrepertoryID(uint16_t _ID) {
+    bool res = nvs_set_u16_wrapped("Repertoire", "IDcount", _ID);
+    if (log)
+        ESP_LOGE(TAG, "set NBrepertoryID: %d", _ID);
+    return res;
+}
+
+uint16_t GetNBrepertoryID(void) {
+    uint16_t value = 0;
+    bool     res   = nvs_get_u16_wrapped("Repertoire", "IDcount", &value);
+    if (log)
+        ESP_LOGE(TAG, "Get NBrepertoryID: %d", value);
+    return value;
+}
+
+bool StoreRepertoire(char _repertoryIDlist[nicknamelenght], uint8_t mac[8], uint16_t _ID) {
+    char strnick[15] = "nickname";
+    char strmac[15]  = "MAC";
+    char nb[15];
+    snprintf(nb, 15, "%d", _ID);
+    strcat(strnick, nb);
+    strcat(strmac, nb);
+    if (log) {
+        ESP_LOGE(TAG, "StoreRepertoire: ");
+        ESP_LOGE(TAG, "set _ID: %d", _ID);
         ESP_LOGE(TAG, "nickname key: %s", strnick);
-        ESP_LOGE(TAG, "nickname write: %s", _repertoryIDlist[i]);
+        ESP_LOGE(TAG, "nickname write: %s", _repertoryIDlist);
         ESP_LOGE(TAG, "MAC key: %s", strmac);
-        for (int y = 0; y < 8; y++) ESP_LOGE(TAG, "MAC: %d", mac[i][y]);
-        nvs_set_str_wrapped("Repertoire", strnick, _repertoryIDlist[i]);
-        nvs_set_u8_blob_wrapped("Repertoire", strmac, mac[i], 8);
+        for (int y = 0; y < 8; y++) ESP_LOGE(TAG, "MAC: %d", mac[y]);
+    }
+    bool res = nvs_set_str_wrapped("Repertoire", strnick, _repertoryIDlist);
+    if (res == ESP_OK) {
+        res = nvs_set_u8_blob_wrapped("Repertoire", strmac, mac, 8);
     }
     return res;
 }
 
-int GetRepertoire(char _repertoryIDlist[maxIDrepertoire][nicknamelenght], uint8_t mac[maxIDrepertoire][8]) {
-    uint16_t value = 0;
-    bool     res   = nvs_get_u16_wrapped("Repertoire", "IDcount", &value);
-    ESP_LOGE(TAG, "read _nbrepertoryID: %d", value);
-    for (int i = 0; i < value; i++) {
-        char strnick[15] = "nickname";
-        char strmac[15]  = "MAC";
-        char nb[15];
-        snprintf(nb, 15, "%d", i);
-        strcat(strnick, nb);
-        strcat(strmac, nb);
-        nvs_get_str_wrapped("Repertoire", strnick, _repertoryIDlist[i], sizeof(_repertoryIDlist[i]));
-        nvs_get_u8_blob_wrapped("Repertoire", strmac, mac[i], 8);
-        ESP_LOGE(TAG, "nickname key: %s", strnick);
-        ESP_LOGE(TAG, "nickname read: %s", _repertoryIDlist[i]);
-        ESP_LOGE(TAG, "MAC key: %s", strmac);
-        for (int y = 0; y < 8; y++) ESP_LOGE(TAG, "MAC: %02x", mac[i][y]);
+bool GetRepertoire(char _repertoryIDlist[nicknamelenght], uint8_t mac[8], uint16_t _ID) {
+    char strnick[15] = "nickname";
+    char strmac[15]  = "MAC";
+    char nb[15];
+    snprintf(nb, 15, "%d", _ID);
+    strcat(strnick, nb);
+    strcat(strmac, nb);
+    bool res = nvs_get_str_wrapped("Repertoire", strnick, _repertoryIDlist, sizeof(_repertoryIDlist));
+    if (res == ESP_OK) {
+        res = nvs_get_u8_blob_wrapped("Repertoire", strmac, mac, 8);
     }
-    return value;
+    if (log) {
+        ESP_LOGE(TAG, "GetRepertoire: ");
+        ESP_LOGE(TAG, "ID: %d", _ID);
+        ESP_LOGE(TAG, "nickname key: %s", strnick);
+        ESP_LOGE(TAG, "nickname read: %s", _repertoryIDlist);
+        ESP_LOGE(TAG, "MAC key: %s", strmac);
+    }
+    for (int y = 0; y < 8; y++) ESP_LOGE(TAG, "MAC: %02x", mac[y]);
+    return res;
 }
 
 void receive_repertoire(void) {
@@ -117,8 +182,8 @@ void receive_repertoire(void) {
 void send_repertoire(void) {
     // first we create a struct with the data, as we would like to receive on the other side
     badge_message_repertoire data;
-    char                     _nickname[nicknamelenght] = "Guru-san";
-    // nvs_get_str_wrapped("owner", "nickname", _nickname, sizeof(_nickname));
+    char                     _nickname[nicknamelenght] = "Error get owner nickname";
+    nvs_get_str_wrapped("owner", "nickname", _nickname, sizeof(_nickname));
 
     strcpy(data.nickname, _nickname);
 
@@ -138,20 +203,15 @@ void send_repertoire(void) {
         ESP_LOGE(TAG, "message sent to: %04x", TargetAddress);
 }
 
-void SendRegularBr(void) {
-    while (1) {
-        send_repertoire();
-        vTaskDelay(pdMS_TO_TICKS(BroadcastInterval));
-    }
-}
-
 void Display_repertoire(
     uint16_t        _nbrepertoryID,
     int             _nbsurroundingID,
-    char            _repertoryIDlist[maxIDrepertoire][nicknamelenght],
-    char            _surroundingIDlist[maxIDrepertoire][nicknamelenght],
-    uint8_t         repertory_mac[maxIDrepertoire][8],
-    uint8_t         surrounding_mac[maxIDrepertoire][8],
+    uint16_t        nb_item_rep,
+    int             nb_item_sur,
+    char            _repertoryIDlist[maxperpage][nicknamelenght],
+    char            _surroundingIDlist[maxIDsurrounding][nicknamelenght],
+    uint8_t         repertory_mac[maxperpage][8],
+    uint8_t         surrounding_mac[maxIDsurrounding][8],
     struct cursor_t cursor,
     int             show_name_or_mac
 ) {
@@ -163,9 +223,9 @@ void Display_repertoire(
 
     int title_o_y = 4;
 
-    int maxperpage = 8;
-    int box_y      = 11;
-    int box_o_y    = 20;
+    int page    = cursor.y / maxperpage;
+    int box_y   = 11;
+    int box_o_y = 20;
 
     int pagefooter_o_x = 21;
 
@@ -173,15 +233,20 @@ void Display_repertoire(
     int text_sur_x    = gfx->height * 3 / 4;
     int text_cursor_x = 0;
 
+    if (log) {
+        ESP_LOGE(TAG, "Display: Page: %d", page);
+        ESP_LOGE(TAG, "Display: Cursor x: %d", cursor.x);
+        ESP_LOGE(TAG, "Display: Cursor y: %d", cursor.y);
+    }
 
     pax_background(gfx, WHITE);
     AddSWtoBuffer("Exit", "", "", "", "");
     pax_insert_png_buf(gfx, b_arrow1_png_start, b_arrow1_png_end - b_arrow1_png_start, 66, 118, 0);
     pax_insert_png_buf(gfx, b_arrow2_png_start, b_arrow2_png_end - b_arrow2_png_start, 127, 118, 0);
-    if (cursor.x == remove && _nbrepertoryID) {
+    if (cursor.x == remove && _nbrepertoryID % maxperpage) {
         text_cursor_x = text_rep_x;
         AddOneTextSWtoBuffer(SWITCH_5, "Remove");
-    } else if (cursor.x == add && _nbsurroundingID) {
+    } else if (cursor.x == add && _nbsurroundingID % maxperpage) {
         text_cursor_x = text_sur_x;
         AddOneTextSWtoBuffer(SWITCH_5, "Add");
     }
@@ -190,14 +255,9 @@ void Display_repertoire(
     } else {
         AddOneTextSWtoBuffer(SWITCH_4, "Name");
     }
-
-
     pax_center_text(gfx, BLACK, font1, fontsizeS * 1.5, gfx->height / 4, title_o_y, "Repertoire");
     pax_center_text(gfx, BLACK, font1, fontsizeS * 1.5, gfx->height * 3 / 4, title_o_y, "In proximity");
-    int page = cursor.y / maxperpage;
-    ESP_LOGE(TAG, "Page: %d", page);
-    ESP_LOGE(TAG, "Cursor x: %d", cursor.x);
-    ESP_LOGE(TAG, "Cursor y: %d", cursor.y);
+
 
     // display repertoire and surrounding name/mac content
     for (int i = 0; i < maxperpage; i++) {
@@ -206,27 +266,28 @@ void Display_repertoire(
         char rightfield[nicknamelenght] = "";
         char buf[10]                    = "";
         if (!show_name_or_mac) {
-            strcpy(leftfield, _repertoryIDlist[i + page * maxperpage]);
-            strcpy(rightfield, _surroundingIDlist[i + page * maxperpage]);
+            strcpy(leftfield, _repertoryIDlist[i]);
+            strcpy(rightfield, _surroundingIDlist[i]);
         } else {
-            for (int i = 0; i < 8; i++) {
-                snprintf(buf, 10, "%02x", repertory_mac[i + page * maxperpage][i]);
+            for (int y = 0; y < 8; y++) {
+                snprintf(buf, 10, "%02x", repertory_mac[i][y]);
                 strcat(leftfield, strcat(buf, ":"));
-                snprintf(buf, 10, "%02x", surrounding_mac[i + page * maxperpage][i]);
+                snprintf(buf, 10, "%02x", surrounding_mac[i][y]);
                 strcat(rightfield, strcat(buf, ":"));
             }
             leftfield[strlen(leftfield) - 1]   = '\0';  // remove last :
             rightfield[strlen(rightfield) - 1] = '\0';  // remove last :
         }
 
-        if (_nbrepertoryID > (i + page * maxperpage)) {
+        if (nb_item_rep > (i)) {
             pax_center_text(gfx, BLACK, font1, fontsizeS, text_rep_x, text_IDs_y, leftfield);
         }
-        if (_nbsurroundingID > (i + page * maxperpage)) {
+        if (nb_item_sur > (i)) {
             pax_center_text(gfx, BLACK, font1, fontsizeS, text_sur_x, text_IDs_y, rightfield);
         }
+
         // display cursor and page number
-        if (cursor.y == (i + page * maxperpage)) {
+        if (cursor.y == (i)) {
             pax_vec1_t dims = {
                 .x = 999,
                 .y = 999,
@@ -246,7 +307,6 @@ void Display_repertoire(
             pax_center_text(gfx, BLACK, font1, fontsizeS, gfx->height / 2, gfx->width - pagefooter_o_x, pagefooter);
         }
     }
-
     bsp_display_flush();
 }
 
@@ -254,56 +314,68 @@ void AddSurroundingRepertoire(char _inboundnick[nicknamelenght], uint8_t _inboun
 }
 
 screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
-    char    repertoryIDlist[maxIDrepertoire][nicknamelenght];
-    char    surroundingIDlist[maxIDrepertoire][nicknamelenght];
-    uint8_t repertory_mac[maxIDrepertoire][8];
-    uint8_t surrounding_mac[maxIDrepertoire][8];
-    for (int i = 0; i < maxIDrepertoire; i++) {
+    char    repertoryIDlist[maxperpage][nicknamelenght];
+    char    surroundingIDlist[maxIDsurrounding][nicknamelenght];
+    uint8_t repertory_mac[maxperpage][8];
+    uint8_t surrounding_mac[maxIDsurrounding][8];
+
+    for (int i = 0; i < maxperpage; i++) {
         strcpy(repertoryIDlist[i], "");
+        for (int y = 0; y < 8; y++) {
+            repertory_mac[i][y] = 0;
+        }
+    }
+    for (int i = 0; i < maxIDsurrounding; i++) {
         strcpy(surroundingIDlist[i], "");
-        for (int y = 0; y < 8; y++) repertory_mac[i][y] = 0;
+        for (int y = 0; y < 8; y++) {
+            surrounding_mac[i][y] = 0;
+        }
     }
     strcpy(surroundingIDlist[0], "Florian");
     strcpy(surroundingIDlist[1], "Dog");
-    // strcpy(surroundingIDlist[2], "Ryan");
+    strcpy(surroundingIDlist[2], "Ryan");
 
-    uint16_t nbrepertoryID    = 0;
-    int      nbsurroundingID  = 2;
-    int      displayflag      = 1;
-    int      show_name_or_mac = 0;
-    int      MSpassed         = 0;
-
-    struct cursor_t cursor = {.x = 0, .y = 0};
-
-    nbrepertoryID = GetRepertoire(repertoryIDlist, repertory_mac);
-    ESP_LOGE(TAG, "nbrepertoryID main loop: %d", nbrepertoryID);
-
-    // insert scan
-    ESP_LOGE(TAG, "MAC 6: %02x", repertory_mac[0][6]);
-    ESP_LOGE(TAG, "MAC 7: %02x", repertory_mac[0][7]);
-
-    uint16_t addresstarget = (repertory_mac[0][6] << 8) | repertory_mac[0][7];
-    ESP_LOGE(TAG, "addresstarget: %04x", addresstarget);
-
-    uint8_t mactest[8];
+    uint16_t        nbrepertoryID    = 0;
+    int             nbsurroundingID  = 0;
+    uint16_t        nb_item_rep      = 0;
+    int             nb_item_sur      = 0;
+    int             page             = 0;
+    int             nb_page          = 0;
+    int             show_name_or_mac = 0;
+    int             displayflag      = 1;
+    int             timer_track      = esp_timer_get_time() / 5000000;
+    struct cursor_t cursor           = {.x = 0, .y = 0, .yabs = 0};
+    uint16_t        addresstarget    = (repertory_mac[0][6] << 8) | repertory_mac[0][7];
+    // LONG ADDRESS
+    uint8_t         mac_owner[8];
     for (int y = 0; y < 8; y++) {
-        esp_read_mac(mactest, ESP_MAC_IEEE802154);
-        ESP_LOGE(TAG, "mac owner: %02x", mactest[y]);
+        esp_read_mac(mac_owner, ESP_MAC_IEEE802154);
     }
+    // SHORT ADDRESS
+    uint16_t short_address_owner = (mac_owner[6] << 8) | mac_owner[7];
+    esp_ieee802154_set_short_address(short_address_owner);
 
-    uint16_t addressowner = (mactest[6] << 8) | mactest[7];
-    ESP_LOGE(TAG, "MAC address owner: %04x", addressowner);
+    nbrepertoryID = GetNBrepertoryID();
 
-
-    esp_ieee802154_set_short_address(addressowner);
-    ESP_LOGE(TAG, "stored owner short address: %04x", esp_ieee802154_get_short_address());
-
+    if (log) {
+        ESP_LOGE(TAG, "nbrepertoryID init: %d", nbrepertoryID);
+        ESP_LOGE(TAG, "MAC 6: %02x", repertory_mac[0][6]);
+        ESP_LOGE(TAG, "MAC 7: %02x", repertory_mac[0][7]);
+        ESP_LOGE(TAG, "addresstarget: %04x", addresstarget);
+        for (int y = 0; y < 8; y++) {
+            ESP_LOGE(TAG, "mac owner: %02x", mac_owner[y]);
+        }
+        ESP_LOGE(TAG, "MAC address owner: %04x", short_address_owner);
+        ESP_LOGE(TAG, "stored owner short address: %04x", esp_ieee802154_get_short_address());
+    }
     // TargetAddress = addresstarget;
 
-    ESP_LOGE(TAG, "message sent to: %04x", TargetAddress);
-
     InitKeyboard(keyboard_event_queue);
-    configure_keyboard_presses(keyboard_event_queue, true, false, false, true, true);
+    configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_2, true);
+    configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, true);
+    configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_4, true);  // debug
+
+    configure_keyboard_presses(keyboard_event_queue, true, true, false, true, true);
 
     // init broadcast receive
     // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
@@ -316,70 +388,146 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
         ESP_LOGI(TAG, "listening");
     badge_comms_message_t message;
 
-    // BaseType_t   xReturned;
-    // TaskHandle_t SendRegularBr_handle = NULL;
-    // if (SendRegularBr_handle == NULL) {
-    //     xReturned = xTaskCreate(SendRegularBr, "SendRegularBr", 1024, NULL, 1, SendRegularBr_handle);
-    // } else
-    //     ESP_LOGI(TAG, "Error");
-
     while (1) {
-        MSpassed += 10;
-        ESP_LOGE(TAG, "MSpassed: %d", MSpassed);
-        if (MSpassed > BroadcastInterval) {
+        if ((esp_timer_get_time() / 1000000) > (timer_track * BroadcastInterval)) {
             send_repertoire();
-            MSpassed = 0;
+            timer_track++;
         }
         event_t event = {0};
         if (displayflag) {
+
+            // update page
+            if (nbrepertoryID - page * maxperpage > 0) {
+                if (nbrepertoryID - page * maxperpage > maxperpage)
+                    nb_item_rep = maxperpage;
+                else
+                    nb_item_rep = nbrepertoryID % maxperpage;
+            }
+
+            if (nbsurroundingID - page * maxperpage > 0) {
+                if (nbsurroundingID - page * maxperpage > maxperpage)
+                    nb_item_sur = maxperpage;
+                else
+                    nb_item_sur = nbsurroundingID % maxperpage;
+            }
+
             if (log) {
+                ESP_LOGE(TAG, "before logic");
+                ESP_LOGE(TAG, "cursor.x: %d", cursor.x);
+                ESP_LOGE(TAG, "cursor.y: %d", cursor.y);
                 ESP_LOGE(TAG, "nbrepertoryID: %d", nbrepertoryID);
                 ESP_LOGE(TAG, "nbsurroundingID: %d", nbsurroundingID);
+                ESP_LOGE(TAG, "nb_item_rep: %d", nb_item_rep);
+                ESP_LOGE(TAG, "nb_item_sur: %d", nb_item_sur);
+                ESP_LOGE(TAG, "page: %d", page);
             }
+            int max_y = nbrepertoryID;
+            if (nbrepertoryID < nbsurroundingID)
+                max_y = nbsurroundingID;
+            int max_page = max_y / maxperpage;
+
             // update cursor
-            // check for x over/underflow/emptycolumn
-            if (nbrepertoryID == 0 || cursor.x < 0) {
+            // check for x over/underflow
+            if (cursor.x < 0) {
                 cursor.x = 1;
+                page     = Decrement(page, max_page);
                 ESP_LOGE(TAG, "underflow x");
             }
-            if (nbsurroundingID == 0 || cursor.x > 1) {
+            if (cursor.x > 1) {
                 cursor.x = 0;
+                page     = Increment(page, max_page);
                 ESP_LOGE(TAG, "overflow x");
             }
-            ESP_LOGE(TAG, "nbsurroundingID: %d", nbsurroundingID);
 
-            // check for y over/underflow/empty row
-            if (cursor.x == 0 && cursor.y > (nbrepertoryID - 1)) {
+            // check for y over/underflow
+            if (cursor.x == 0 && cursor.y > maxperpage) {
                 cursor.y = 0;
+                page     = Increment(page, max_page);
                 ESP_LOGE(TAG, "repertory overflow y");
             }
-            if (cursor.x == 1 && cursor.y > (nbsurroundingID - 1)) {
+            if (cursor.x == 1 && cursor.y > maxperpage) {
                 cursor.y = 0;
+                page     = Increment(page, max_page);
                 ESP_LOGE(TAG, "surroundingID overflow y");
             }
             if (cursor.x == 0 && cursor.y < 0) {
-                cursor.y = nbrepertoryID - 1;
+                cursor.y = maxperpage - 1;
+                page     = Decrement(page, max_page);
                 ESP_LOGE(TAG, "repertory underflow y");
             }
             if (cursor.x == 1 && cursor.y < 0) {
-                cursor.y = nbsurroundingID - 1;
+                cursor.y = maxperpage - 1;
+                page     = Decrement(page, max_page);
                 ESP_LOGE(TAG, "surroundingID underflow y");
             }
 
+            cursor.yabs = cursor.y + page * maxperpage;
+
+            if (log) {
+                ESP_LOGE(TAG, "after logic");
+                ESP_LOGE(TAG, "cursor.x: %d", cursor.x);
+                ESP_LOGE(TAG, "cursor.y: %d", cursor.y);
+                ESP_LOGE(TAG, "nbrepertoryID: %d", nbrepertoryID);
+                ESP_LOGE(TAG, "nbsurroundingID: %d", nbsurroundingID);
+                ESP_LOGE(TAG, "nb_item_rep: %d", nb_item_rep);
+                ESP_LOGE(TAG, "nb_item_sur: %d", nb_item_sur);
+                ESP_LOGE(TAG, "page: %d", page);
+                ESP_LOGE(TAG, "max_page: %d", max_page);
+                ESP_LOGE(TAG, "cursor.yabs: %d", cursor.yabs);
+            }
+
+            for (int i = page * maxperpage; i < nb_item_rep; i++)
+                GetRepertoire(repertoryIDlist[i], repertory_mac[i], i);
+
+
+            if (log) {
+                for (int i = page * maxperpage; i < nb_item_rep; i++) {
+                    ESP_LOGE(TAG, "Display after get: repertory name: %s", repertoryIDlist[i]);
+                    ESP_LOGE(
+                        TAG,
+                        "Display after get: repertory MAC: %d:%d:%d:%d:%d:%d:%d:%d",
+                        repertory_mac[i][0],
+                        repertory_mac[i][1],
+                        repertory_mac[i][2],
+                        repertory_mac[i][3],
+                        repertory_mac[i][4],
+                        repertory_mac[i][5],
+                        repertory_mac[i][6],
+                        repertory_mac[i][7]
+                    );
+                }
+                for (int i = page * maxperpage; i < nb_item_sur; i++) {
+                    ESP_LOGE(TAG, "Display after get: surrounding name: %s", surroundingIDlist[i]);
+                    ESP_LOGE(
+                        TAG,
+                        "Display after get: surrounding MAC: %d:%d:%d:%d:%d:%d:%d:%d",
+                        surrounding_mac[i][0],
+                        surrounding_mac[i][1],
+                        surrounding_mac[i][2],
+                        surrounding_mac[i][3],
+                        surrounding_mac[i][4],
+                        surrounding_mac[i][5],
+                        surrounding_mac[i][6],
+                        surrounding_mac[i][7]
+                    );
+                }
+            }
+
+
             // disable x navigation if nothing in range
-            if (nbrepertoryID > 0 && nbsurroundingID > 0)
-                configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_2, true);
-            else
-                configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_2, false);
+            // if (nbrepertoryID > 0 && nbsurroundingID > 0)
+            //     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_2, true);
+            // else
+            //     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_2, false);
 
             // disable y navigation if nothing in range
-            if ((cursor.x == 0 && nbrepertoryID > 1) || (cursor.x == 1 && nbsurroundingID > 1))
-                configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, true);
-            else
-                configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, false);
+            // if ((cursor.x == 0 && nbrepertoryID > 1) || (cursor.x == 1 && nbsurroundingID > 1))
+            //     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, true);
+            // else
+            //     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, false);
 
             // disable add / remove
-            if ((cursor.x == 0 && nbrepertoryID == 0) || (cursor.x == 1 && nbsurroundingID == 0))
+            if ((cursor.x == 0 && nb_item_rep == 0) || (cursor.x == 1 && nb_item_sur == 0))
                 configure_keyboard_press(keyboard_event_queue, SWITCH_5, false);
             else
                 configure_keyboard_press(keyboard_event_queue, SWITCH_5, true);
@@ -387,6 +535,8 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
             Display_repertoire(
                 nbrepertoryID,
                 nbsurroundingID,
+                nb_item_rep,
+                nb_item_sur,
                 repertoryIDlist,
                 surroundingIDlist,
                 repertory_mac,
@@ -416,31 +566,44 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
 
             // check if already know the inbound message
 
-            int flag_already_exist    = 0;
-            int flag_line_repertory   = 0;
-            int flag_line_surrounding = 0;
-            for (int i = 0; i < maxIDrepertoire; i++) {
+            int     flag_already_exist    = 0;
+            int     flag_line_repertory   = 0;
+            int     flag_line_surrounding = 0;
+            char    stored_nick[nicknamelenght];
+            uint8_t stored_mac[8];
+
+            for (int i = 0; i < nbrepertoryID; i++) {
+                GetRepertoire(stored_nick, stored_mac, i);
                 for (int y = 0; y < 8; y++) {
                     if (repertory_mac[i][y] == _inbound_mac[y])
                         flag_line_repertory++;
+                }
+                // if known, update nickname in case it changed
+                if (flag_line_repertory == 8) {
+                    flag_already_exist = 1;
+                    if (strcmp(stored_nick, inboundnick) != 0) {
+                        StoreRepertoire(inboundnick, _inbound_mac, i);
+                        if (log)
+                            ESP_LOGE(TAG, "replaced nickanme %s with %s", stored_nick, inboundnick);
+                    }
+                }
+                flag_line_repertory = 0;
+            }
+
+            for (int i = 0; i < nbsurroundingID; i++) {
+                for (int y = 0; y < 8; y++) {
                     if (surrounding_mac[i][y] == _inbound_mac[y])
                         flag_line_surrounding++;
                 }
-                if (flag_line_repertory == 8) {
-                    flag_already_exist = 1;
-                    strcpy(repertoryIDlist[i], inboundnick);
-                }
-
                 if (flag_line_surrounding == 8) {
                     flag_already_exist = 1;
                     strcpy(surroundingIDlist[i], inboundnick);
                 }
-                flag_line_repertory   = 0;
                 flag_line_surrounding = 0;
             }
 
             // add incoming message to surrounding
-            if ((!flag_already_exist) && (nbsurroundingID < maxIDrepertoire)) {
+            if ((!flag_already_exist) && (nbsurroundingID < maxIDsurrounding)) {
                 strcpy(surroundingIDlist[nbsurroundingID], inboundnick);
                 for (int i = 0; i < 8; i++) surrounding_mac[nbsurroundingID][i] = _inbound_mac[i];
                 nbsurroundingID++;
@@ -455,16 +618,53 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
                         case SWITCH_1:
-                            StoreRepertoire(repertoryIDlist, repertory_mac, nbrepertoryID);
+                            // StoreRepertoire(repertoryIDlist, repertory_mac, nbrepertoryID);
                             configure_keyboard_rotate_disable(keyboard_event_queue);
+                            esp_err_t err = badge_comms_remove_listener(repertoire_queue);
+                            ESP_LOGI(TAG, "unsubscription result: %s", esp_err_to_name(err));
                             vTaskDelay(pdMS_TO_TICKS(100));
                             ESP_LOGI(TAG, "Exit");
                             return screen_home;
+                            break;
+                        case SWITCH_2:
+                            SettNBrepertoryID(0);
+                            nbrepertoryID = 0;
+                            for (int i = 0; i < 10; i++) {
+                                char    name[32] = "";
+                                uint8_t maca[8];
+                                for (int y = 0; y < 8; y++) maca[y] = 0;
+
+                                StoreRepertoire(name, maca, i);
+                            }
                             break;
                         case SWITCH_L2: cursor.x--; break;
                         case SWITCH_R2: cursor.x++; break;
                         case SWITCH_L3: cursor.y++; break;
                         case SWITCH_R3: cursor.y--; break;
+                        case SWITCH_L4:
+                            char    nameget[32] = "";
+                            uint8_t macget[8]   = {0, 1, 0, 1, 0, 1, 0, 1};
+                            if (GetRepertoire(nameget, macget, 0) != ESP_OK)
+                                ESP_LOGE(TAG, "NOOOOOOOOOOOT OOOOOOOOOOOK");
+                            ESP_LOGE(TAG, "nameget: %s", nameget);   // debug
+                            ESP_LOGE(TAG, "macget: %d", macget[0]);  // debug
+                            ESP_LOGE(TAG, "macget: %d", macget[1]);  // debug
+                            ESP_LOGE(TAG, "macget: %d", macget[2]);  // debug
+                            ESP_LOGE(TAG, "macget: %d", macget[3]);  // debug
+
+                            break;
+                        case SWITCH_R4:
+                            char    nameset[32] = "Banana";
+                            uint8_t macset[8]   = {24, 14, 23, 43, 102, 45, 54, 54};
+                            if (StoreRepertoire(nameset, macset, 0) != ESP_OK)
+                                ESP_LOGE(TAG, "NOOOOOOOOOOOT OOOOOOOOOOOK");
+
+                            ESP_LOGE(TAG, "nameset: %s", nameset);   // debug
+                            ESP_LOGE(TAG, "macset: %d", macset[0]);  // debug
+                            ESP_LOGE(TAG, "macset: %d", macset[1]);  // debug
+                            ESP_LOGE(TAG, "macset: %d", macset[2]);  // debug
+                            ESP_LOGE(TAG, "macset: %d", macset[3]);  // debug
+                            break;
                         case SWITCH_3: break;
                         case SWITCH_4:
                             if (!show_name_or_mac)
@@ -476,28 +676,39 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
                             switch (cursor.x) {
                                 case remove:
                                     char promt[128] = "Are you sure you want to remove ";
-                                    strcat(promt, repertoryIDlist[cursor.y]);
+                                    strcat(promt, repertoryIDlist[cursor.yabs]);
                                     strcat(promt, "?");
                                     if (Screen_Confirmation(promt, application_event_queue, keyboard_event_queue) &&
                                         nbrepertoryID) {
-                                        strcpy(repertoryIDlist[cursor.y], "");
+                                        // write loop that moves all the stored values debug
+                                        // strcpy(repertoryIDlist[cursor.y], "");
                                         nbrepertoryID--;
-                                        for (int i = cursor.y; i < nbrepertoryID; i++) {
-                                            strcpy(repertoryIDlist[i], repertoryIDlist[i + 1]);
-                                            for (int y = 0; y < 8; y++) repertory_mac[i][y] = repertory_mac[i + 1][y];
-                                        }
-                                        if (cursor.y)
-                                            cursor.y--;
+                                        // for (int i = cursor.y; i < nbrepertoryID; i++) {
+                                        //     strcpy(repertoryIDlist[i], repertoryIDlist[i + 1]);
+                                        //     for (int y = 0; y < 8; y++) repertory_mac[i][y] = repertory_mac[i +
+                                        //     1][y];
+                                        // }
+                                        cursor.y--;
                                     }
 
                                     break;
                                 case add:
-                                    strcpy(repertoryIDlist[nbrepertoryID], surroundingIDlist[cursor.y]);
-                                    for (int i = 0; i < 8; i++)
-                                        repertory_mac[nbrepertoryID][i] = surrounding_mac[cursor.y][i];
-                                    cursor.y = nbrepertoryID;
-                                    cursor.x = 0;
+                                    StoreRepertoire(
+                                        surroundingIDlist[cursor.yabs],
+                                        surrounding_mac[cursor.yabs],
+                                        nbrepertoryID
+                                    );
+                                    for (int i = 0; i < 8; i++) surrounding_mac[cursor.y + page][i] = 0;
+                                    strcpy(surroundingIDlist[cursor.y + page], "");
                                     nbrepertoryID++;
+                                    SettNBrepertoryID(nbrepertoryID);
+
+                                    // strcpy(repertoryIDlist[nbrepertoryID], surroundingIDlist[cursor.y]);
+                                    // for (int i = 0; i < 8; i++)
+                                    //     repertory_mac[nbrepertoryID][i] = surrounding_mac[cursor.y][i];
+                                    cursor.y++;
+                                    // cursor.x = 0;
+
                                     nbsurroundingID--;
                                     break;
                             }
