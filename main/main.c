@@ -23,6 +23,7 @@
 #include "nvs_flash.h"
 #include "pax_codecs.h"
 #include "pax_gfx.h"
+#include "printer.h"
 #include "resources.h"
 #include "riscv/rv_utils.h"
 #include "screen_billboard.h"
@@ -124,8 +125,17 @@ void app_main(void) {
         return;
     }
 
+    // Printer
+    if (printer_initialize()) {
+        char teststring[] = "Hello from ESP32C6\r\n";
+        res               = printer_print(teststring);
+        if (res != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to print");
+        }
+    }
+
     // Main application
-    screen_t current_screen = screen_hangman;
+    screen_t current_screen = screen_home;
     while (1) {
         switch (current_screen) {
             case screen_mascots:
