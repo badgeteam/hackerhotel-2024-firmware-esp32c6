@@ -90,7 +90,8 @@
         "ranges": "c",
         "span": "c",
         "stacktrace": "c",
-        "valarray": "c"
+        "valarray": "c",
+        "esp_ieee802154.h": "c"
     },
     "editor.formatOnType": false,
     "editor.formatOnSave": true,

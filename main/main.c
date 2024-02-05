@@ -8,6 +8,7 @@
 #include "esp_err.h"
 #include "esp_ieee802154.h"
 #include "esp_log.h"
+#include "esp_mac.h"
 #include "esp_ota_ops.h"
 #include "esp_sleep.h"
 #include "esp_system.h"
@@ -52,6 +53,7 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+
 
 static char const * TAG = "main";
 
@@ -125,8 +127,27 @@ void app_main(void) {
         return;
     }
 
+    // LONG ADDRESS OWNER
+    uint8_t mac_owner[8];
+    for (int y = 0; y < 8; y++) {
+        esp_read_mac(mac_owner, ESP_MAC_IEEE802154);
+    }
+    // SET SHORT ADDRESS OWNER
+    uint16_t short_address_owner = (mac_owner[6] << 8) | mac_owner[7];
+    if (esp_ieee802154_get_short_address() != short_address_owner) {
+        esp_ieee802154_set_short_address(short_address_owner);
+    }
+
+    if (log) {
+        for (int y = 0; y < 8; y++) {
+            ESP_LOGE(TAG, "MAC address owner: %02x", mac_owner[y]);
+        }
+        ESP_LOGE(TAG, "short address owner: %04x", short_address_owner);
+        ESP_LOGE(TAG, "stored owner short address: %04x", esp_ieee802154_get_short_address());
+    }
+
     // Main application
-    screen_t current_screen = screen_pointclick;
+    screen_t current_screen = screen_battleship;
     while (1) {
         switch (current_screen) {
             case screen_mascots:
@@ -166,7 +187,7 @@ void app_main(void) {
                 }
             case screen_repertoire:
                 {
-                    current_screen = screen_repertoire_entry(application_event_queue, keyboard_event_queue);
+                    current_screen = screen_repertoire_entry(application_event_queue, keyboard_event_queue, 0);
                     break;
                 }
             case screen_template:

@@ -12,6 +12,7 @@
 #include "pax_codecs.h"
 #include "pax_gfx.h"
 #include "screen_home.h"
+#include "screen_repertoire.h"
 #include "screens.h"
 #include "textedit.h"
 #include <inttypes.h>
@@ -675,7 +676,9 @@ screen_t screen_battleship_splash(QueueHandle_t application_event_queue, QueueHa
                         case SWITCH_2: return screen_BS_placeships; break;
                         case SWITCH_3: break;
                         case SWITCH_4: bsp_set_addressable_led(0xFF0000); break;  // replay, to implement
-                        case SWITCH_5: break;                                     // online, to implement
+                        case SWITCH_5:
+                            return screen_repertoire_entry(application_event_queue, keyboard_event_queue, 1);
+                            break;  // online, to implement
                         default: break;
                     }
                     break;
