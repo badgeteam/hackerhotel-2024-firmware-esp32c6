@@ -24,6 +24,7 @@
 
 extern int const telegraph_X[20];
 extern int const telegraph_Y[20];
+extern event_t   kbsettings;
 
 void DisplayError(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, char const * errorstr);
 void Addborder1toBuffer(void);
@@ -61,7 +62,8 @@ void       DisplayWallofText(
 void Justify_right_text(
     pax_buf_t* buf, pax_col_t color, pax_font_t const * font, float font_size, float x, float y, char const * text
 );
-int  Screen_Confirmation(char _prompt[128], QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
+int Screen_Confirmation(char _prompt[128], QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
+int WaitingforOpponent(char const * _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
 void AddSwitchesBoxtoBuffer(int _switch);
 void AddOneTextSWtoBuffer(int _SW, char const * SWstr);
 void DisplayTelegraph(int _colour, int _position);

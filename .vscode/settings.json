@@ -91,7 +91,8 @@
         "span": "c",
         "stacktrace": "c",
         "valarray": "c",
-        "esp_ieee802154.h": "c"
+        "esp_ieee802154.h": "c",
+        "screen_home.h": "c"
     },
     "editor.formatOnType": false,
     "editor.formatOnSave": true,

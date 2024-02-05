@@ -1,18 +1,22 @@
 #include "screen_battleship.h"
 #include "application.h"
+#include "badge_comms.h"
 #include "badge_messages.h"
 #include "bsp.h"
 #include "esp_err.h"
 #include "esp_log.h"
+#include "esp_timer.h"
 #include "events.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/portmacro.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
 #include "nvs.h"
+#include "nvs_flash.h"
 #include "pax_codecs.h"
 #include "pax_gfx.h"
 #include "screen_home.h"
+#include "screen_pointclick.h"
 #include "screen_repertoire.h"
 #include "screens.h"
 #include "textedit.h"
@@ -20,6 +24,7 @@
 #include <stdio.h>
 #include <esp_random.h>
 #include <string.h>
+
 
 extern uint8_t const caronl_png_start[] asm("_binary_caronl_png_start");
 extern uint8_t const caronl_png_end[] asm("_binary_caronl_png_end");
@@ -53,29 +58,94 @@ extern uint8_t const carond_png_end[] asm("_binary_carond_png_end");
 static char const * TAG                = "testscreen";
 static char const   forfeitprompt[128] = "Do you want to exit and declare forfeit";
 
-
-screen_t screen_battleship_splash(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
+screen_t screen_battleship_splash(
+    QueueHandle_t application_event_queue,
+    QueueHandle_t keyboard_event_queue,
+    uint8_t       player_data[BSpayload],
+    uint8_t       ennemy_data[BSpayload]
+);
 screen_t screen_battleship_placeships(
     QueueHandle_t application_event_queue,
     QueueHandle_t keyboard_event_queue,
-    int           playerboard[20],
-    int           _position[20],
-    int           playership[6]
+    uint8_t       playerboard[20],
+    uint8_t       _position[20],
+    uint8_t       playership[6]
 );
 screen_t screen_battleship_battle(
     QueueHandle_t application_event_queue,
     QueueHandle_t keyboard_event_queue,
-    int           playerboard[20],
-    int           ennemyboard[20],
-    int           _position[20],
+    uint8_t       playerboard[20],
+    uint8_t       ennemyboard[20],
+    uint8_t       _position[20],
     int*          victoryflag,
-    int           playership[6],
-    int           ennemyship[6],
-    int           bodge
+    uint8_t       playership[6],
+    uint8_t       ennemyship[6],
+    uint8_t       bodge
 );
 screen_t screen_battleship_victory(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int* victoryflag
 );
+
+void receive_battleship(void) {
+    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
+    QueueHandle_t BS_queue = badge_comms_add_listener(MESSAGE_TYPE_BATTLESHIP, sizeof(badge_message_battleship));
+    // check if an error occurred (check logs for the reason)
+    if (BS_queue == NULL) {
+        ESP_LOGE(TAG, "Failed to add listener");
+        return;
+    }
+
+    uint32_t i = 0;
+
+    while (true) {
+        // variable for the queue to store the message in
+        ESP_LOGI(TAG, "listening");
+        badge_comms_message_t message;
+        xQueueReceive(BS_queue, &message, portMAX_DELAY);
+
+        // typecast the message data to the expected message type
+        badge_message_battleship* ts = (badge_message_battleship*)message.data;
+
+
+        // show we got a message, and its contents
+        for (int i = 0; i < BSpayload; i++) ESP_LOGI(TAG, "dataBS: %d is %d", i, ts->dataBS[i]);
+        bsp_set_addressable_led(LED_PURPLE);
+        vTaskDelay(pdMS_TO_TICKS(100));
+        bsp_set_addressable_led(LED_OFF);
+        // receive 3 timestamps
+        i++;
+        if (i >= 3) {
+
+            // to clean up a listener, call the remove listener
+            // this free's the queue from heap
+            esp_err_t err_ = badge_comms_remove_listener(BS_queue);
+
+            // show the result of the listener removal
+            ESP_LOGI(TAG, "unsubscription result: %s", esp_err_to_name(err_));
+            return;
+        }
+    }
+}
+
+void send_battleship(uint8_t player_data[BSpayload]) {
+    // first we create a struct with the data, as we would like to receive on the other side
+    badge_message_battleship data;
+    // uint8_t                  _dataBS[BSpayload];
+    for (int i = 0; i < BSpayload; i++) data.dataBS[i] = player_data[i];
+
+    // then we wrap the data in something to send over the comms bus
+    badge_comms_message_t message = {0};
+    message.message_type          = MESSAGE_TYPE_BATTLESHIP;
+    message.data_len_to_send      = sizeof(data);
+    memcpy(message.data, &data, message.data_len_to_send);
+
+    // send the message over the comms bus
+    badge_comms_send_message(&message);
+    vTaskDelay(pdMS_TO_TICKS(100));  // SUPER DUPER IMPORTANT, OTHERWISE THE LEDS MESS WITH THE MESSAGE
+    bsp_set_addressable_led(LED_GREEN);
+    vTaskDelay(pdMS_TO_TICKS(100));
+    bsp_set_addressable_led(LED_OFF);
+}
 
 uint8_t PostoCha(uint8_t _nb) {
     if (_nb > 1)
@@ -162,19 +232,28 @@ void AddShiptoBuffer(int _shiplenght, int _shiporientation, int _x, int _y) {
 }
 
 void Display_battleship_placeships(
-    int playerboard[20], int _shipplaced, int _flagstart, int _position[20], int playership[6]
+    uint8_t playerboard[20], int _shipplaced, int _flagstart, uint8_t _position[20], uint8_t playership[6]
 );
 void Display_battleship_battle(
-    int  playerboard[20],
-    int  ennemyboard[20],
-    char _nickname[nicknamelenght],
-    char _ennemyname[nicknamelenght],
-    int  _turn,
-    int  _position[20],
-    int  playership[6],
-    int  ennemyship[6]
+    uint8_t playerboard[20],
+    uint8_t ennemyboard[20],
+    char    _nickname[nicknamelenght],
+    char    _ennemyname[nicknamelenght],
+    int     _turn,
+    uint8_t _position[20],
+    uint8_t playership[6],
+    uint8_t ennemyship[6]
 );
-void debugboardstatus(int board[20]) {
+void DebugData(uint8_t _data[BSpayload]) {
+    ESP_LOGE(TAG, "BS_A_CK: %d", _data[0]);
+    ESP_LOGE(TAG, "BS_invite: %d", _data[1]);
+    ESP_LOGE(TAG, " BS_starter: %d", _data[2]);
+    ESP_LOGE(TAG, "BS_shotlocation : %d", _data[9]);
+    ESP_LOGE(TAG, "BS_abort : %d", _data[10]);
+    for (int i = BS_shipboard_start; i <= BS_shipboard_end; i++) ESP_LOGE(TAG, "BS_shipboard: %d", _data[i]);
+}
+
+void debugboardstatus(uint8_t board[20]) {
     ESP_LOGE(TAG, "      %d", board[0]);
     ESP_LOGE(TAG, "    %d - %d", board[1], board[2]);
     ESP_LOGE(TAG, "  %d - %d - %d", board[3], board[4], board[5]);
@@ -184,13 +263,13 @@ void debugboardstatus(int board[20]) {
     ESP_LOGE(TAG, "    %d - %d", board[17], board[18]);
     ESP_LOGE(TAG, "      %d", board[19]);
 }
-void debugshipstatus(int ships[6]) {
+void debugshipstatus(uint8_t ships[6]) {
     ESP_LOGE(TAG, "Ship 1: %d", ships[0]);
     ESP_LOGE(TAG, "Ship 2: %d - %d", ships[1], ships[2]);
     ESP_LOGE(TAG, "Ship 3: %d - %d - %d", ships[3], ships[4], ships[5]);
 }
 
-int CalculateMidPositionLongShip(int _ships[6]) {
+int CalculateMidPositionLongShip(uint8_t _ships[6]) {
     if (log)
         ESP_LOGE(TAG, "Enter CalculateMidPositionLongShip");
     int validlines[24][4] = {{0, 1, 3, 6},     {2, 4, 7, -1},    {5, 8, -1, -1},   {-1, -1, -1, -1},  //
@@ -226,7 +305,7 @@ int CalculateMidPositionLongShip(int _ships[6]) {
     return -1;
 }
 
-int CalculateShipOrientation(int _ships[6], int _shiplenght) {
+int CalculateShipOrientation(uint8_t _ships[6], int _shiplenght) {
     int validlines[24][4] = {{0, 1, 3, 6},     {2, 4, 7, -1},    {5, 8, -1, -1},   {-1, -1, -1, -1},  //
                              {0, 2, 5, 9},     {1, 4, 8, -1},    {3, 7, -1, -1},   {-1, -1, -1, -1},  //
                              {-1, -1, -1, -1}, {1, 2, -1, -1},   {3, 4, 5, -1},    {6, 7, 8, 9},      //
@@ -364,7 +443,7 @@ int CalculateShipOrientation(int _ships[6], int _shiplenght) {
 // either return the possible blocks for the front of the ship, or the back
 // _FB for which part of the boat to place, if front (first part) _FB = 1, back is 0
 // _blockfrontship show the block off the front of the ship, only relevant if _FB = 0
-int CheckforShipPlacement(int _ships[6], int _shipplaced, int _position[20]) {
+int CheckforShipPlacement(uint8_t _ships[6], int _shipplaced, uint8_t _position[20]) {
 
     for (int i = 0; i < 20; i++) _position[i] = water;                                                // reset position
     int validlines[24][4] = {{0, 1, 3, 6},     {2, 4, 7, -1},    {5, 8, -1, -1},   {-1, -1, -1, -1},  //
@@ -488,7 +567,7 @@ int CheckforShipPlacement(int _ships[6], int _shipplaced, int _position[20]) {
     return -1;
 }
 
-void AIplaceShips(int ennemyboard[20], int _position[20], int ennemyship[6]) {
+void AIplaceShips(uint8_t ennemyboard[20], uint8_t _position[20], uint8_t ennemyship[6]) {
     ennemyship[0] = esp_random() % 20;
     int attemptblock;
     CheckforShipPlacement(ennemyship, small_ship, _position);
@@ -515,7 +594,9 @@ void AIplaceShips(int ennemyboard[20], int _position[20], int ennemyship[6]) {
     debugshipstatus(ennemyship);
 }
 
-void CheckforDestroyedShips(int playerboard[20], int ennemyboard[20], int playership[6], int ennemyship[6]) {
+void CheckforDestroyedShips(
+    uint8_t playerboard[20], uint8_t ennemyboard[20], uint8_t playership[6], uint8_t ennemyship[6]
+) {
     if (playerboard[playership[0]] == boathit)
         playerboard[playership[0]] = boatdestroyed;
     if (playerboard[playership[1]] == boathit && playerboard[playership[2]] == boathit) {
@@ -543,7 +624,7 @@ void CheckforDestroyedShips(int playerboard[20], int ennemyboard[20], int player
     }
 }
 
-int CheckforVictory(int playerboard[20], int ennemyboard[20]) {
+int CheckforVictory(uint8_t playerboard[20], uint8_t ennemyboard[20]) {
     // check for player victory
     int _victoryflag = 1;
     for (int i = 0; i < 20; i++)
@@ -611,13 +692,34 @@ void AddTelegraphBlockStatustoBuffer(int _offset_x, int _block, int _status) {
 }
 
 screen_t screen_battleship_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
-    int playerboard[20];
-    int ennemyboard[20];
+    uint8_t playerboard[20];
+    uint8_t ennemyboard[20];
 
-    int playership[6];
-    int ennemyship[6];
+    uint8_t playership[6];
+    uint8_t ennemyship[6];
 
-    int _position[20];
+    uint8_t _position[20];
+    uint8_t player_data[BSpayload];
+    uint8_t ennemy_data[BSpayload];
+
+    for (int i = 0; i < BSpayload; i++) {
+        player_data[i] = -1;
+        ennemy_data[i] = -1;
+    }
+    for (int i = 0; i < 20; i++) {
+        playerboard[i] = 0;
+        ennemyboard[i] = 0;
+    }
+
+    for (int i = 0; i < 6; i++) {
+        playership[i] = -1;
+        ennemyship[i] = -1;
+    }
+
+    // set the starter, can be overridden if a player oppenent is the inviter
+    player_data[BS_starter] = esp_random() % 2;
+    player_data[BS_abort]   = 0;
+
     int victoryflag;
 
     screen_t current_screen_BS = screen_BS_splash;
@@ -625,17 +727,13 @@ screen_t screen_battleship_entry(QueueHandle_t application_event_queue, QueueHan
         switch (current_screen_BS) {
             case screen_BS_splash:
                 {
-                    for (int i = 0; i < 20; i++) {
-                        playerboard[i] = 0;
-                        ennemyboard[i] = 0;
-                    }
-
-                    for (int i = 0; i < 6; i++) {
-                        playership[i] = -1;
-                        ennemyship[i] = -1;
-                    }
                     victoryflag       = playing;
-                    current_screen_BS = screen_battleship_splash(application_event_queue, keyboard_event_queue);
+                    current_screen_BS = screen_battleship_splash(
+                        application_event_queue,
+                        keyboard_event_queue,
+                        player_data,
+                        ennemy_data
+                    );
                     break;
                 }
             case screen_BS_placeships:
@@ -679,9 +777,14 @@ screen_t screen_battleship_entry(QueueHandle_t application_event_queue, QueueHan
     }
 }
 
-screen_t screen_battleship_splash(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+screen_t screen_battleship_splash(
+    QueueHandle_t application_event_queue,
+    QueueHandle_t keyboard_event_queue,
+    uint8_t       player_data[BSpayload],
+    uint8_t       ennemy_data[BSpayload]
+) {
     InitKeyboard(keyboard_event_queue);
-    configure_keyboard_presses(keyboard_event_queue, true, true, false, true, true);
+    configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
 
     pax_font_t const * font = pax_font_sky;
     pax_buf_t*         gfx  = bsp_get_gfx_buffer();
@@ -694,20 +797,66 @@ screen_t screen_battleship_splash(QueueHandle_t application_event_queue, QueueHa
     AddOneTextSWtoBuffer(SWITCH_4, "Replay");
     AddOneTextSWtoBuffer(SWITCH_5, "Online");
     bsp_display_flush();
+
+    int           timer_track = esp_timer_get_time() / 5000000;
+    bool          sendflag    = false;
+    bool          listenflag  = true;
+    // init radio
+    QueueHandle_t BS_queue    = badge_comms_add_listener(MESSAGE_TYPE_BATTLESHIP, sizeof(badge_message_battleship));
+    if (BS_queue == NULL) {
+        ESP_LOGE(TAG, "Failed to add listener");
+    } else
+        ESP_LOGI(TAG, "listening");
+    badge_comms_message_t message;
+
     while (1) {
+        if ((esp_timer_get_time() / 1000000) > (timer_track * BroadcastInterval / 5)) {
+            if (sendflag)
+                send_battleship(player_data);
+            bsp_set_addressable_led(LED_YELLOW);
+            timer_track++;
+        }
         event_t event = {0};
-        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+        if (listenflag)
+            if (xQueueReceive(BS_queue, &message, pdMS_TO_TICKS(10)) == pdTRUE) {
+                ESP_LOGI(TAG, "listening");
+                badge_comms_message_t message;
+                xQueueReceive(BS_queue, &message, portMAX_DELAY);
+                badge_message_battleship* ts = (badge_message_battleship*)message.data;
+
+                for (int i = 0; i < BSpayload; i++) {
+                    ennemy_data[i] = ts->dataBS[i];
+                    if (log)
+                        ESP_LOGI(TAG, "dataBS: %d is %d", i, ts->dataBS[i]);
+                }
+                bsp_set_addressable_led(LED_PURPLE);
+                vTaskDelay(pdMS_TO_TICKS(100));
+                bsp_set_addressable_led(LED_OFF);
+                // DisplayBillboard(1, ts->nickname, ts->payload);
+            }
+        if (xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE) {
             switch (event.type) {
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
-                        case SWITCH_1: return screen_home; break;
-                        case SWITCH_2: return screen_BS_placeships; break;
-                        case SWITCH_3: break;
-                        case SWITCH_4: bsp_set_addressable_led(0xFF0000); break;  // replay, to implement
-                        case SWITCH_5:
-                            return screen_repertoire_entry(application_event_queue, keyboard_event_queue, 1);
-                            break;  // online, to implement
+                        case SWITCH_1:  // exit
+                            badge_comms_remove_listener(BS_queue);
+                            return screen_home;
+                            break;
+                        case SWITCH_2:  // offline
+                            badge_comms_remove_listener(BS_queue);
+                            return screen_BS_placeships;
+                            break;
+                        case SWITCH_3: DebugData(ennemy_data); break;
+                        case SWITCH_4: DebugData(player_data); break;  // replay, to implement
+                        case SWITCH_5:                                 // online
+                            badge_comms_remove_listener(BS_queue);
+                            screen_repertoire_entry(application_event_queue, keyboard_event_queue, 1);
+                            sendflag               = true;
+                            listenflag             = false;
+                            player_data[BS_invite] = 1;
+                            WaitingforOpponent("Waiting for reply", application_event_queue, keyboard_event_queue);
+                            break;
                         default: break;
                     }
                     break;
@@ -720,9 +869,9 @@ screen_t screen_battleship_splash(QueueHandle_t application_event_queue, QueueHa
 screen_t screen_battleship_placeships(
     QueueHandle_t application_event_queue,
     QueueHandle_t keyboard_event_queue,
-    int           playerboard[20],
-    int           _position[20],
-    int           playership[6]
+    uint8_t       playerboard[20],
+    uint8_t       _position[20],
+    uint8_t       playership[6]
 ) {
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, false, false, false, false);
@@ -810,7 +959,7 @@ screen_t screen_battleship_placeships(
 }
 
 void Display_battleship_placeships(
-    int playerboard[20], int _shipplaced, int _flagstart, int _position[20], int playership[6]
+    uint8_t playerboard[20], int _shipplaced, int _flagstart, uint8_t _position[20], uint8_t playership[6]
 ) {
     int telegraph_x      = 100;
     int text_x           = 220;
@@ -926,13 +1075,13 @@ void Display_battleship_placeships(
 screen_t screen_battleship_battle(
     QueueHandle_t application_event_queue,
     QueueHandle_t keyboard_event_queue,
-    int           playerboard[20],
-    int           ennemyboard[20],
-    int           _position[20],
+    uint8_t       playerboard[20],
+    uint8_t       ennemyboard[20],
+    uint8_t       _position[20],
     int*          victoryflag,
-    int           playership[6],
-    int           ennemyship[6],
-    int           bodge
+    uint8_t       playership[6],
+    uint8_t       ennemyship[6],
+    uint8_t       bodge
 ) {
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, false, false, false, false);
@@ -1043,14 +1192,14 @@ screen_t screen_battleship_battle(
 }
 
 void Display_battleship_battle(
-    int  playerboard[20],
-    int  ennemyboard[20],
-    char _nickname[nicknamelenght],
-    char _ennemyname[nicknamelenght],
-    int  _turn,
-    int  _position[20],
-    int  playership[6],
-    int  ennemyship[6]
+    uint8_t playerboard[20],
+    uint8_t ennemyboard[20],
+    char    _nickname[nicknamelenght],
+    char    _ennemyname[nicknamelenght],
+    int     _turn,
+    uint8_t _position[20],
+    uint8_t playership[6],
+    uint8_t ennemyship[6]
 ) {
     pax_font_t const * font = pax_font_sky;
     pax_buf_t*         gfx  = bsp_get_gfx_buffer();

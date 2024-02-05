@@ -5,6 +5,7 @@
 
 #define nicknamelenght 32
 #define messagelenght  67
+#define BSpayload      25
 
 // please no more userdata than this, else we might not have enough buffer for the message structure
 #define BADGE_COMMS_USER_DATA_MAX_LEN (100)
@@ -15,6 +16,7 @@ typedef enum {
     MESSAGE_TYPE_TIMESTAMP  = 10,
     MESSAGE_TYPE_STRING     = 11,
     MESSAGE_TYPE_REPERTOIRE = 12,
+    MESSAGE_TYPE_BATTLESHIP = 13,
     MESSAGE_TYPE_MAX        = 0xFF
 } badge_comms_message_type_t;
 
@@ -35,3 +37,8 @@ typedef struct {
     char nickname[nicknamelenght];
 } badge_message_repertoire;
 static_assert(sizeof(badge_message_repertoire) < BADGE_COMMS_USER_DATA_MAX_LEN, "badge_message_timestamp_t is too big");
+
+typedef struct {
+    uint8_t dataBS[BSpayload];
+} badge_message_battleship;
+static_assert(sizeof(badge_message_battleship) < BADGE_COMMS_USER_DATA_MAX_LEN, "badge_message_timestamp_t is too big");

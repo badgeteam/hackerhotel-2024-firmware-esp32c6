@@ -241,6 +241,24 @@ int Screen_Confirmation(char _prompt[128], QueueHandle_t application_event_queue
         }
     }
 }
+
+int WaitingforOpponent(
+    char const * _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue
+) {
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, true, false, false, false, false);
+
+    int text_x = gfx->height / 2;
+    int text_y = 40;
+
+    AddSWtoBufferL("Abort");
+    pax_center_text(gfx, BLACK, font1, fontsizeS * 2, text_x, text_y, _prompt);
+    bsp_display_flush();
+    bsp_set_addressable_led(LED_YELLOW);
+    return 1;
+}
 // Parse _message[] into an array of _nbwords
 // and makes them into up to _maxnblines which are _maxlinelenght pixel long
 // can be centered if the _centered flag is high
