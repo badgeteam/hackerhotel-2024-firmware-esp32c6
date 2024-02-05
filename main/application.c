@@ -57,6 +57,10 @@ extern uint8_t const switchframe1_png_start[] asm("_binary_switchframe1_png_star
 extern uint8_t const switchframe1_png_end[] asm("_binary_switchframe1_png_end");
 extern uint8_t const switchframe2_png_start[] asm("_binary_switchframe2_png_start");
 extern uint8_t const switchframe2_png_end[] asm("_binary_switchframe2_png_end");
+extern uint8_t const border2lsw_png_start[] asm("_binary_border2lsw_png_start");
+extern uint8_t const border2lsw_png_end[] asm("_binary_border2lsw_png_end");
+extern uint8_t const border2lrsw_png_start[] asm("_binary_border2lrsw_png_start");
+extern uint8_t const border2lrsw_png_end[] asm("_binary_border2lrsw_png_end");
 
 extern uint8_t const diamondl_png_start[] asm("_binary_diamondl_png_start");
 extern uint8_t const diamondl_png_end[] asm("_binary_diamondl_png_end");
@@ -69,6 +73,40 @@ int const telegraph_X[20] = {0, -8, 8, -16, 0, 16, -24, -8, 8, 24, -24, -8, 8, 2
 int const telegraph_Y[20] = {12, 27, 27, 42, 42, 42, 57, 57, 57, 57, 71, 71, 71, 71, 86, 86, 86, 101, 101, 116};
 
 static char const * TAG = "application utilities";
+
+void DisplayError(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, char const * errorstr) {
+    event_t    tempkbsettings = kbsettings;
+    pax_buf_t* gfx            = bsp_get_gfx_buffer();
+
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
+
+    int text_x = gfx->height / 2;
+    int text_y = 40;
+
+    pax_background(gfx, WHITE);
+    AddSWtoBuffer("", "", "", "", "");
+    pax_center_text(gfx, BLACK, font1, fontsizeS, text_x, text_y, errorstr);
+    bsp_display_flush();
+
+    while (1) {
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        default:
+                            configure_keyboard_kb(keyboard_event_queue, tempkbsettings);
+                            return;
+                            break;
+                    }
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type); break;
+            }
+        }
+    }
+}
 
 void Addborder1toBuffer(void) {
 
@@ -111,7 +149,7 @@ void AddSWtoBuffer(
 ) {
     Addborder2toBuffer();
     pax_buf_t* gfx = bsp_get_gfx_buffer();
-    pax_insert_png_buf(gfx, switchframe2_png_start, switchframe2_png_end - switchframe2_png_start, 0, 127 - 11, 0);
+    pax_insert_png_buf(gfx, switchframe2_png_start, switchframe2_png_end - switchframe2_png_start, 0, 127 - 12, 0);
     int gapx = 60;
     int o_x  = 28;
     int o_y  = 118;
@@ -119,6 +157,25 @@ void AddSWtoBuffer(
     pax_center_text(gfx, BLACK, font1, 9, o_x + gapx * 1, o_y, SW2str);
     pax_center_text(gfx, BLACK, font1, 9, o_x + gapx * 2, o_y, SW3str);
     pax_center_text(gfx, BLACK, font1, 9, o_x + gapx * 3, o_y, SW4str);
+    pax_center_text(gfx, BLACK, font1, 9, o_x + gapx * 4, o_y, SW5str);
+}
+
+void AddSWtoBufferL(char const * SW1str) {
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_insert_png_buf(gfx, border2lsw_png_start, border2lsw_png_end - border2lsw_png_start, 0, 0, 0);
+    int gapx = 60;
+    int o_x  = 28;
+    int o_y  = 118;
+    pax_center_text(gfx, BLACK, font1, 9, o_x + gapx * 0, o_y, SW1str);
+}
+
+void AddSWtoBufferLR(char const * SW1str, char const * SW5str) {
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_insert_png_buf(gfx, border2lrsw_png_start, border2lrsw_png_end - border2lrsw_png_start, 0, 0, 0);
+    int gapx = 60;
+    int o_x  = 28;
+    int o_y  = 118;
+    pax_center_text(gfx, BLACK, font1, 9, o_x + gapx * 0, o_y, SW1str);
     pax_center_text(gfx, BLACK, font1, 9, o_x + gapx * 4, o_y, SW5str);
 }
 
@@ -143,35 +200,6 @@ void Justify_right_text(
     pax_draw_text(buf, color, font, font_size, _xoffset, y, text);
 }
 
-int DisplayExitConfirmation(char _prompt[128], QueueHandle_t keyboard_event_queue) {
-    event_t kbsettings = {
-        .type                                     = event_control_keyboard,
-        .args_control_keyboard.enable_typing      = true,
-        .args_control_keyboard.enable_actions     = {true, false, false, false, true},
-        .args_control_keyboard.enable_leds        = true,
-        .args_control_keyboard.enable_relay       = true,
-        kbsettings.args_control_keyboard.capslock = false,
-    };
-    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
-
-    int text_x = 50;
-    int text_y = 20;
-    // int text_fontsize = 18;
-
-    pax_font_t const * font = pax_font_sky;
-    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
-    bsp_apply_lut(lut_1s);
-    pax_background(gfx, WHITE);
-    Addborder2toBuffer();
-    pax_draw_text(gfx, BLACK, font, 9, text_x, text_y, _prompt);
-    AddSwitchesBoxtoBuffer(SWITCH_1);
-    pax_draw_text(gfx, BLACK, font, 9, 8 + SWITCH_1 * 62, 116, "yes");
-    AddSwitchesBoxtoBuffer(SWITCH_5);
-    pax_draw_text(gfx, BLACK, font, 9, 8 + SWITCH_5 * 62, 116, "no");
-    bsp_display_flush();
-    return 1;
-}
-
 int Screen_Confirmation(char _prompt[128], QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     event_t    tempkbsettings = kbsettings;
     pax_buf_t* gfx            = bsp_get_gfx_buffer();
@@ -184,7 +212,6 @@ int Screen_Confirmation(char _prompt[128], QueueHandle_t application_event_queue
 
     pax_background(gfx, WHITE);
     AddSWtoBuffer("yes", "", "", "", "no");
-    ESP_LOGE(TAG, "text_x %d", text_x);
     pax_center_text(gfx, BLACK, font1, fontsizeS, text_x, text_y, _prompt);
     bsp_display_flush();
 
@@ -529,10 +556,16 @@ void DisplayTelegraph(int _colour, int _position) {
         _position = 36;  // prevent to draw outside of buffer
 
     // Diamond
+    pax_draw_line(gfx, WHITE, _position - 3, 1, _position + 4, 1);        // white over the border
+    pax_draw_line(gfx, WHITE, _position - 4, 4, _position + 5, 4);        // white over the border
+    pax_draw_line(gfx, WHITE, _position - 4, 123, _position + 5, 123);    // white over the border
+    pax_draw_line(gfx, WHITE, _position - 3, 126, _position + 4, 126);    // white over the border
     pax_draw_line(gfx, _colour, _position - 36, 64, _position - 3, 127);  // Left to top
     pax_draw_line(gfx, _colour, _position - 36, 63, _position - 3, 0);    // Left to bottom
     pax_draw_line(gfx, _colour, _position + 37, 64, _position + 4, 127);  // Right to top
     pax_draw_line(gfx, _colour, _position + 37, 63, _position + 4, 0);    // Right to bottom
+    pax_draw_line(gfx, _colour, _position - 3, 0, _position + 4, 0);      // horizontal top
+    pax_draw_line(gfx, _colour, _position - 3, 127, _position + 4, 127);  // horizontal bottom
 
     // Letter circles
 

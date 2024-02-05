@@ -105,8 +105,12 @@ screen_t screen_template_entry(QueueHandle_t application_event_queue, QueueHandl
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
     // receive_strb();
+    int displayflag = 1;
 
     while (1) {
+        if (displayflag) {
+            displayflag = 0;
+        }
         event_t event = {0};
         if ((xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE)) {
             switch (event.type) {

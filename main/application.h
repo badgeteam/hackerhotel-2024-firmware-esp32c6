@@ -25,6 +25,7 @@
 extern int const telegraph_X[20];
 extern int const telegraph_Y[20];
 
+void DisplayError(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, char const * errorstr);
 void Addborder1toBuffer(void);
 void Addborder2toBuffer(void);
 void AddSWborder1toBuffer(void);
@@ -32,6 +33,8 @@ void AddSWborder2toBuffer(void);
 void AddSWtoBuffer(
     char const * SW1str, char const * SW2str, char const * SW3str, char const * SW4str, char const * SW5str
 );
+void AddSWtoBufferL(char const * SW1str);
+void AddSWtoBufferLR(char const * SW1str, char const * SW5str);
 void AddBlocktoBuffer(int _x, int _y);
 
 // Parse _message[] into an array of _nbwords
@@ -58,7 +61,6 @@ void       DisplayWallofText(
 void Justify_right_text(
     pax_buf_t* buf, pax_col_t color, pax_font_t const * font, float font_size, float x, float y, char const * text
 );
-int  DisplayExitConfirmation(char _psrompt[128], QueueHandle_t keyboard_event_queue);
 int  Screen_Confirmation(char _prompt[128], QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
 void AddSwitchesBoxtoBuffer(int _switch);
 void AddOneTextSWtoBuffer(int _SW, char const * SWstr);
