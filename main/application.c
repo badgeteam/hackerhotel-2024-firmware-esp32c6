@@ -571,6 +571,7 @@ int InputtoNum(char _inputletter) {
     }
 }
 
+// debug to refactor
 void configure_keyboard_guru(QueueHandle_t keyboard_event_queue, bool SW1, bool SW2, bool SW3, bool SW4, bool SW5) {
     // update the keyboard event handler settings
     event_t kbsettings = {
@@ -593,7 +594,7 @@ void InitKeyboard(QueueHandle_t keyboard_event_queue) {
     kbsettings.type                                = event_control_keyboard;
     kbsettings.args_control_keyboard.enable_typing = false;
     for (int i = 0; i < NUM_ROTATION; i++) kbsettings.args_control_keyboard.enable_rotations[i] = false;
-    for (int i = 0; i < NUM_LETTER; i++) kbsettings.args_control_keyboard.enable_characters[i] = true;
+    for (int i = 0; i < NUM_CHARACTERS; i++) kbsettings.args_control_keyboard.enable_characters[i] = true;
     for (int i = 0; i < NUM_SWITCHES; i++) kbsettings.args_control_keyboard.enable_actions[i] = false;
     kbsettings.args_control_keyboard.enable_leds  = true;
     kbsettings.args_control_keyboard.enable_relay = true;
@@ -662,7 +663,7 @@ void DebugKeyboardSettings(void) {
     for (int i = 0; i < NUM_ROTATION; i++)
         ESP_LOGE(TAG, "%d: %d", i, kbsettings.args_control_keyboard.enable_rotations[i]);
     ESP_LOGE(TAG, "enable_characters:");
-    for (int i = 0; i < NUM_LETTER; i++)
+    for (int i = 0; i < NUM_CHARACTERS; i++)
         ESP_LOGE(TAG, "%d: %d", i, kbsettings.args_control_keyboard.enable_characters[i]);
     ESP_LOGE(TAG, "enable_actions:");
     for (int i = 0; i < NUM_SWITCHES; i++)

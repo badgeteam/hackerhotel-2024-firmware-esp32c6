@@ -17,7 +17,7 @@ typedef struct _event_control_keyboard_args {
     bool enable_typing;
     bool enable_actions[NUM_SWITCHES];
     bool enable_rotations[NUM_ROTATION];
-    bool enable_characters[NUM_LETTER];
+    bool enable_characters[NUM_CHARACTERS];
     bool enable_leds;
     bool enable_relay;
     bool capslock;
