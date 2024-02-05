@@ -26,6 +26,7 @@
 #include "pax_gfx.h"
 #include "resources.h"
 #include "riscv/rv_utils.h"
+#include "screen_battleship.h"
 #include "screen_billboard.h"
 #include "screen_hangman.h"
 #include "screen_home.h"
@@ -53,7 +54,6 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-
 
 static char const * TAG = "main";
 
