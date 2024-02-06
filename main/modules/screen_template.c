@@ -73,8 +73,8 @@ void receive_strb(void) {
 void send_strb(void) {
     // first we create a struct with the data, as we would like to receive on the other side
     badge_message_str data;
-    char              _nickname[nicknamelenght] = "banana";
-    char              _payload[messagelenght]   = "bread";
+    char              _nickname[nicknamelength] = "banana";
+    char              _payload[messagelength]   = "bread";
     strcpy(data.nickname, _nickname);
     strcpy(data.payload, _payload);
 

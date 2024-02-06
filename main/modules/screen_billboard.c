@@ -24,8 +24,8 @@
 
 static const char* TAG = "billboard";
 
-char nicknamearray[nbmessages][nicknamelenght];
-char messagearray[nbmessages][messagelenght];
+char nicknamearray[nbmessages][nicknamelength];
+char messagearray[nbmessages][messagelength];
 int  messagecursor = 0;
 int  initflag      = 0;
 
@@ -71,8 +71,8 @@ int  initflag      = 0;
 // void send_repertoire(void) {
 //     // first we create a struct with the data, as we would like to receive on the other side
 //     badge_message_str data;
-//     char              nickname[nicknamelenght]     = "dwawdawda";
-//     char              playermessage[messagelenght] = "babnannan";
+//     char              nickname[nicknamelength]     = "dwawdawda";
+//     char              playermessage[messagelength] = "babnannan";
 //     strcpy(data.nickname, nickname);
 //     strcpy(data.payload, playermessage);
 
@@ -128,7 +128,7 @@ void receive_str(void) {
     }
 }
 
-void send_str(char _nickname[nicknamelenght], char _payload[messagelenght]) {
+void send_str(char _nickname[nicknamelength], char _payload[messagelength]) {
     // first we create a struct with the data, as we would like to receive on the other side
     badge_message_str data;
     strcpy(data.nickname, _nickname);
@@ -225,8 +225,8 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
             initflag = 1;
         }
 
-    char nickname[nicknamelenght]     = "";
-    char playermessage[messagelenght] = "";
+    char nickname[nicknamelength]     = "";
+    char playermessage[messagelength] = "";
 
     // init broadcast receive
     // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t

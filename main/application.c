@@ -213,11 +213,11 @@ int Screen_Confirmation(char _prompt[128], QueueHandle_t application_event_queue
     }
 }
 // Parse _message[] into an array of _nbwords
-// and makes them into up to _maxnblines which are _maxlinelenght pixel long
+// and makes them into up to _maxnblines which are _maxlinelength pixel long
 // can be centered if the _centered flag is high
 void DisplayWallofTextWords(
     int  _fontsize,
-    int  _maxlinelenght,
+    int  _maxlinelength,
     int  _maxnblines,
     int  _nbwords,
     int  _xoffset,
@@ -229,7 +229,7 @@ void DisplayWallofTextWords(
     const pax_font_t* font = pax_font_sky;
     pax_buf_t*        gfx  = bsp_get_gfx_buffer();
 
-    // to verify text lenght on buffer
+    // to verify text length on buffer
     pax_vec1_t dims = {
         .x = 999,
         .y = 999,
@@ -257,9 +257,9 @@ void DisplayWallofTextWords(
             strcat(linetodisplay, Words[wordcount]);  // add word to linetodisplay
             strcat(linetodisplay, " ");               // and a space that was not parsed
 
-            // if longer than maxlinelenght, go to the next line
+            // if longer than maxlinelength, go to the next line
             dims = pax_text_size(font, _fontsize, linetodisplay);
-            if ((int)dims.x > _maxlinelenght) {
+            if ((int)dims.x > _maxlinelength) {
                 linetodisplay[strlen(linetodisplay) - (strlen(Words[wordcount]) + 2)] =
                     '\0';  // remove the last word and 2 spaces
 
@@ -305,11 +305,11 @@ void DisplayWallofTextWords(
 }
 
 // Parse _message[] into lines
-// and makes them into up to _maxnblines which are _maxlinelenght pixel long
+// and makes them into up to _maxnblines which are _maxlinelength pixel long
 // can be centered if the _centered flag is high
 void DisplayWallofText(
     int  _fontsize,
-    int  _maxlinelenght,
+    int  _maxlinelength,
     int  _maxnblines,
     int  _nbwords,
     int  _xoffset,
@@ -321,7 +321,7 @@ void DisplayWallofText(
     const pax_font_t* font = pax_font_sky;
     pax_buf_t*        gfx  = bsp_get_gfx_buffer();
 
-    // to verify text lenght on buffer
+    // to verify text length on buffer
     pax_vec1_t dims = {
         .x = 999,
         .y = 999,
@@ -349,9 +349,9 @@ void DisplayWallofText(
             strcat(linetodisplay, Words);  // add word to linetodisplay
             strcat(linetodisplay, " ");    // and a space that was not parsed
 
-            // if longer than maxlinelenght, go to the next line
+            // if longer than maxlinelength, go to the next line
             dims = pax_text_size(font, _fontsize, linetodisplay);
-            if ((int)dims.x > _maxlinelenght) {
+            if ((int)dims.x > _maxlinelength) {
                 linetodisplay[strlen(linetodisplay) - (strlen(Words) + 2)] = '\0';  // remove the last word and 2 spaces
 
                 // center the text
@@ -596,13 +596,13 @@ void AddDiamondSelecttoBuf(int _x, int _y, int _gap) {
     //     {-7, -5},
     //     {-7, 6},
     //     {-6, -6},
-    //     {5 + 16 * (_shiplenght - 1), -6},
+    //     {5 + 16 * (_shiplength - 1), -6},
     //     {-6, 7},
-    //     {5 + 16 * (_shiplenght - 1), 7},
-    //     {5 + 16 * (_shiplenght - 1), -6},
-    //     {11 + 16 * (_shiplenght - 1), 0},
-    //     {5 + 16 * (_shiplenght - 1), 7},
-    //     {11 + 16 * (_shiplenght - 1), 1},
+    //     {5 + 16 * (_shiplength - 1), 7},
+    //     {5 + 16 * (_shiplength - 1), -6},
+    //     {11 + 16 * (_shiplength - 1), 0},
+    //     {5 + 16 * (_shiplength - 1), 7},
+    //     {11 + 16 * (_shiplength - 1), 1},
     //     {16, 0}
     // };
 

@@ -31,11 +31,11 @@ void AddSWtoBuffer(const char* SW1str, const char* SW2str, const char* SW3str, c
 void AddBlocktoBuffer(int _x, int _y);
 
 // Parse _message[] into an array of _nbwords
-// and makes them into up to _maxnblines which are _maxlinelenght pixel long
+// and makes them into up to _maxnblines which are _maxlinelength pixel long
 // can be centered if the _centered flag is high
 void DisplayWallofTextWords(
     int  _fontsize,
-    int  _maxlinelenght,
+    int  _maxlinelength,
     int  _maxnblines,
     int  _nbwords,
     int  _xoffset,
@@ -45,11 +45,11 @@ void DisplayWallofTextWords(
 );
 
 // Parse _message[] into lines
-// and makes them into up to _maxnblines which are _maxlinelenght pixel long
+// and makes them into up to _maxnblines which are _maxlinelength pixel long
 // can be centered if the _centered flag is high
 void DisplayWallofText(
     int  _fontsize,
-    int  _maxlinelenght,
+    int  _maxlinelength,
     int  _maxnblines,
     int  _nbwords,
     int  _xoffset,

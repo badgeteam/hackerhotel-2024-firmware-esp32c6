@@ -31,7 +31,7 @@ extern const uint8_t b_arrow2_png_start[] asm("_binary_b_arrow2_png_start");
 extern const uint8_t b_arrow2_png_end[] asm("_binary_b_arrow2_png_end");
 
 bool StoreRepertoire(
-    char _repertoryIDlist[maxIDrepertoire][nicknamelenght], uint8_t mac[maxIDrepertoire][8], uint8_t _nbrepertoryID
+    char _repertoryIDlist[maxIDrepertoire][nicknamelength], uint8_t mac[maxIDrepertoire][8], uint8_t _nbrepertoryID
 ) {
     bool res = nvs_set_u8_wrapped("Repertoire", "IDcount", _nbrepertoryID);
     ESP_LOGE(TAG, "set _nbrepertoryID: %d", _nbrepertoryID);
@@ -52,7 +52,7 @@ bool StoreRepertoire(
     return res;
 }
 
-int GetRepertoire(char _repertoryIDlist[maxIDrepertoire][nicknamelenght], uint8_t mac[maxIDrepertoire][8]) {
+int GetRepertoire(char _repertoryIDlist[maxIDrepertoire][nicknamelength], uint8_t mac[maxIDrepertoire][8]) {
     uint8_t value = 0;
     bool    res   = nvs_get_u8_wrapped("Repertoire", "IDcount", &value);
     ESP_LOGE(TAG, "read _nbrepertoryID: %d", value);
@@ -115,7 +115,7 @@ void receive_repertoire(void) {
 void send_repertoire(void) {
     // first we create a struct with the data, as we would like to receive on the other side
     badge_message_repertoire data;
-    char                     _nickname[nicknamelenght] = "Guru-san";
+    char                     _nickname[nicknamelength] = "Guru-san";
     // nvs_get_str_wrapped("owner", "nickname", _nickname, sizeof(_nickname));
 
     strcpy(data.nickname, _nickname);
@@ -148,8 +148,8 @@ void Display_repertoire(
     uint8_t _nbrepertoryID,
     int     _nbsurroundingID,
     int     _max_y,
-    char    _repertoryIDlist[maxIDrepertoire][nicknamelenght],
-    char    _surroundingIDlist[maxIDrepertoire][nicknamelenght]
+    char    _repertoryIDlist[maxIDrepertoire][nicknamelength],
+    char    _surroundingIDlist[maxIDrepertoire][nicknamelength]
 ) {
     pax_buf_t* gfx = bsp_get_gfx_buffer();
 
@@ -238,12 +238,12 @@ void Display_repertoire(
     bsp_display_flush();
 }
 
-void AddSurroundingRepertoire(char _inboundnick[nicknamelenght], uint8_t _inbound_mac[8]) {
+void AddSurroundingRepertoire(char _inboundnick[nicknamelength], uint8_t _inbound_mac[8]) {
 }
 
 screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
-    char    repertoryIDlist[maxIDrepertoire][nicknamelenght];
-    char    surroundingIDlist[maxIDrepertoire][nicknamelenght];
+    char    repertoryIDlist[maxIDrepertoire][nicknamelength];
+    char    surroundingIDlist[maxIDrepertoire][nicknamelength];
     uint8_t repertory_mac[maxIDrepertoire][8];
     uint8_t surrounding_mac[maxIDrepertoire][8];
     for (int i = 0; i < maxIDrepertoire; i++) {
@@ -311,7 +311,7 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
         // upon receiving a message
         if (xQueueReceive(repertoire_queue, &message, pdMS_TO_TICKS(1)) == pdTRUE) {
             badge_message_repertoire* ts                          = (badge_message_repertoire*)message.data;
-            char                      inboundnick[nicknamelenght] = "";
+            char                      inboundnick[nicknamelength] = "";
             uint8_t                   _inbound_mac[8];
             strcpy(inboundnick, ts->nickname);
             for (int i = 0; i < 8; i++) {

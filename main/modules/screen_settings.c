@@ -104,7 +104,7 @@ static void ota_update_wrapped(QueueHandle_t keyboard_event_queue, bool nightly)
 // }
 
 static void edit_nickname(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
-    char nickname[nicknamelenght] = {0};
+    char nickname[nicknamelength] = {0};
     nvs_get_str_wrapped("owner", "nickname", nickname, sizeof(nickname));
     bool res =
         textedit("What is your name?", application_event_queue, keyboard_event_queue, nickname, sizeof(nickname));
