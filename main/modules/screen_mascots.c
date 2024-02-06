@@ -15,10 +15,10 @@
 #include <stdio.h>
 #include <string.h>
 
-extern uint8_t const mascots_png_start[] asm("_binary_mascots_png_start");
-extern uint8_t const mascots_png_end[] asm("_binary_mascots_png_end");
+extern const uint8_t mascots_png_start[] asm("_binary_mascots_png_start");
+extern const uint8_t mascots_png_end[] asm("_binary_mascots_png_end");
 
-static char const * TAG = "mascots";
+static const char* TAG = "mascots";
 
 screen_t screen_mascots_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     event_t kbsettings = {
@@ -31,8 +31,8 @@ screen_t screen_mascots_entry(QueueHandle_t application_event_queue, QueueHandle
     };
     xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 
-//    pax_font_t const * font = pax_font_saira_regular;
-    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
+    //    pax_font_t const * font = pax_font_saira_regular;
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
     pax_insert_png_buf(gfx, mascots_png_start, mascots_png_end - mascots_png_start, 0, 0, 0);
     bsp_display_flush();

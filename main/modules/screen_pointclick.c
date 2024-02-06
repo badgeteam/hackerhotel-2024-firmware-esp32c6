@@ -20,35 +20,35 @@
 #include <esp_random.h>
 #include <string.h>
 
-static char const * TAG = "point & click";
+static const char* TAG = "point & click";
 
-extern uint8_t const dock1n_png_start[] asm("_binary_dock1n_png_start");
-extern uint8_t const dock1n_png_end[] asm("_binary_dock1n_png_end");
-extern uint8_t const dock1e_png_start[] asm("_binary_dock1e_png_start");
-extern uint8_t const dock1e_png_end[] asm("_binary_dock1e_png_end");
-extern uint8_t const dock1s_png_start[] asm("_binary_dock1s_png_start");
-extern uint8_t const dock1s_png_end[] asm("_binary_dock1s_png_end");
-extern uint8_t const dock1w_png_start[] asm("_binary_dock1w_png_start");
-extern uint8_t const dock1w_png_end[] asm("_binary_dock1w_png_end");
+extern const uint8_t dock1n_png_start[] asm("_binary_dock1n_png_start");
+extern const uint8_t dock1n_png_end[] asm("_binary_dock1n_png_end");
+extern const uint8_t dock1e_png_start[] asm("_binary_dock1e_png_start");
+extern const uint8_t dock1e_png_end[] asm("_binary_dock1e_png_end");
+extern const uint8_t dock1s_png_start[] asm("_binary_dock1s_png_start");
+extern const uint8_t dock1s_png_end[] asm("_binary_dock1s_png_end");
+extern const uint8_t dock1w_png_start[] asm("_binary_dock1w_png_start");
+extern const uint8_t dock1w_png_end[] asm("_binary_dock1w_png_end");
 
-extern uint8_t const dock2n_png_start[] asm("_binary_dock2n_png_start");
-extern uint8_t const dock2n_png_end[] asm("_binary_dock2n_png_end");
-extern uint8_t const dock2e_png_start[] asm("_binary_dock2e_png_start");
-extern uint8_t const dock2e_png_end[] asm("_binary_dock2e_png_end");
-extern uint8_t const dock2s_png_start[] asm("_binary_dock2s_png_start");
-extern uint8_t const dock2s_png_end[] asm("_binary_dock2s_png_end");
-extern uint8_t const dock2w_png_start[] asm("_binary_dock2w_png_start");
-extern uint8_t const dock2w_png_end[] asm("_binary_dock2w_png_end");
+extern const uint8_t dock2n_png_start[] asm("_binary_dock2n_png_start");
+extern const uint8_t dock2n_png_end[] asm("_binary_dock2n_png_end");
+extern const uint8_t dock2e_png_start[] asm("_binary_dock2e_png_start");
+extern const uint8_t dock2e_png_end[] asm("_binary_dock2e_png_end");
+extern const uint8_t dock2s_png_start[] asm("_binary_dock2s_png_start");
+extern const uint8_t dock2s_png_end[] asm("_binary_dock2s_png_end");
+extern const uint8_t dock2w_png_start[] asm("_binary_dock2w_png_start");
+extern const uint8_t dock2w_png_end[] asm("_binary_dock2w_png_end");
 
-extern uint8_t const dune1n_png_start[] asm("_binary_dune1n_png_start");
-extern uint8_t const dune1n_png_end[] asm("_binary_dune1n_png_end");
-extern uint8_t const dune1s_png_start[] asm("_binary_dune1s_png_start");
-extern uint8_t const dune1s_png_end[] asm("_binary_dune1s_png_end");
+extern const uint8_t dune1n_png_start[] asm("_binary_dune1n_png_start");
+extern const uint8_t dune1n_png_end[] asm("_binary_dune1n_png_end");
+extern const uint8_t dune1s_png_start[] asm("_binary_dune1s_png_start");
+extern const uint8_t dune1s_png_end[] asm("_binary_dune1s_png_end");
 
-extern uint8_t const dune2n_png_start[] asm("_binary_dune2n_png_start");
-extern uint8_t const dune2n_png_end[] asm("_binary_dune2n_png_end");
-extern uint8_t const dune2s_png_start[] asm("_binary_dune2s_png_start");
-extern uint8_t const dune2s_png_end[] asm("_binary_dune2s_png_end");
+extern const uint8_t dune2n_png_start[] asm("_binary_dune2n_png_start");
+extern const uint8_t dune2n_png_end[] asm("_binary_dune2n_png_end");
+extern const uint8_t dune2s_png_start[] asm("_binary_dune2s_png_start");
+extern const uint8_t dune2s_png_end[] asm("_binary_dune2s_png_end");
 
 screen_t screen_pointclick_dock1(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
 screen_t screen_pointclick_dock2(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);

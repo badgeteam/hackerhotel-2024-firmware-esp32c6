@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <string.h>
 
-static char const * TAG = "epaper";
+static const char* TAG = "epaper";
 
 static uint8_t lut_buffer[HINK_LUT_SIZE];
 

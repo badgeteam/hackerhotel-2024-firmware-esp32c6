@@ -22,16 +22,16 @@
 
 #define nbmessages 9
 
-static char const * TAG = "billboard";
+static const char* TAG = "billboard";
 
-char nicknamearray[nbmessages][nicknamelenght];
-char messagearray[nbmessages][messagelenght];
+char nicknamearray[nbmessages][nicknamelength];
+char messagearray[nbmessages][messagelength];
 int  messagecursor = 0;
 int  initflag      = 0;
 
 // void receive_repertoire(void) {
-//     // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
-//     QueueHandle_t str_queue = badge_comms_add_listener(MESSAGE_TYPE_STRING, sizeof(badge_message_str));
+//     // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_time_t
+//     QueueHandle_t str_queue = badge_comms_add_listener(MESSAGE_TYPE_STRING, sizeof(badge_message_chat_t));
 //     // check if an error occurred (check logs for the reason)
 //     if (str_queue == NULL) {
 //         ESP_LOGE(TAG, "Failed to add listener");
@@ -47,7 +47,7 @@ int  initflag      = 0;
 //         xQueueReceive(str_queue, &message, portMAX_DELAY);
 
 //         // typecast the message data to the expected message type
-//         badge_message_str* ts = (badge_message_str*)message.data;
+//         badge_message_chat_t* ts = (badge_message_chat_t*)message.data;
 
 //         // show we got a message, and its contents
 //         ESP_LOGI(TAG, "Got a string: %s \n", ts->nickname);
@@ -70,9 +70,9 @@ int  initflag      = 0;
 
 // void send_repertoire(void) {
 //     // first we create a struct with the data, as we would like to receive on the other side
-//     badge_message_str data;
-//     char              nickname[nicknamelenght]     = "dwawdawda";
-//     char              playermessage[messagelenght] = "babnannan";
+//     badge_message_chat_t data;
+//     char              nickname[nicknamelength]     = "dwawdawda";
+//     char              playermessage[messagelength] = "babnannan";
 //     strcpy(data.nickname, nickname);
 //     strcpy(data.payload, playermessage);
 
@@ -90,8 +90,8 @@ int  initflag      = 0;
 // }
 
 void receive_str(void) {
-    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
-    QueueHandle_t str_queue = badge_comms_add_listener(MESSAGE_TYPE_STRING, sizeof(badge_message_str));
+    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_time_t
+    QueueHandle_t str_queue = badge_comms_add_listener(MESSAGE_TYPE_STRING, sizeof(badge_message_chat_t));
     // check if an error occurred (check logs for the reason)
     if (str_queue == NULL) {
         ESP_LOGE(TAG, "Failed to add listener");
@@ -107,7 +107,7 @@ void receive_str(void) {
         xQueueReceive(str_queue, &message, portMAX_DELAY);
 
         // typecast the message data to the expected message type
-        badge_message_str* ts = (badge_message_str*)message.data;
+        badge_message_chat_t* ts = (badge_message_chat_t*)message.data;
 
         // show we got a message, and its contents
         ESP_LOGI(TAG, "Got a string: %s \n", ts->nickname);
@@ -128,9 +128,9 @@ void receive_str(void) {
     }
 }
 
-void send_str(char _nickname[nicknamelenght], char _payload[messagelenght]) {
+void send_str(char _nickname[nicknamelength], char _payload[messagelength]) {
     // first we create a struct with the data, as we would like to receive on the other side
-    badge_message_str data;
+    badge_message_chat_t data;
     strcpy(data.nickname, _nickname);
     strcpy(data.payload, _payload);
 
@@ -146,8 +146,8 @@ void send_str(char _nickname[nicknamelenght], char _payload[messagelenght]) {
 
 void DisplayBillboard(int _addmessageflag, char* _nickname, char* _message) {
     // set screen font and buffer
-    pax_font_t const * font = pax_font_sky;
-    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
+    const pax_font_t* font = pax_font_sky;
+    pax_buf_t*        gfx  = bsp_get_gfx_buffer();
 
     // set infrastructure
     pax_background(gfx, WHITE);
@@ -225,12 +225,12 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
             initflag = 1;
         }
 
-    char nickname[nicknamelenght]     = "";
-    char playermessage[messagelenght] = "";
+    char nickname[nicknamelength]     = "";
+    char playermessage[messagelength] = "";
 
     // init broadcast receive
-    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
-    QueueHandle_t str_queue = badge_comms_add_listener(MESSAGE_TYPE_STRING, sizeof(badge_message_str));
+    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_time_t
+    QueueHandle_t str_queue = badge_comms_add_listener(MESSAGE_TYPE_STRING, sizeof(badge_message_chat_t));
     // check if an error occurred (check logs for the reason)
     if (str_queue == NULL) {
         ESP_LOGE(TAG, "Failed to add listener");
@@ -247,7 +247,7 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
 
         // upon receiving a message
         if (xQueueReceive(str_queue, &message, pdMS_TO_TICKS(1)) == pdTRUE) {
-            badge_message_str* ts = (badge_message_str*)message.data;
+            badge_message_chat_t* ts = (badge_message_chat_t*)message.data;
             ESP_LOGI(TAG, "Got a string: %s \n", ts->nickname);
             ESP_LOGI(TAG, "Got a string: %s \n", ts->payload);
             DisplayBillboard(1, ts->nickname, ts->payload);

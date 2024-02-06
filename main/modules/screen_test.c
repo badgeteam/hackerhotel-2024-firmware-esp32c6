@@ -19,12 +19,12 @@
 #include <esp_random.h>
 #include <string.h>
 
-extern uint8_t const caronl_png_start[] asm("_binary_caronl_png_start");
-extern uint8_t const caronl_png_end[] asm("_binary_caronl_png_end");
-extern uint8_t const caronv_png_start[] asm("_binary_caronv_png_start");
-extern uint8_t const caronv_png_end[] asm("_binary_caronv_png_end");
-extern uint8_t const carond_png_start[] asm("_binary_carond_png_start");
-extern uint8_t const carond_png_end[] asm("_binary_carond_png_end");
+extern const uint8_t caronl_png_start[] asm("_binary_caronl_png_start");
+extern const uint8_t caronl_png_end[] asm("_binary_caronl_png_end");
+extern const uint8_t caronv_png_start[] asm("_binary_caronv_png_start");
+extern const uint8_t caronv_png_end[] asm("_binary_caronv_png_end");
+extern const uint8_t carond_png_start[] asm("_binary_carond_png_start");
+extern const uint8_t carond_png_end[] asm("_binary_carond_png_end");
 
 #define water         0
 #define boat          1
@@ -48,7 +48,7 @@ extern uint8_t const carond_png_end[] asm("_binary_carond_png_end");
 
 #define invalid -1
 
-static char const * TAG = "testscreen";
+static const char* TAG = "testscreen";
 
 screen_t screen_battleship_splash(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
 screen_t screen_battleship_placeships(
@@ -72,7 +72,7 @@ screen_t screen_battleship_victory(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int* victoryflag
 );
 
-void AddShiptoBuffer(int _shiplenght, int _shiporientation, int _x, int _y) {
+void AddShiptoBuffer(int _shiplength, int _shiporientation, int _x, int _y) {
     pax_buf_t* gfx = bsp_get_gfx_buffer();
 
     // horizontal ship coordonates orientation east
@@ -82,15 +82,14 @@ void AddShiptoBuffer(int _shiplenght, int _shiporientation, int _x, int _y) {
         {-7, -5},
         {-7, 6},
         {-6, -6},
-        {5 + 16 * (_shiplenght - 1), -6},
+        {5 + 16 * (_shiplength - 1), -6},
         {-6, 7},
-        {5 + 16 * (_shiplenght - 1), 7},
-        {5 + 16 * (_shiplenght - 1), -6},
-        {11 + 16 * (_shiplenght - 1), 0},
-        {5 + 16 * (_shiplenght - 1), 7},
-        {11 + 16 * (_shiplenght - 1), 1},
-        {16, 0}
-    };
+        {5 + 16 * (_shiplength - 1), 7},
+        {5 + 16 * (_shiplength - 1), -6},
+        {11 + 16 * (_shiplength - 1), 0},
+        {5 + 16 * (_shiplength - 1), 7},
+        {11 + 16 * (_shiplength - 1), 1},
+        {16, 0}};
 
     // diagonal ship coordonates orientation southeasty
     int od[10][2] = {
@@ -101,17 +100,16 @@ void AddShiptoBuffer(int _shiplenght, int _shiporientation, int _x, int _y) {
         {0, -9},
         {4, -8},
         {6, -6},
-        {9 + 8 * (_shiplenght - 1), 2 + 15 * (_shiplenght - 1)},
-        {6 + 8 * (_shiplenght - 1), 11 + 15 * (_shiplenght - 1)},
-        {-3 + 8 * (_shiplenght - 1), 8 + 15 * (_shiplenght - 1)}
-    };
+        {9 + 8 * (_shiplength - 1), 2 + 15 * (_shiplength - 1)},
+        {6 + 8 * (_shiplength - 1), 11 + 15 * (_shiplength - 1)},
+        {-3 + 8 * (_shiplength - 1), 8 + 15 * (_shiplength - 1)}};
 
     switch (_shiporientation) {
         case west:
         case east:
             if (_shiporientation == west)  // flip on y axis if west
                 for (int i = 0; i < 13; i++) of[i][0] = -of[i][0];
-            for (int i = 0; i < _shiplenght; i++) AddBlocktoBuffer(_x + i * of[12][0], _y);
+            for (int i = 0; i < _shiplength; i++) AddBlocktoBuffer(_x + i * of[12][0], _y);
             _y--;
 
             pax_draw_line(gfx, BLACK, _x + of[0][0], _y + of[0][1], _x + of[1][0], _y + of[1][1]);
@@ -130,7 +128,7 @@ void AddShiptoBuffer(int _shiplenght, int _shiporientation, int _x, int _y) {
                 for (int i = 0; i < 10; i++) od[i][0] = -od[i][0];
             if (_shiporientation == northeast || _shiporientation == northwest)  // flip on x axis if north
                 for (int i = 0; i < 10; i++) od[i][1] = -od[i][1];
-            for (int i = 0; i < _shiplenght; i++) AddBlocktoBuffer(_x + i * od[0][0], _y + i * od[0][1]);
+            for (int i = 0; i < _shiplength; i++) AddBlocktoBuffer(_x + i * od[0][0], _y + i * od[0][1]);
 
             for (int i = 1; i < 9; i++)
                 pax_draw_line(gfx, BLACK, _x + od[i][0], _y + od[i][1], _x + od[i + 1][0], _y + od[i + 1][1]);
@@ -146,8 +144,8 @@ void Display_battleship_placeships(
 void Display_battleship_battle(
     int  playerboard[20],
     int  ennemyboard[20],
-    char _nickname[nicknamelenght],
-    char _ennemyname[nicknamelenght],
+    char _nickname[nicknamelength],
+    char _ennemyname[nicknamelength],
     int  _turn,
     int  _position[20],
     int  playership[6],
@@ -638,8 +636,8 @@ screen_t screen_battleship_entry(QueueHandle_t application_event_queue, QueueHan
 }
 
 screen_t screen_battleship_splash(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
-    pax_font_t const * font = pax_font_sky;
-    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
+    const pax_font_t* font = pax_font_sky;
+    pax_buf_t*        gfx  = bsp_get_gfx_buffer();
 
     event_t kbsettings = {
         .type                                     = event_control_keyboard,
@@ -705,7 +703,7 @@ screen_t screen_battleship_placeships(
 
     int        shipplaced         = 0;
     int        exitconf           = 0;
-    char const forfeitprompt[128] = "Do you want to exit and declare forfeit";
+    const char forfeitprompt[128] = "Do you want to exit and declare forfeit";
     int        flagstart          = 0;
 
     Display_battleship_placeships(playerboard, shipplaced, flagstart, _position, playership);
@@ -830,8 +828,8 @@ void Display_battleship_placeships(
     int gapinstruction_y = 50;
     int fontsize         = 9;
 
-    pax_font_t const * font = pax_font_sky;
-    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
+    const pax_font_t* font = pax_font_sky;
+    pax_buf_t*        gfx  = bsp_get_gfx_buffer();
 
     ESP_LOGE(TAG, "ship placed: %d", _shipplaced);
 
@@ -962,8 +960,8 @@ screen_t screen_battleship_battle(
     int  exitconf                   = 0;
     char exitprompt[128]            = "Do you want to exit and declare forfeit";
     int  turn                       = ennemy;
-    char nickname[nicknamelenght]   = "";
-    char ennemyname[nicknamelenght] = "AI";
+    char nickname[nicknamelength]   = "";
+    char ennemyname[nicknamelength] = "AI";
 
     for (int i = 0; i < 6; i++) {
         ennemyboard[ennemyship[i]] = boat;
@@ -1080,15 +1078,15 @@ screen_t screen_battleship_battle(
 void Display_battleship_battle(
     int  playerboard[20],
     int  ennemyboard[20],
-    char _nickname[nicknamelenght],
-    char _ennemyname[nicknamelenght],
+    char _nickname[nicknamelength],
+    char _ennemyname[nicknamelength],
     int  _turn,
     int  _position[20],
     int  playership[6],
     int  ennemyship[6]
 ) {
-    pax_font_t const * font = pax_font_sky;
-    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
+    const pax_font_t* font = pax_font_sky;
+    pax_buf_t*        gfx  = bsp_get_gfx_buffer();
 
     int telegraphplayer_x = 100;
     int telegraphennemy_x = gfx->height - telegraphplayer_x;

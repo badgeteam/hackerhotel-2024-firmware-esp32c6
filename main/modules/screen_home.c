@@ -16,10 +16,10 @@
 #include <stdio.h>
 #include <string.h>
 
-extern uint8_t const homescreen_png_start[] asm("_binary_homescreen_png_start");
-extern uint8_t const homescreen_png_end[] asm("_binary_homescreen_png_end");
+extern const uint8_t homescreen_png_start[] asm("_binary_homescreen_png_start");
+extern const uint8_t homescreen_png_end[] asm("_binary_homescreen_png_end");
 
-static char const * TAG = "homescreen";
+static const char* TAG = "homescreen";
 
 screen_t screen_home_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
 
@@ -35,8 +35,8 @@ screen_t screen_home_entry(QueueHandle_t application_event_queue, QueueHandle_t 
     xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 
     // set screen font and buffer
-    pax_font_t const * font = pax_font_marker;
-    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
+    const pax_font_t* font = pax_font_marker;
+    pax_buf_t*        gfx  = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
 
     // memory

@@ -14,20 +14,20 @@
 #include <stdio.h>
 #include <string.h>
 
-static char const * TAG = "textedit";
+static const char* TAG = "textedit";
 
-extern uint8_t const textedit_png_start[] asm("_binary_textedit_png_start");
-extern uint8_t const textedit_png_end[] asm("_binary_textedit_png_end");
-extern uint8_t const capslock_png_start[] asm("_binary_capslock_png_start");
-extern uint8_t const capslock_png_end[] asm("_binary_capslock_png_end");
-extern uint8_t const special_png_start[] asm("_binary_special_png_start");
-extern uint8_t const special_png_end[] asm("_binary_special_png_end");
-extern uint8_t const page1_png_start[] asm("_binary_page1_png_start");
-extern uint8_t const page1_png_end[] asm("_binary_page1_png_end");
-extern uint8_t const page2_png_start[] asm("_binary_page2_png_start");
-extern uint8_t const page2_png_end[] asm("_binary_page2_png_end");
-extern uint8_t const page3_png_start[] asm("_binary_page3_png_start");
-extern uint8_t const page3_png_end[] asm("_binary_page3_png_end");
+extern const uint8_t textedit_png_start[] asm("_binary_textedit_png_start");
+extern const uint8_t textedit_png_end[] asm("_binary_textedit_png_end");
+extern const uint8_t capslock_png_start[] asm("_binary_capslock_png_start");
+extern const uint8_t capslock_png_end[] asm("_binary_capslock_png_end");
+extern const uint8_t special_png_start[] asm("_binary_special_png_start");
+extern const uint8_t special_png_end[] asm("_binary_special_png_end");
+extern const uint8_t page1_png_start[] asm("_binary_page1_png_start");
+extern const uint8_t page1_png_end[] asm("_binary_page1_png_end");
+extern const uint8_t page2_png_start[] asm("_binary_page2_png_start");
+extern const uint8_t page2_png_end[] asm("_binary_page2_png_end");
+extern const uint8_t page3_png_start[] asm("_binary_page3_png_start");
+extern const uint8_t page3_png_end[] asm("_binary_page3_png_end");
 
 void flush_event_queue(QueueHandle_t queue) {
     event_t event = {0};
@@ -60,9 +60,9 @@ void flush_event_queue(QueueHandle_t queue) {
 // xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 // }
 
-void textedit_draw(char const * title, char* value, bool capslock) {
-    pax_font_t const * font = pax_font_saira_regular;
-    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
+void textedit_draw(const char* title, char* value, bool capslock) {
+    const pax_font_t* font = pax_font_saira_regular;
+    pax_buf_t*        gfx  = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
     pax_draw_text(gfx, RED, font, 18, 5, 5, title);
     pax_draw_line(gfx, BLACK, 0, 20, 295, 20);
@@ -74,7 +74,7 @@ void textedit_draw(char const * title, char* value, bool capslock) {
     bsp_display_flush();
 }
 
-void special_draw(char const * title, char* value, uint8_t page) {
+void special_draw(const char* title, char* value, uint8_t page) {
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
     pax_insert_png_buf(gfx, special_png_start, special_png_end - special_png_start, 0, 0, 0);
@@ -180,7 +180,7 @@ char translate_special_character(char input, uint8_t page) {
 }
 
 void special_character(
-    char const *  title,
+    const char*   title,
     QueueHandle_t application_event_queue,
     QueueHandle_t keyboard_event_queue,
     char*         output,
@@ -245,7 +245,7 @@ void special_character(
 
 
 bool textedit(
-    char const *  title,
+    const char*   title,
     QueueHandle_t application_event_queue,
     QueueHandle_t keyboard_event_queue,
     char*         output,

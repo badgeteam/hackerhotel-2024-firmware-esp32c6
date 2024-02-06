@@ -49,7 +49,7 @@ typedef struct _hink {
     spi_device_handle_t spi_device;
     bool                dc_level;
     SemaphoreHandle_t   mutex;
-    uint8_t const *     lut;
+    const uint8_t*      lut;
 } hink_t;
 
 typedef enum _epaper_lut {
@@ -135,10 +135,10 @@ bool      hink_busy(hink_t* device);
 esp_err_t hink_wait(hink_t* device);
 
 // Write data to the display.
-esp_err_t hink_write(hink_t* device, uint8_t const * data);
+esp_err_t hink_write(hink_t* device, const uint8_t* data);
 // Set the active LUT.
 // Does not create a copy of the LUT.
-esp_err_t hink_set_lut(hink_t* device, uint8_t const * lut);
+esp_err_t hink_set_lut(hink_t* device, const uint8_t* lut);
 
 esp_err_t hink_set_gate_driving_voltage(hink_t* device, uint8_t value);
 esp_err_t hink_set_source_driving_voltage(hink_t* device, uint8_t vsh1, uint8_t vsh2, uint8_t vsl);

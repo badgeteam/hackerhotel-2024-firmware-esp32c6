@@ -22,10 +22,10 @@
 #include <stdio.h>
 #include <string.h>
 
-extern uint8_t const settings_png_start[] asm("_binary_settings_png_start");
-extern uint8_t const settings_png_end[] asm("_binary_settings_png_end");
+extern const uint8_t settings_png_start[] asm("_binary_settings_png_start");
+extern const uint8_t settings_png_end[] asm("_binary_settings_png_end");
 
-static char const * TAG = "settings";
+static const char* TAG = "settings";
 
 static void configure_keyboard(QueueHandle_t keyboard_event_queue) {
     InitKeyboard(keyboard_event_queue);
@@ -104,7 +104,7 @@ static void ota_update_wrapped(QueueHandle_t keyboard_event_queue, bool nightly)
 // }
 
 static void edit_nickname(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
-    char nickname[nicknamelenght] = {0};
+    char nickname[nicknamelength] = {0};
     nvs_get_str_wrapped("owner", "nickname", nickname, sizeof(nickname));
     bool res =
         textedit("What is your name?", application_event_queue, keyboard_event_queue, nickname, sizeof(nickname));
@@ -217,7 +217,7 @@ static bool edit_network_type(wifi_auth_mode_t* network_type) {
     *network_type = pick;
     return true;
 
-    pax_font_t const * font = pax_font_saira_regular;
+    const pax_font_t* font = pax_font_saira_regular;
     pax_background(gfx, WHITE);
     pax_draw_text(gfx, RED, font, 18, 0, 0, "Select network type:\n1. Cancel\n3. Move to select\n5. Save and continue");
 
@@ -260,8 +260,8 @@ static bool edit_network_type(wifi_auth_mode_t* network_type) {
 }
 
 static void draw_wifi_defaults() {
-    pax_font_t const * font = pax_font_saira_regular;
-    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
+    const pax_font_t* font = pax_font_saira_regular;
+    pax_buf_t*        gfx  = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
     pax_draw_text(
         gfx,
@@ -377,8 +377,8 @@ static void edit_wifi(QueueHandle_t application_event_queue, QueueHandle_t keybo
 }
 
 static void draw() {
-    pax_font_t const * font = pax_font_saira_regular;
-    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
+    const pax_font_t* font = pax_font_saira_regular;
+    pax_buf_t*        gfx  = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
     pax_draw_text(gfx, RED, font, 18, 5, 5, "Settings & OTA update");
     pax_insert_png_buf(gfx, settings_png_start, settings_png_end - settings_png_start, 0, gfx->width - 24, 0);

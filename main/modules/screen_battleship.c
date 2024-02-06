@@ -32,8 +32,8 @@ screen_t screen_placeholder_entry(QueueHandle_t application_event_queue, QueueHa
     };
     xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 
-    pax_font_t const * font = pax_font_saira_regular;
-    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
+    const pax_font_t* font = pax_font_saira_regular;
+    pax_buf_t*        gfx  = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
 
     pax_draw_text(gfx, RED, font, 18, 5, 5, "BATTLESHIP");

@@ -24,14 +24,14 @@
 #include <soc/spi_reg.h>
 #include <string.h>
 
-static char const * TAG = "epaper";
+static const char* TAG = "epaper";
 
 static void IRAM_ATTR hink_spi_pre_transfer_callback(spi_transaction_t* t) {
     hink_t* device = ((hink_t*)t->user);
     gpio_set_level(device->pin_dcx, device->dc_level);
 }
 
-static esp_err_t hink_send(hink_t* device, uint8_t const * data, int const len, bool const dc_level) {
+static esp_err_t hink_send(hink_t* device, const uint8_t* data, const int len, const bool dc_level) {
     if (device->spi_device == NULL) {
         return ESP_FAIL;
     }
@@ -52,7 +52,7 @@ static esp_err_t hink_send(hink_t* device, uint8_t const * data, int const len, 
     return spi_device_transmit(device->spi_device, &transaction);
 }
 
-static esp_err_t hink_write_init_data(hink_t* device, uint8_t const * data) {
+static esp_err_t hink_write_init_data(hink_t* device, const uint8_t* data) {
     esp_err_t res;
     uint8_t   cmd, len;
 
@@ -79,15 +79,15 @@ static esp_err_t hink_write_init_data(hink_t* device, uint8_t const * data) {
     return res;
 }
 
-static esp_err_t hink_send_command(hink_t* device, uint8_t const cmd) {
+static esp_err_t hink_send_command(hink_t* device, const uint8_t cmd) {
     return hink_send(device, &cmd, 1, false);
 }
 
-static esp_err_t hink_send_data(hink_t* device, uint8_t const * data, uint16_t const length) {
+static esp_err_t hink_send_data(hink_t* device, const uint8_t* data, const uint16_t length) {
     return hink_send(device, data, length, true);
 }
 
-static esp_err_t hink_send_u32(hink_t* device, uint32_t const data) {
+static esp_err_t hink_send_u32(hink_t* device, const uint32_t data) {
     uint8_t buffer[4];
     buffer[0] = (data >> 24) & 0xFF;
     buffer[1] = (data >> 16) & 0xFF;
@@ -96,14 +96,14 @@ static esp_err_t hink_send_u32(hink_t* device, uint32_t const data) {
     return hink_send(device, buffer, 4, true);
 }
 
-static esp_err_t hink_send_u16(hink_t* device, uint32_t const data) {
+static esp_err_t hink_send_u16(hink_t* device, const uint32_t data) {
     uint8_t buffer[2];
     buffer[0] = (data >> 8) & 0xFF;
     buffer[1] = data & 0xFF;
     return hink_send(device, buffer, 2, true);
 }
 
-static esp_err_t hink_send_u8(hink_t* device, uint8_t const data) {
+static esp_err_t hink_send_u8(hink_t* device, const uint8_t data) {
     return hink_send(device, &data, 1, true);
 }
 
@@ -136,7 +136,7 @@ esp_err_t hink_wait(hink_t* device) {
     return ESP_OK;
 }
 
-static esp_err_t hink_select(hink_t* device, bool const state) {
+static esp_err_t hink_select(hink_t* device, const bool state) {
     if (device->spi_device != NULL) {
         return ESP_FAIL;
     }
@@ -331,7 +331,7 @@ esp_err_t hink_deinit(hink_t* device) {
     return res;
 }
 
-esp_err_t hink_write(hink_t* device, uint8_t const * buffer) {
+esp_err_t hink_write(hink_t* device, const uint8_t* buffer) {
     if (device->spi_device == NULL) {
         return ESP_FAIL;
     }
@@ -474,7 +474,7 @@ esp_err_t hink_sleep(hink_t* device) {
 
 // Set the active LUT.
 // Does not create a copy of the LUT.
-esp_err_t hink_set_lut(hink_t* device, uint8_t const * lut) {
+esp_err_t hink_set_lut(hink_t* device, const uint8_t* lut) {
     device->lut = lut;
     return ESP_OK;
 }
