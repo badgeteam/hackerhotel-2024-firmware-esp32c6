@@ -1,4 +1,5 @@
 #include "screen_home.h"
+#include "application.h"
 #include "bsp.h"
 #include "esp_err.h"
 #include "esp_log.h"
@@ -21,18 +22,35 @@ extern uint8_t const homescreen_png_end[] asm("_binary_homescreen_png_end");
 
 static char const * TAG = "homescreen";
 
+char const screen_name[10][30] = {
+    "Lighthouse",
+    "Engine room",
+    "Billboard",
+    "Name tag",
+    "Library",
+
+    "Deibler",
+    "Repertoire",
+    "template",
+    "test",
+    "Carondelet",
+};
+
 screen_t screen_home_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
 
     // update the keyboard event handler settings
-    event_t kbsettings = {
-        .type                                     = event_control_keyboard,
-        .args_control_keyboard.enable_typing      = false,
-        .args_control_keyboard.enable_actions     = {true, true, true, true, true},
-        .args_control_keyboard.enable_leds        = true,
-        .args_control_keyboard.enable_relay       = true,
-        kbsettings.args_control_keyboard.capslock = false,
-    };
-    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
+    configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_1, true);
+    // event_t kbsettings = {
+    //     .type                                     = event_control_keyboard,
+    //     .args_control_keyboard.enable_typing      = false,
+    //     .args_control_keyboard.enable_actions     = {true, true, true, true, true},
+    //     .args_control_keyboard.enable_leds        = true,
+    //     .args_control_keyboard.enable_relay       = true,
+    //     kbsettings.args_control_keyboard.capslock = false,
+    // };
+    // xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 
     // set screen font and buffer
     pax_font_t const * font = pax_font_marker;
@@ -72,6 +90,7 @@ screen_t screen_home_entry(QueueHandle_t application_event_queue, QueueHandle_t 
     pax_draw_text(gfx, RED, font, scale, (296 - dims.x) / 2, (100 - dims.y) / 2, nickname);
     pax_insert_png_buf(gfx, homescreen_png_start, homescreen_png_end - homescreen_png_start, 0, gfx->width - 24, 0);
     bsp_display_flush();
+    uint8_t cursor = 0;
 
     while (1) {
         event_t event = {0};
@@ -80,6 +99,7 @@ screen_t screen_home_entry(QueueHandle_t application_event_queue, QueueHandle_t 
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
+
                         case SWITCH_1: return screen_settings; break;
                         case SWITCH_2: return screen_billboard; break;
                         case SWITCH_3: return screen_battleship; break;

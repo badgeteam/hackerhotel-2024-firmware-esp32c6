@@ -62,12 +62,17 @@ void       DisplayWallofText(
 void Justify_right_text(
     pax_buf_t* buf, pax_col_t color, pax_font_t const * font, float font_size, float x, float y, char const * text
 );
-int Screen_Confirmation(char _prompt[128], QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
+
+int Screen_Information(char const * _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
+int Screen_Confirmation(
+    char const * _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue
+);
 int WaitingforOpponent(char const * _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
 void AddSwitchesBoxtoBuffer(int _switch);
 void AddOneTextSWtoBuffer(int _SW, char const * SWstr);
 void DisplayTelegraph(int _colour, int _position);
 int  InputtoNum(char _inputletter);
+
 void configure_keyboard_guru(QueueHandle_t keyboard_event_queue, bool SW1, bool SW2, bool SW3, bool SW4, bool SW5);
 void InitKeyboard(QueueHandle_t keyboard_event_queue);
 void configure_keyboard_kb(QueueHandle_t keyboard_event_queue, event_t _kbsettings);
@@ -81,10 +86,12 @@ void configure_keyboard_rotate_disable(QueueHandle_t keyboard_event_queue);
 void configure_keyboard_relay(QueueHandle_t keyboard_event_queue, bool _relay);
 void configure_keyboard_caps(QueueHandle_t keyboard_event_queue, bool _caps);
 void DebugKeyboardSettings(void);
-int  Increment(int _num, int _max);
-int  Decrement(int _num, int _max);
-void AddDiamondSelecttoBuf(int _x, int _y, int _gap);
-uint32_t  ChartoLED(char _letter);
+
+int      Increment(int _num, int _max);
+int      Decrement(int _num, int _max);
+void     AddDiamondSelecttoBuf(int _x, int _y, int _gap);
+uint32_t ChartoLED(char _letter);
+
 esp_err_t nvs_get_str_wrapped(char const * namespace, char const * key, char* buffer, size_t buffer_size);
 esp_err_t nvs_set_str_wrapped(char const * namespace, char const * key, char* buffer);
 esp_err_t nvs_get_u8_wrapped(char const * namespace, char const * key, uint8_t* value);

@@ -80,7 +80,9 @@ screen_t screen_battleship_battle(
     int*          victoryflag,
     uint8_t       playership[6],
     uint8_t       ennemyship[6],
-    uint8_t       bodge
+    uint8_t       bodge,
+    uint8_t       player_data[BSpayload],
+    uint8_t       ennemy_data[BSpayload]
 );
 screen_t screen_battleship_victory(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int* victoryflag
@@ -702,24 +704,6 @@ screen_t screen_battleship_entry(QueueHandle_t application_event_queue, QueueHan
     uint8_t player_data[BSpayload];
     uint8_t ennemy_data[BSpayload];
 
-    for (int i = 0; i < BSpayload; i++) {
-        player_data[i] = BS_default;
-        ennemy_data[i] = BS_default;
-    }
-    for (int i = 0; i < 20; i++) {
-        playerboard[i] = 0;
-        ennemyboard[i] = 0;
-    }
-
-    for (int i = 0; i < 6; i++) {
-        playership[i] = -1;
-        ennemyship[i] = -1;
-    }
-
-    // set the starter, can be overridden if a player oppenent is the inviter
-    player_data[BS_starter] = esp_random() % 2;
-    player_data[BS_abort]   = 0;
-
     int victoryflag;
 
     screen_t current_screen_BS = screen_BS_splash;
@@ -727,6 +711,26 @@ screen_t screen_battleship_entry(QueueHandle_t application_event_queue, QueueHan
         switch (current_screen_BS) {
             case screen_BS_splash:
                 {
+                    for (int i = 0; i < BSpayload; i++) {
+                        player_data[i] = BS_default;
+                        ennemy_data[i] = BS_default;
+                    }
+                    for (int i = 0; i < 20; i++) {
+                        playerboard[i] = 0;
+                        ennemyboard[i] = 0;
+                    }
+
+                    for (int i = 0; i < 6; i++) {
+                        playership[i] = -1;
+                        ennemyship[i] = -1;
+                    }
+
+                    // set the starter, can be overridden if a player oppenent is the inviter
+                    player_data[BS_starter]      = esp_random() % 2;
+                    player_data[BS_abort]        = playing_game;
+                    player_data[BS_ACK]          = 0;
+                    player_data[BS_current_turn] = 0;
+
                     victoryflag       = playing;
                     current_screen_BS = screen_battleship_splash(
                         application_event_queue,
@@ -750,8 +754,6 @@ screen_t screen_battleship_entry(QueueHandle_t application_event_queue, QueueHan
             case screen_BS_battle:
                 {
                     ESP_LOGE(TAG, "entry");
-                    debugboardstatus(playerboard);
-                    debugshipstatus(playership);
                     current_screen_BS = screen_battleship_battle(
                         application_event_queue,
                         keyboard_event_queue,
@@ -761,7 +763,9 @@ screen_t screen_battleship_entry(QueueHandle_t application_event_queue, QueueHan
                         &victoryflag,
                         playership,
                         ennemyship,
-                        playership[5]
+                        playership[5],
+                        player_data,
+                        ennemy_data
                     );
                     break;
                 }
@@ -783,14 +787,13 @@ screen_t screen_battleship_splash(
     uint8_t       player_data[BSpayload],
     uint8_t       ennemy_data[BSpayload]
 ) {
-    pax_font_t const * font = pax_font_sky;
-    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
 
-    int  timer_track = esp_timer_get_time() / 5000000;
-    bool sendflag    = false;
-    bool listenflag  = true;
-    bool invitesent  = 0;
-    bool displayflag = 1;
+    int  timer_track         = esp_timer_get_time() / 5000000;
+    bool sendflag            = false;
+    bool listenflag          = true;
+    bool displayflag         = true;
+    bool invitationrepliedto = false;
 
     // init radio
     QueueHandle_t BS_queue = badge_comms_add_listener(MESSAGE_TYPE_BATTLESHIP, sizeof(badge_message_battleship));
@@ -801,10 +804,40 @@ screen_t screen_battleship_splash(
     badge_comms_message_t message;
 
     while (1) {
+        event_t event = {0};
+        // logic
+        if (player_data[BS_invite] == invitation_sent && ennemy_data[BS_invite] == BS_default) {  // 1A
+            WaitingforOpponent("Waiting for reply", application_event_queue, keyboard_event_queue);
+        } else if (ennemy_data[BS_invite] == invitation_sent && ennemy_data[BS_abort] == playing_game && invitationrepliedto == false) {  // 1B
+
+            if (Screen_Confirmation(
+                    "Player 2 invited you to a game of Carondelet",
+                    application_event_queue,
+                    keyboard_event_queue
+                ))
+                player_data[BS_invite] = invitation_accepted;
+            else
+                player_data[BS_invite] = invitation_declined;
+            sendflag            = true;
+            invitationrepliedto = true;
+        } else if (ennemy_data[BS_invite] == invitation_sent && ennemy_data[BS_abort] == aborted_game) {
+            Screen_Information("Player 2 has aborted the game", application_event_queue, keyboard_event_queue);
+            return screen_BS_splash;
+        } else if (ennemy_data[BS_invite] == invitation_accepted) {  // 2-1A
+            Screen_Information("Player 2 has accepted your invitation", application_event_queue, keyboard_event_queue);
+            return screen_BS_placeships;
+        } else if (ennemy_data[BS_invite] == invitation_declined) {  // 2-2A
+            Screen_Information("Player 2 has declined your invitation", application_event_queue, keyboard_event_queue);
+            return screen_BS_splash;
+        } else if (invitationrepliedto == true && player_data[BS_invite] == invitation_accepted && sendflag == false) {
+            return screen_BS_placeships;
+        } else if (invitationrepliedto == true && player_data[BS_invite] == invitation_declined && sendflag == false) {
+            return screen_BS_splash;
+        }
+
         if ((esp_timer_get_time() / 1000000) > (timer_track * BroadcastInterval / 5)) {
             if (sendflag) {
                 send_battleship(player_data);
-                bsp_set_addressable_led(LED_YELLOW);
             }
             timer_track++;
         }
@@ -819,10 +852,10 @@ screen_t screen_battleship_splash(
             AddOneTextSWtoBuffer(SWITCH_4, "Replay");
             AddOneTextSWtoBuffer(SWITCH_5, "Online");
             bsp_display_flush();
-            displayflag = 0;
+            displayflag = false;
         }
-        event_t event = {0};
-        if (listenflag)
+
+        if (listenflag)  // otherwise if this runs while the listener is remove, badge crash
             if (xQueueReceive(BS_queue, &message, pdMS_TO_TICKS(10)) == pdTRUE) {
                 ESP_LOGI(TAG, "listening");
                 badge_comms_message_t message;
@@ -837,17 +870,16 @@ screen_t screen_battleship_splash(
                 bsp_set_addressable_led(LED_PURPLE);
                 vTaskDelay(pdMS_TO_TICKS(100));
                 bsp_set_addressable_led(LED_OFF);
-                if (ennemy_data[BS_invite] == invitation_sent) {
-                    char const invite_s[128] = "[placeholder] sent you and invitation to play battleship";
-                    Screen_Confirmation(invite_s, application_event_queue, keyboard_event_queue);
-                } else if (ennemy_data[BS_invite] == invitation_accepted) {
-                    char const invite_a[128] = "invitation accepted";
-                    Screen_Confirmation(invite_a, application_event_queue, keyboard_event_queue);
-                } else if (ennemy_data[BS_invite] == invitation_declined) {
-                    char const invite_d[128] = "invitation declined";
-                    Screen_Confirmation(invite_d, application_event_queue, keyboard_event_queue);
+                vTaskDelay(pdMS_TO_TICKS(100));
+
+                if (ennemy_data[BS_ACK] == 1)  // the ennemy got the message, stop sending it.
+                    sendflag = false;
+                else {  // the ennemy sent an actual message, not a ACK, so send ACK back
+                    player_data[BS_ACK] = 1;
+                    send_battleship(player_data);
                 }
-                // DisplayBillboard(1, ts->nickname, ts->payload);
+                vTaskDelay(pdMS_TO_TICKS(100));
+                player_data[BS_ACK] = 0;
             }
         if (xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE) {
             switch (event.type) {
@@ -873,14 +905,13 @@ screen_t screen_battleship_splash(
                         case SWITCH_3: DebugData(ennemy_data); break;
                         case SWITCH_4: DebugData(player_data); break;  // replay, to implement
                         case SWITCH_5:                                 // online
-                            badge_comms_remove_listener(BS_queue);
+                            badge_comms_remove_listener(BS_queue);  // to not clash with the listener of the repertoire
                             screen_repertoire_entry(application_event_queue, keyboard_event_queue, 1);
                             BS_queue =
                                 badge_comms_add_listener(MESSAGE_TYPE_BATTLESHIP, sizeof(badge_message_battleship));
                             sendflag               = true;
                             listenflag             = true;
                             player_data[BS_invite] = invitation_sent;
-                            WaitingforOpponent("Waiting for reply", application_event_queue, keyboard_event_queue);
                             break;
                         default: break;
                     }
@@ -907,6 +938,14 @@ screen_t screen_battleship_placeships(
     int flagstart   = 0;
     int displayflag = 1;
 
+    // debug
+    shipplaced    = long_whole;
+    playership[0] = 0;
+    playership[1] = 1;
+    playership[2] = 2;
+    playership[3] = 19;
+    playership[4] = 18;
+    playership[5] = 16;
 
     while (1) {
         if (displayflag) {
@@ -1106,7 +1145,9 @@ screen_t screen_battleship_battle(
     int*          victoryflag,
     uint8_t       playership[6],
     uint8_t       ennemyship[6],
-    uint8_t       bodge
+    uint8_t       bodge,
+    uint8_t       player_data[BSpayload],
+    uint8_t       ennemy_data[BSpayload]
 ) {
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, false, false, false, false);
@@ -1115,45 +1156,187 @@ screen_t screen_battleship_battle(
     debugboardstatus(playerboard);
     debugshipstatus(playership);
 
-    int  turn                       = ennemy;
+    bool oppenenttype               = human;
+    bool turn                       = esp_random() % 2;
     char nickname[nicknamelenght]   = "";
     char ennemyname[nicknamelenght] = "AI";
-    int  displayflag                = 1;
+    bool displayflag                = false;
+    bool sendflag                   = true;
+    bool listenflag                 = true;
+    int  ennemy_phase               = 0;
+    int  timer_track                = esp_timer_get_time() / (BroadcastInterval * 1000000);
+    bool populate_ennemy_board      = true;
 
-    for (int i = 0; i < 6; i++) {
-        ennemyboard[ennemyship[i]] = boat;
+    int last_ennemy_turn = 0;
+
+    if (ennemy_data[BS_invite] == invitation_accepted)  // player sent the invite
+        turn = player_data[BS_starter];
+    else if (player_data[BS_invite] == invitation_accepted)  // opponent sent the invite
+        turn = !ennemy_data[BS_starter];
+    else
+        oppenenttype = AI;
+    ESP_LOGE(TAG, "oppenenttype: %d", oppenenttype);
+
+    ESP_LOGE(TAG, "ennemy_data[BS_invite]: %d", ennemy_data[BS_invite]);
+    ESP_LOGE(TAG, "player_data[BS_invite]: %d", player_data[BS_invite]);
+    ESP_LOGE(TAG, "player_data[BS_starter]: %d", player_data[BS_starter]);
+    ESP_LOGE(TAG, "ennemy_data[BS_starter]: %d", ennemy_data[BS_starter]);
+    ESP_LOGE(TAG, "turn: %d", turn);
+    // separated the displayed turn from the logic turn
+    bool turn_displayed = turn;
+
+    if (oppenenttype == AI) {
+        AIplaceShips(ennemyboard, _position, ennemyship);
+        sendflag    = false;
+        displayflag = true;
     }
+    for (int i = 0; i < 6; i++) player_data[BS_shipboard_start + i] = playership[i];
 
     nvs_get_str_wrapped("owner", "nickname", nickname, sizeof(nickname));
-    AIplaceShips(ennemyboard, _position, ennemyship);
     ESP_LOGE(TAG, "just before display test");
     debugboardstatus(playerboard);
     debugshipstatus(playership);
     playership[5] = bodge;
 
+    // init radio
+    QueueHandle_t BS_queue = badge_comms_add_listener(MESSAGE_TYPE_BATTLESHIP, sizeof(badge_message_battleship));
+    if (BS_queue == NULL) {
+        ESP_LOGE(TAG, "Failed to add listener");
+    } else
+        ESP_LOGI(TAG, "listening");
+    badge_comms_message_t message;
+
     while (1) {
+        event_t event = {0};
+        // logic
+        if (CheckforVictory(playerboard, ennemyboard) && sendflag == false) {
+            ESP_LOGE(TAG, "enter victory");
+            vTaskDelay(pdMS_TO_TICKS(1000));
+            *victoryflag = CheckforVictory(playerboard, ennemyboard);
+            ESP_LOGE(TAG, "Victory flag: %d", *victoryflag);
+            badge_comms_remove_listener(BS_queue);
+            vTaskDelay(pdMS_TO_TICKS(100));
+            return screen_BS_victory;
+        }
+
+        if (turn == ennemy && oppenenttype == human && last_ennemy_turn != ennemy_data[BS_current_turn]) {
+            ESP_LOGE(TAG, "ENTER HUMAN ENNEMY");
+            int hitlocation = ennemy_data[BS_shotlocation];
+            if (playerboard[hitlocation] == water)
+                playerboard[hitlocation] = missedshot;
+            if (playerboard[hitlocation] == boat)
+                playerboard[hitlocation] = boathit;
+            ESP_LOGE(TAG, "ennemy shot");
+            CheckforDestroyedShips(playerboard, ennemyboard, playership, ennemyship);
+            turn_displayed = ennemy;
+            displayflag    = 1;
+            turn           = player;
+        }
+
+        if (turn == ennemy && oppenenttype == AI) {
+            switch (ennemy_phase) {
+                case 0: ennemy_phase = 1; break;
+                case 1:
+                    vTaskDelay(pdMS_TO_TICKS(1000));
+                    ennemy_phase = 2;
+                    break;
+                case 2:
+                    int hitlocation = -1;
+                    do hitlocation = esp_random() % 20;
+                    while ((playerboard[hitlocation] == missedshot) || (playerboard[hitlocation] == boathit) ||
+                           (playerboard[hitlocation] == boatdestroyed));
+                    if (playerboard[hitlocation] == water)
+                        playerboard[hitlocation] = missedshot;
+                    if (playerboard[hitlocation] == boat)
+                        playerboard[hitlocation] = boathit;
+                    ESP_LOGE(TAG, "ennemy shot");
+                    debugboardstatus(ennemyboard);
+                    debugboardstatus(playerboard);
+                    CheckforDestroyedShips(playerboard, ennemyboard, playership, ennemyship);
+                    turn_displayed = ennemy;
+                    displayflag    = 1;
+                    ennemy_phase   = 3;
+                    break;
+                case 3:
+                    vTaskDelay(pdMS_TO_TICKS(1000));
+                    turn         = player;
+                    ennemy_phase = 0;
+                    break;
+                default: break;
+            }
+        }
+
         if (displayflag) {
             Display_battleship_battle(
                 playerboard,
                 ennemyboard,
                 nickname,
                 ennemyname,
-                turn,
+                turn_displayed,
                 _position,
                 playership,
                 ennemyship
             );
             displayflag = 0;
         }
-        event_t event = {0};
-        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+        if ((esp_timer_get_time() / 1000000) > (timer_track * BroadcastInterval / 5)) {
+            if (sendflag) {
+                send_battleship(player_data);
+            }
+            timer_track++;
+        }
+
+        // if (listenflag)  // otherwise if this runs while the listener is remove, badge crash
+        //     if (xQueueReceive(BS_queue, &message, pdMS_TO_TICKS(10)) == pdTRUE) {
+        //         ESP_LOGI(TAG, "listening");
+        //         badge_comms_message_t message;
+        //         xQueueReceive(BS_queue, &message, portMAX_DELAY);
+        //         badge_message_battleship* ts = (badge_message_battleship*)message.data;
+
+        //         for (int i = 0; i < BSpayload; i++) {
+        //             ennemy_data[i] = ts->dataBS[i];
+        //             if (log)
+        //                 ESP_LOGI(TAG, "dataBS: %d is %d", i, ts->dataBS[i]);
+        //         }
+        //         bsp_set_addressable_led(LED_PURPLE);
+        //         vTaskDelay(pdMS_TO_TICKS(100));
+        //         bsp_set_addressable_led(LED_OFF);
+        //         vTaskDelay(pdMS_TO_TICKS(100));
+
+        //         if (ennemy_data[BS_ACK] == 1)  // the ennemy got the message, stop sending it.
+        //             sendflag = false;
+        //         else {  // the ennemy sent an actual message, not a ACK, so send ACK back
+        //             player_data[BS_ACK] = 1;
+        //             send_battleship(player_data);
+        //         }
+
+        //         if (populate_ennemy_board == true) {
+        //             ESP_LOGI(TAG, "POPULATE ENNEMY BOARD");
+        //             for (int i = 0; i < 6; i++) {
+        //                 ennemyship[i]              = ennemy_data[BS_shipboard_start + i];
+        //                 ennemyboard[ennemyship[i]] = boat;
+        //             }
+        //             populate_ennemy_board = false;
+        //             displayflag           = true;
+        //         }
+
+        //         vTaskDelay(pdMS_TO_TICKS(100));
+        //         player_data[BS_ACK] = 0;
+        //     }
+
+        if (xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE) {
+            ESP_LOGI(TAG, "EVENT");
             switch (event.type) {
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
                         case SWITCH_1:
-                            if (Screen_Confirmation(forfeitprompt, application_event_queue, keyboard_event_queue))
+                            if (Screen_Confirmation(forfeitprompt, application_event_queue, keyboard_event_queue)) {
+                                badge_comms_remove_listener(BS_queue);
+                                vTaskDelay(pdMS_TO_TICKS(100));
                                 return screen_home;
+                            } else
+                                displayflag = 1;
                             break;
                         case SWITCH_2: break;
                         case SWITCH_3: break;
@@ -1163,51 +1346,27 @@ screen_t screen_battleship_battle(
                     }
                     if (event.args_input_keyboard.character != '\0' &&
                         TelegraphtoBlock(event.args_input_keyboard.character) != -1) {
-                        turn            = player;
-                        int hitlocation = TelegraphtoBlock(event.args_input_keyboard.character);
-                        if (ennemyboard[hitlocation] == water)
-                            ennemyboard[hitlocation] = missedshot;
-                        if (ennemyboard[hitlocation] == boat)
-                            ennemyboard[hitlocation] = boathit;
-                        ESP_LOGE(TAG, "player shot");
-                        CheckforDestroyedShips(playerboard, ennemyboard, playership, ennemyship);
-                        displayflag = 1;
-                        debugboardstatus(ennemyboard);
-                        debugboardstatus(playerboard);
 
-                        if (CheckforVictory(playerboard, ennemyboard)) {
-                            ESP_LOGE(TAG, "enter victroy");
-                            vTaskDelay(pdMS_TO_TICKS(1000));
-                            *victoryflag = CheckforVictory(playerboard, ennemyboard);
-                            ESP_LOGE(TAG, "Victory flag: %d", *victoryflag);
-                            return screen_BS_victory;
+                        if (turn == player) {
+                            int hitlocation = TelegraphtoBlock(event.args_input_keyboard.character);
+                            if (ennemyboard[hitlocation] == water)
+                                ennemyboard[hitlocation] = missedshot;
+                            if (ennemyboard[hitlocation] == boat)
+                                ennemyboard[hitlocation] = boathit;
+                            ESP_LOGE(TAG, "player shot");
+                            CheckforDestroyedShips(playerboard, ennemyboard, playership, ennemyship);
+                            turn_displayed = player;
+                            displayflag    = 1;
+                            debugboardstatus(ennemyboard);
+                            debugboardstatus(playerboard);
+
+                            turn = ennemy;
+                            if (oppenenttype == human) {
+                                player_data[BS_shotlocation] = hitlocation;
+                                player_data[BS_current_turn]++;
+                                sendflag = true;
+                            }
                         }
-
-                        vTaskDelay(pdMS_TO_TICKS(1000));
-                        turn = ennemy;
-
-                        do hitlocation = esp_random() % 20;
-                        while ((playerboard[hitlocation] == missedshot) || (playerboard[hitlocation] == boathit) ||
-                               (playerboard[hitlocation] == boatdestroyed));
-                        if (playerboard[hitlocation] == water)
-                            playerboard[hitlocation] = missedshot;
-                        if (playerboard[hitlocation] == boat)
-                            playerboard[hitlocation] = boathit;
-                        ESP_LOGE(TAG, "ennemy shot");
-                        debugboardstatus(ennemyboard);
-                        debugboardstatus(playerboard);
-
-                        CheckforDestroyedShips(playerboard, ennemyboard, playership, ennemyship);
-
-                        displayflag = 1;
-                        if (CheckforVictory(playerboard, ennemyboard)) {
-                            ESP_LOGE(TAG, "enter victroy");
-                            vTaskDelay(pdMS_TO_TICKS(1000));
-                            *victoryflag = CheckforVictory(playerboard, ennemyboard);
-                            ESP_LOGE(TAG, "Victory flag: %d", *victoryflag);
-                            return screen_BS_victory;
-                        }
-                        vTaskDelay(pdMS_TO_TICKS(1000));
                     }
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
@@ -1252,9 +1411,9 @@ void Display_battleship_battle(
     pax_draw_text(gfx, BLACK, font, 14, pl_x, pl_y, _nickname);
     Justify_right_text(gfx, BLACK, font, 14, pl_x, pl_y, _ennemyname);
 
-    if (_turn == ennemy)  // counter intuitive, but it is waiting on next player so it's inverted
-        pax_draw_text(gfx, BLACK, font, text_fontsize, pl_x, tn_y, "your turn");
     if (_turn == player)
+        pax_draw_text(gfx, BLACK, font, text_fontsize, pl_x, tn_y, "your turn");
+    if (_turn == ennemy)
         Justify_right_text(gfx, BLACK, font, text_fontsize, pl_x, tn_y, "your turn");
 
     // instructions

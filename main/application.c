@@ -200,7 +200,52 @@ void Justify_right_text(
     pax_draw_text(buf, color, font, font_size, _xoffset, y, text);
 }
 
-int Screen_Confirmation(char _prompt[128], QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+// screen that stop the game loop from running and display information until the player press any inputs
+int Screen_Information(
+    char const * _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue
+) {
+    event_t    tempkbsettings = kbsettings;
+    pax_buf_t* gfx            = bsp_get_gfx_buffer();
+
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
+
+    int text_x = gfx->height / 2;
+    int text_y = 40;
+
+    pax_background(gfx, WHITE);
+    AddSWtoBuffer("", "", "", "", "");
+    pax_center_text(gfx, BLACK, font1, fontsizeS, text_x, text_y, _prompt);
+    bsp_display_flush();
+
+    while (1) {
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        // case SWITCH_1:
+                        // case SWITCH_2:
+                        // case SWITCH_3:
+                        // case SWITCH_4:
+                        // case SWITCH_5:
+                        default:
+                            configure_keyboard_kb(keyboard_event_queue, tempkbsettings);
+                            return 0;
+                            break;
+                    }
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type); break;
+            }
+        }
+    }
+}
+
+// screen that stop the game loop from running, asking for a prompt and return 1 (yes) or 0 (no)
+int Screen_Confirmation(
+    char const * _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue
+) {
     event_t    tempkbsettings = kbsettings;
     pax_buf_t* gfx            = bsp_get_gfx_buffer();
 
