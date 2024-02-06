@@ -18,22 +18,25 @@ typedef enum {
     MESSAGE_TYPE_MAX        = 0xFF
 } badge_comms_message_type_t;
 
-typedef struct {
+typedef struct _badge_message_timestamp {
     time_t unix_time;
-} badge_message_timestamp_t;
+} __attribute__((packed)) badge_message_timestamp_t;
+
 static_assert(
     sizeof(badge_message_timestamp_t) < BADGE_COMMS_USER_DATA_MAX_LEN, "badge_message_timestamp_t is too big"
 );
 
-typedef struct {
+typedef struct _badge_message_str {
     char nickname[nicknamelength];
     char payload[messagelength];
-} badge_message_str_t;
+} __attribute__((packed)) badge_message_str_t;
+
 static_assert(sizeof(badge_message_str_t) < BADGE_COMMS_USER_DATA_MAX_LEN, "badge_message_timestamp_t is too big");
 
-typedef struct {
+typedef struct _badge_message_repertoire {
     char nickname[nicknamelength];
-} badge_message_repertoire_t;
+} __attribute__((packed)) badge_message_repertoire_t;
+
 static_assert(
     sizeof(badge_message_repertoire_t) < BADGE_COMMS_USER_DATA_MAX_LEN, "badge_message_timestamp_t is too big"
 );
