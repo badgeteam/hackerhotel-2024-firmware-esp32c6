@@ -15,10 +15,10 @@
 #include <stdio.h>
 #include <string.h>
 
-extern uint8_t const shades_png_start[] asm("_binary_shades_png_start");
-extern uint8_t const shades_png_end[] asm("_binary_shades_png_end");
+extern const uint8_t shades_png_start[] asm("_binary_shades_png_start");
+extern const uint8_t shades_png_end[] asm("_binary_shades_png_end");
 
-static char const * TAG = "shades";
+static const char* TAG = "shades";
 
 screen_t screen_shades_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
 
@@ -32,8 +32,8 @@ screen_t screen_shades_entry(QueueHandle_t application_event_queue, QueueHandle_
     };
     xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 
-    pax_font_t const * font = pax_font_saira_regular;
-    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
+    const pax_font_t* font = pax_font_saira_regular;
+    pax_buf_t*        gfx  = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
     pax_insert_png_buf(gfx, shades_png_start, shades_png_end - shades_png_start, 0, 0, 0);
     bsp_display_flush();

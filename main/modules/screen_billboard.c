@@ -22,7 +22,7 @@
 
 #define nbmessages 9
 
-static char const * TAG = "billboard";
+static const char* TAG = "billboard";
 
 char nicknamearray[nbmessages][nicknamelenght];
 char messagearray[nbmessages][messagelenght];
@@ -146,8 +146,8 @@ void send_str(char _nickname[nicknamelenght], char _payload[messagelenght]) {
 
 void DisplayBillboard(int _addmessageflag, char* _nickname, char* _message) {
     // set screen font and buffer
-    pax_font_t const * font = pax_font_sky;
-    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
+    const pax_font_t* font = pax_font_sky;
+    pax_buf_t*        gfx  = bsp_get_gfx_buffer();
 
     // set infrastructure
     pax_background(gfx, WHITE);

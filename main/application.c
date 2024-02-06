@@ -49,26 +49,26 @@
 #include <string.h>
 #include <time.h>
 
-extern uint8_t const border1_png_start[] asm("_binary_border1_png_start");
-extern uint8_t const border1_png_end[] asm("_binary_border1_png_end");
-extern uint8_t const border2_png_start[] asm("_binary_border2_png_start");
-extern uint8_t const border2_png_end[] asm("_binary_border2_png_end");
-extern uint8_t const switchframe1_png_start[] asm("_binary_switchframe1_png_start");
-extern uint8_t const switchframe1_png_end[] asm("_binary_switchframe1_png_end");
-extern uint8_t const switchframe2_png_start[] asm("_binary_switchframe2_png_start");
-extern uint8_t const switchframe2_png_end[] asm("_binary_switchframe2_png_end");
+extern const uint8_t border1_png_start[] asm("_binary_border1_png_start");
+extern const uint8_t border1_png_end[] asm("_binary_border1_png_end");
+extern const uint8_t border2_png_start[] asm("_binary_border2_png_start");
+extern const uint8_t border2_png_end[] asm("_binary_border2_png_end");
+extern const uint8_t switchframe1_png_start[] asm("_binary_switchframe1_png_start");
+extern const uint8_t switchframe1_png_end[] asm("_binary_switchframe1_png_end");
+extern const uint8_t switchframe2_png_start[] asm("_binary_switchframe2_png_start");
+extern const uint8_t switchframe2_png_end[] asm("_binary_switchframe2_png_end");
 
-extern uint8_t const diamondl_png_start[] asm("_binary_diamondl_png_start");
-extern uint8_t const diamondl_png_end[] asm("_binary_diamondl_png_end");
-extern uint8_t const diamondr_png_start[] asm("_binary_diamondr_png_start");
-extern uint8_t const diamondr_png_end[] asm("_binary_diamondr_png_end");
+extern const uint8_t diamondl_png_start[] asm("_binary_diamondl_png_start");
+extern const uint8_t diamondl_png_end[] asm("_binary_diamondl_png_end");
+extern const uint8_t diamondr_png_start[] asm("_binary_diamondr_png_start");
+extern const uint8_t diamondr_png_end[] asm("_binary_diamondr_png_end");
 
 event_t kbsettings;
 
-int const telegraph_X[20] = {0, -8, 8, -16, 0, 16, -24, -8, 8, 24, -24, -8, 8, 24, -16, 0, 16, -8, 8, 0};
-int const telegraph_Y[20] = {12, 27, 27, 42, 42, 42, 57, 57, 57, 57, 71, 71, 71, 71, 86, 86, 86, 101, 101, 116};
+const int telegraph_X[20] = {0, -8, 8, -16, 0, 16, -24, -8, 8, 24, -24, -8, 8, 24, -16, 0, 16, -8, 8, 0};
+const int telegraph_Y[20] = {12, 27, 27, 42, 42, 42, 57, 57, 57, 57, 71, 71, 71, 71, 86, 86, 86, 101, 101, 116};
 
-static char const * TAG = "application utilities";
+static const char* TAG = "application utilities";
 
 void Addborder1toBuffer(void) {
 
@@ -106,9 +106,7 @@ void AddSWborder2toBuffer(void) {
     );
 }
 
-void AddSWtoBuffer(
-    char const * SW1str, char const * SW2str, char const * SW3str, char const * SW4str, char const * SW5str
-) {
+void AddSWtoBuffer(const char* SW1str, const char* SW2str, const char* SW3str, const char* SW4str, const char* SW5str) {
     Addborder2toBuffer();
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_insert_png_buf(gfx, switchframe2_png_start, switchframe2_png_end - switchframe2_png_start, 0, 127 - 11, 0);
@@ -122,7 +120,7 @@ void AddSWtoBuffer(
     pax_center_text(gfx, BLACK, font1, 9, o_x + gapx * 4, o_y, SW5str);
 }
 
-void AddOneTextSWtoBuffer(int _SW, char const * SWstr) {
+void AddOneTextSWtoBuffer(int _SW, const char* SWstr) {
     pax_buf_t* gfx  = bsp_get_gfx_buffer();
     int        gapx = 60;
     int        o_x  = 28;
@@ -131,7 +129,7 @@ void AddOneTextSWtoBuffer(int _SW, char const * SWstr) {
 }
 
 void Justify_right_text(
-    pax_buf_t* buf, pax_col_t color, pax_font_t const * font, float font_size, float x, float y, char const * text
+    pax_buf_t* buf, pax_col_t color, const pax_font_t* font, float font_size, float x, float y, const char* text
 ) {
     pax_vec1_t dims = {
         .x = 999,
@@ -158,8 +156,8 @@ int DisplayExitConfirmation(char _prompt[128], QueueHandle_t keyboard_event_queu
     int text_y = 20;
     // int text_fontsize = 18;
 
-    pax_font_t const * font = pax_font_sky;
-    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
+    const pax_font_t* font = pax_font_sky;
+    pax_buf_t*        gfx  = bsp_get_gfx_buffer();
     bsp_apply_lut(lut_1s);
     pax_background(gfx, WHITE);
     Addborder2toBuffer();
@@ -228,8 +226,8 @@ void DisplayWallofTextWords(
     int  _centered
 ) {
     // set screen font and buffer
-    pax_font_t const * font = pax_font_sky;
-    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
+    const pax_font_t* font = pax_font_sky;
+    pax_buf_t*        gfx  = bsp_get_gfx_buffer();
 
     // to verify text lenght on buffer
     pax_vec1_t dims = {
@@ -320,8 +318,8 @@ void DisplayWallofText(
     int  _centered
 ) {
     // set screen font and buffer
-    pax_font_t const * font = pax_font_sky;
-    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
+    const pax_font_t* font = pax_font_sky;
+    pax_buf_t*        gfx  = bsp_get_gfx_buffer();
 
     // to verify text lenght on buffer
     pax_vec1_t dims = {
@@ -612,7 +610,7 @@ void AddDiamondSelecttoBuf(int _x, int _y, int _gap) {
     //             pax_draw_line(gfx, BLACK, _x + od[i][0], _y + od[i][1], _x + od[i + 1][0], _y + od[i + 1][1]);
 }
 
-esp_err_t nvs_get_str_wrapped(char const * namespace, char const * key, char* buffer, size_t buffer_size) {
+esp_err_t nvs_get_str_wrapped(const char* namespace, const char* key, char* buffer, size_t buffer_size) {
     nvs_handle_t handle;
     esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
     if (res == ESP_OK) {
@@ -631,7 +629,7 @@ esp_err_t nvs_get_str_wrapped(char const * namespace, char const * key, char* bu
     return res;
 }
 
-esp_err_t nvs_set_str_wrapped(char const * namespace, char const * key, char* buffer) {
+esp_err_t nvs_set_str_wrapped(const char* namespace, const char* key, char* buffer) {
     nvs_handle_t handle;
     esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
     if (res == ESP_OK) {
@@ -642,7 +640,7 @@ esp_err_t nvs_set_str_wrapped(char const * namespace, char const * key, char* bu
     return res;
 }
 
-esp_err_t nvs_get_u8_wrapped(char const * namespace, char const * key, uint8_t* value) {
+esp_err_t nvs_get_u8_wrapped(const char* namespace, const char* key, uint8_t* value) {
     nvs_handle_t handle;
     esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
     if (res != ESP_OK) {
@@ -653,7 +651,7 @@ esp_err_t nvs_get_u8_wrapped(char const * namespace, char const * key, uint8_t* 
     return res;
 }
 
-esp_err_t nvs_set_u8_wrapped(char const * namespace, char const * key, uint8_t value) {
+esp_err_t nvs_set_u8_wrapped(const char* namespace, const char* key, uint8_t value) {
     nvs_handle_t handle;
     esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
     if (res != ESP_OK) {
@@ -665,7 +663,7 @@ esp_err_t nvs_set_u8_wrapped(char const * namespace, char const * key, uint8_t v
     return res;
 }
 
-esp_err_t nvs_get_u8_blob_wrapped(char const * namespace, char const * key, uint8_t* value, size_t length) {
+esp_err_t nvs_get_u8_blob_wrapped(const char* namespace, const char* key, uint8_t* value, size_t length) {
     nvs_handle_t handle;
     esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
     if (res != ESP_OK) {
@@ -680,7 +678,7 @@ esp_err_t nvs_get_u8_blob_wrapped(char const * namespace, char const * key, uint
     return res;
 }
 
-esp_err_t nvs_set_u8_blob_wrapped(char const * namespace, char const * key, uint8_t* value, size_t length) {
+esp_err_t nvs_set_u8_blob_wrapped(const char* namespace, const char* key, uint8_t* value, size_t length) {
     nvs_handle_t handle;
     esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
     if (res != ESP_OK) {

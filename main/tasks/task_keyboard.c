@@ -7,7 +7,7 @@
 #include "freertos/queue.h"
 #include <stdint.h>
 
-static char const * TAG = "keyboard";
+static const char* TAG = "keyboard";
 
 typedef struct _keyboard_state {
     uint8_t button_state_left;

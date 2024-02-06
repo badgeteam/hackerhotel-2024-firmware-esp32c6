@@ -23,10 +23,10 @@
 #include <esp_random.h>
 #include <string.h>
 
-static char const * TAG = "template";
+static const char* TAG = "template";
 
-extern uint8_t const border1_png_start[] asm("_binary_border1_png_start");
-extern uint8_t const border1_png_end[] asm("_binary_border1_png_end");
+extern const uint8_t border1_png_start[] asm("_binary_border1_png_start");
+extern const uint8_t border1_png_end[] asm("_binary_border1_png_end");
 
 void receive_strb(void) {
     // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t

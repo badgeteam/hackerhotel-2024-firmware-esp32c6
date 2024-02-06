@@ -22,18 +22,18 @@
 #include <esp_random.h>
 #include <string.h>
 
-char const forfeitprompt[128] = "Do you want to exit and declare forfeit";
+const char forfeitprompt[128] = "Do you want to exit and declare forfeit";
 
-extern uint8_t const deibler1_png_start[] asm("_binary_deibler1_png_start");
-extern uint8_t const deibler1_png_end[] asm("_binary_deibler1_png_end");
+extern const uint8_t deibler1_png_start[] asm("_binary_deibler1_png_start");
+extern const uint8_t deibler1_png_end[] asm("_binary_deibler1_png_end");
 // lose imeage is x = 169 y = 63
-extern uint8_t const deiblerl_png_start[] asm("_binary_deiblerl_png_start");
-extern uint8_t const deiblerl_png_end[] asm("_binary_deiblerl_png_end");
-extern uint8_t const caronv_png_start[] asm("_binary_caronv_png_start");
-extern uint8_t const caronv_png_end[] asm("_binary_caronv_png_end");
+extern const uint8_t deiblerl_png_start[] asm("_binary_deiblerl_png_start");
+extern const uint8_t deiblerl_png_end[] asm("_binary_deiblerl_png_end");
+extern const uint8_t caronv_png_start[] asm("_binary_caronv_png_start");
+extern const uint8_t caronv_png_end[] asm("_binary_caronv_png_end");
 
-static char const * TAG = "hangman";
-screen_t            screen_hangman_splash(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
+static const char* TAG = "hangman";
+screen_t           screen_hangman_splash(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
 screen_t screen_hangman_victory(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int _vflag);
 
 void DisplayHangman(

@@ -23,12 +23,12 @@
 #include <esp_random.h>
 #include <string.h>
 
-static char const * TAG = "repertoire";
+static const char* TAG = "repertoire";
 
-extern uint8_t const b_arrow1_png_start[] asm("_binary_b_arrow1_png_start");
-extern uint8_t const b_arrow1_png_end[] asm("_binary_b_arrow1_png_end");
-extern uint8_t const b_arrow2_png_start[] asm("_binary_b_arrow2_png_start");
-extern uint8_t const b_arrow2_png_end[] asm("_binary_b_arrow2_png_end");
+extern const uint8_t b_arrow1_png_start[] asm("_binary_b_arrow1_png_start");
+extern const uint8_t b_arrow1_png_end[] asm("_binary_b_arrow1_png_end");
+extern const uint8_t b_arrow2_png_start[] asm("_binary_b_arrow2_png_start");
+extern const uint8_t b_arrow2_png_end[] asm("_binary_b_arrow2_png_end");
 
 bool StoreRepertoire(
     char _repertoryIDlist[maxIDrepertoire][nicknamelenght], uint8_t mac[maxIDrepertoire][8], uint8_t _nbrepertoryID
