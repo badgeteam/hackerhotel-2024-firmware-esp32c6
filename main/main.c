@@ -53,14 +53,14 @@
 #include <time.h>
 #include <unistd.h>
 
-static char const * TAG = "main";
+static const char* TAG = "main";
 
 static QueueHandle_t keyboard_event_queue    = NULL;
 static QueueHandle_t application_event_queue = NULL;
 static QueueHandle_t input_handler_queues[3] = {NULL};
 
 esp_err_t setup(void) {
-    esp_app_desc_t const * app_description = esp_app_get_description();
+    const esp_app_desc_t* app_description = esp_app_get_description();
     printf("BADGE.TEAM %s firmware v%s\r\n", app_description->project_name, app_description->version);
 
     esp_err_t res = bsp_init();
@@ -133,6 +133,27 @@ void app_main(void) {
             ESP_LOGE(TAG, "Failed to print");
         }
     }
+
+    // SAO leds test
+    bsp_sao_addressable_led_enable();
+    uint8_t saoleddata[] = {
+        0xFF,
+        0x00,
+        0x00,
+        0xFF,
+        0x00,
+        0x00,
+        0xFF,
+        0x00,
+        0x00,
+        0xFF,
+        0x00,
+        0x00,
+        0xFF,
+        0x00,
+        0x00,
+    };
+    bsp_sao_addressable_led_set(saoleddata, sizeof(saoleddata));
 
     // Main application
     screen_t current_screen = screen_home;

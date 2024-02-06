@@ -1,7 +1,4 @@
 #include "bsp.h"
-
-#include <string.h>
-
 #include "ch32.h"
 #include "driver/gpio.h"
 #include "driver/i2c.h"
@@ -26,6 +23,7 @@
 #include "pax_codecs.h"
 #include "pax_gfx.h"
 #include "sdmmc_cmd.h"
+#include <string.h>
 
 const uint8_t target_coprocessor_fw_version = 4;  // Must match the value in the ch32_firmware.bin resource
 
@@ -41,6 +39,14 @@ static hink_t epaper = {
     .spi_max_transfer_size = SOC_SPI_MAXIMUM_BUFFER_SIZE,
     .screen_width          = EPAPER_WIDTH,
     .screen_height         = EPAPER_HEIGHT,
+};
+
+static ledstrip_t ledstrip = {
+    .pin = GPIO_LED_DATA,
+};
+
+static ledstrip_t sao_ledstrip = {
+    .pin = GPIO_SAO_IO1,
 };
 
 static sdmmc_card_t* card = NULL;
@@ -164,12 +170,12 @@ static void coprocessor_intr_task(void* arg) {
 }
 
 static esp_err_t initialize_led() {
-    esp_err_t res = ledstrip_init(GPIO_LED_DATA);
+    esp_err_t res = ledstrip_init(&ledstrip);
     if (res != ESP_OK) {
         return res;
     }
     const uint8_t data[3] = {0, 0, 0};
-    res                   = ledstrip_send(data, 3);
+    res                   = ledstrip_send(&ledstrip, data, 3);
     return res;
 }
 
@@ -177,7 +183,8 @@ static esp_err_t initialize_nvs() {
     esp_err_t res = nvs_flash_init();
     if (res == ESP_ERR_NVS_NO_FREE_PAGES || res == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         res = nvs_flash_erase();
-        if (res != ESP_OK) return res;
+        if (res != ESP_OK)
+            return res;
         res = nvs_flash_init();
     }
     return res;
@@ -259,7 +266,14 @@ static esp_err_t initialize_epaper_lut() {
 
     if (!hink_get_lut_populated()) {
         ESP_LOGW(TAG, "Epaper LUT table not initialized");
-        res = hink_read_lut(GPIO_SPI_MOSI, GPIO_SPI_CLK, epaper.pin_cs, epaper.pin_dcx, epaper.pin_reset, epaper.pin_busy);
+        res = hink_read_lut(
+            GPIO_SPI_MOSI,
+            GPIO_SPI_CLK,
+            epaper.pin_cs,
+            epaper.pin_dcx,
+            epaper.pin_reset,
+            epaper.pin_busy
+        );
         if (res != ESP_OK) {
             return res;
         }
@@ -331,7 +345,13 @@ esp_err_t initialize_coprocessor() {
     bool invalid_version = false;
 
     coprocessor_fw_version = 0;
-    esp_err_t res          = i2c_read_reg(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_FW_VERSION, (uint8_t*) &coprocessor_fw_version, sizeof(uint16_t));
+    esp_err_t res          = i2c_read_reg(
+        I2C_BUS,
+        COPROCESSOR_ADDR,
+        COPROCESSOR_REG_FW_VERSION,
+        (uint8_t*)&coprocessor_fw_version,
+        sizeof(uint16_t)
+    );
     if (res != ESP_OK) {
         coprocessor_fw_version = 0;
         ESP_LOGW(TAG, "Failed to read from CH32V003 via I2C");
@@ -350,7 +370,13 @@ esp_err_t initialize_coprocessor() {
             ESP_LOGW(TAG, "Succesfully programmed the CH32V003 co-processor");
         }
 
-        res = i2c_read_reg(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_FW_VERSION, (uint8_t*) &coprocessor_fw_version, sizeof(uint16_t));
+        res = i2c_read_reg(
+            I2C_BUS,
+            COPROCESSOR_ADDR,
+            COPROCESSOR_REG_FW_VERSION,
+            (uint8_t*)&coprocessor_fw_version,
+            sizeof(uint16_t)
+        );
         if (res != ESP_OK || coprocessor_fw_version == 0) {
             ESP_LOGE(TAG, "Failed to read from CH32V003 via I2C after flashing");
             return ESP_ERR_INVALID_RESPONSE;
@@ -382,7 +408,8 @@ esp_err_t initialize_coprocessor() {
     }
 
     res = gpio_isr_handler_add(GPIO_CH32_INT, coprocessor_intr_handler, NULL);
-    if (res != ESP_OK) return res;
+    if (res != ESP_OK)
+        return res;
 
     gpio_config_t sao_cfg = {
         .pin_bit_mask = BIT64(GPIO_CH32_INT),
@@ -414,7 +441,11 @@ static esp_err_t initialize_sdcard() {
     slot_config.gpio_cs               = GPIO_SDCARD_CS;
     slot_config.host_id               = SPI2_HOST;
 
-    esp_vfs_fat_sdmmc_mount_config_t mount_config = {.format_if_mount_failed = false, .max_files = 5, .allocation_unit_size = 16 * 1024};
+    esp_vfs_fat_sdmmc_mount_config_t mount_config = {
+        .format_if_mount_failed = false,
+        .max_files              = 5,
+        .allocation_unit_size   = 16 * 1024
+    };
 
     esp_err_t res = esp_vfs_fat_sdspi_mount("/sdcard", &host, &slot_config, &mount_config, &card);
     if (res != ESP_OK) {
@@ -503,10 +534,14 @@ esp_err_t bsp_init() {
         bsp_display_error("Flashing CH32V003 failed\nPlease contact support");
         return res;
     } else if (res == ESP_ERR_INVALID_RESPONSE) {
-        bsp_display_error("No response from coprocessor\nRemove all addons and restart\nIf that doesn't help\nplease contact support");
+        bsp_display_error(
+            "No response from coprocessor\nRemove all addons and restart\nIf that doesn't help\nplease contact support"
+        );
         return res;
     } else if (res == ESP_ERR_INVALID_VERSION) {
-        bsp_display_error("Coprocessor reports invalid\nversion. Please contact support\nBadge will attempt to continue starting");
+        bsp_display_error(
+            "Coprocessor reports invalid\nversion. Please contact support\nBadge will attempt to continue starting"
+        );
         vTaskDelay(2000 / portTICK_PERIOD_MS);
     } else if (res != ESP_OK) {
         bsp_display_error("Initializing coprocessor failed\n\nPlease contact support");
@@ -539,12 +574,14 @@ esp_err_t bsp_init() {
 }
 
 hink_t* bsp_get_epaper() {
-    if (!epaper_ready) return NULL;
+    if (!epaper_ready)
+        return NULL;
     return &epaper;
 }
 
 esp_err_t bsp_display_flush() {
-    if (!epaper_ready) return ESP_FAIL;
+    if (!epaper_ready)
+        return ESP_FAIL;
     // if (!pax_is_dirty(&pax_buffer)) return ESP_OK;
     hink_write(&epaper, pax_buffer.buf);
     pax_mark_clean(&pax_buffer);
@@ -568,15 +605,19 @@ bool bsp_display_busy() {
 }
 
 pax_buf_t* bsp_get_gfx_buffer() {
-    if (!bsp_ready) return NULL;
+    if (!bsp_ready)
+        return NULL;
     return &pax_buffer;
 }
 
-QueueHandle_t bsp_get_button_queue() { return coprocessor_button_queue; }
+QueueHandle_t bsp_get_button_queue() {
+    return coprocessor_button_queue;
+}
 
 esp_err_t bsp_set_leds(uint32_t led) {
     if (xSemaphoreTake(coprocessor_semaphore, portMAX_DELAY)) {
-        esp_err_t res = i2c_write_reg_n(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_LED, (uint8_t*) &led, sizeof(uint32_t));
+        esp_err_t res =
+            i2c_write_reg_n(I2C_BUS, COPROCESSOR_ADDR, COPROCESSOR_REG_LED, (uint8_t*)&led, sizeof(uint32_t));
         xSemaphoreGive(coprocessor_semaphore);
         return res;
     }
@@ -589,7 +630,9 @@ void bsp_restart() {
     esp_restart();
 }
 
-esp_err_t bsp_apply_lut(epaper_lut_t lut_type) { return hink_apply_lut(&epaper, lut_type); }
+esp_err_t bsp_apply_lut(epaper_lut_t lut_type) {
+    return hink_apply_lut(&epaper, lut_type);
+}
 
 bool bsp_wait_for_button() {
     QueueHandle_t               queue         = bsp_get_button_queue();
@@ -633,10 +676,12 @@ esp_err_t bsp_set_addressable_led(uint32_t color) {
     data[0] = (color >> 8) & 0xFF;   // R
     data[1] = (color >> 16) & 0xFF;  // G
     data[2] = (color >> 0) & 0xFF;   // B
-    return ledstrip_send(data, 3);
+    return ledstrip_send(&ledstrip, data, 3);
 }
 
-esp_err_t bsp_set_addressable_leds(const uint8_t *data, int length) { return ledstrip_send(data, length); }
+esp_err_t bsp_set_addressable_leds(const uint8_t* data, int length) {
+    return ledstrip_send(&ledstrip, data, length);
+}
 
 bool bsp_passed_factory_test() {
     nvs_handle_t nvs_handle;
@@ -695,8 +740,13 @@ esp_err_t bsp_factory_test() {
     if (charging) {
         bsp_set_addressable_led(0xFF0000);  // Red
         char message[128];
-        snprintf(message, sizeof(message) - 1,
-                 " --- FAILED ---\nBattery chip indicates charging\nwithout battery connected\nVoltage: %.2fv\n\nIGNORE? Press button 3", voltage);
+        snprintf(
+            message,
+            sizeof(message) - 1,
+            " --- FAILED ---\nBattery chip indicates charging\nwithout battery connected\nVoltage: %.2fv\n\nIGNORE? "
+            "Press button 3",
+            voltage
+        );
         bsp_display_message("Factory test", message);
         uint8_t button = 0;
         while (button != SWITCH_3) {
@@ -707,7 +757,12 @@ esp_err_t bsp_factory_test() {
     if (voltage >= 4.3) {
         bsp_set_addressable_led(0xFF0000);  // Red
         char message[128];
-        snprintf(message, sizeof(message) - 1, " --- FAILED ---\nBattery terminal voltage too high\nVoltage: %.2fv\n\nIGNORE? Press button 4", voltage);
+        snprintf(
+            message,
+            sizeof(message) - 1,
+            " --- FAILED ---\nBattery terminal voltage too high\nVoltage: %.2fv\n\nIGNORE? Press button 4",
+            voltage
+        );
         bsp_display_message("Factory test", message);
         uint8_t button = 0;
         while (button != SWITCH_4) {
@@ -719,7 +774,9 @@ esp_err_t bsp_factory_test() {
 
     bsp_display_message(
         "Factory test",
-        "Check LEDs:\nAll diamond LEDs should be on\nAddressable LED should be pink\n\nOK?   Press button 5\nFAIL? Press button 1\nSKIP? Press button 2");
+        "Check LEDs:\nAll diamond LEDs should be on\nAddressable LED should be pink\n\nOK?   Press button 5\nFAIL? "
+        "Press button 1\nSKIP? Press button 2"
+    );
 
     bsp_flush_button_queue();
     uint8_t button = bsp_wait_for_button_number();
@@ -757,7 +814,7 @@ esp_err_t bsp_factory_test() {
 
     pax_background(&pax_buffer, WHITE);
     pax_insert_png_buf(&pax_buffer, hackerhotel_png_start, hackerhotel_png_end - hackerhotel_png_start, 0, 0, 0);
-    esp_app_desc_t const* app_description = esp_app_get_description();
+    const esp_app_desc_t* app_description = esp_app_get_description();
     pax_draw_text(&pax_buffer, RED, pax_font_sky_mono, 9, 0, 0, app_description->version);
     bsp_apply_lut(lut_full);
     bsp_display_flush();
@@ -773,7 +830,9 @@ esp_err_t bsp_factory_test() {
     return ESP_OK;
 }
 
-esp_err_t bsp_set_relay(bool state) { return gpio_set_level(GPIO_RELAY, state); }
+esp_err_t bsp_set_relay(bool state) {
+    return gpio_set_level(GPIO_RELAY, state);
+}
 
 float bsp_battery_voltage() {
     int       adc_raw = 0;
@@ -785,4 +844,18 @@ float bsp_battery_voltage() {
     return (adc_raw * 8.3) / 4095.0;
 }
 
-bool bsp_battery_charging() { return !gpio_get_level(GPIO_BATT_CHRG); }
+bool bsp_battery_charging() {
+    return !gpio_get_level(GPIO_BATT_CHRG);
+}
+
+esp_err_t bsp_sao_addressable_led_enable() {
+    return ledstrip_init(&sao_ledstrip);
+}
+
+esp_err_t bsp_sao_addressable_led_disable() {
+    return ledstrip_deinit(&sao_ledstrip);
+}
+
+esp_err_t bsp_sao_addressable_led_set(const uint8_t* data, int length) {
+    return ledstrip_send(&sao_ledstrip, data, length);
+}

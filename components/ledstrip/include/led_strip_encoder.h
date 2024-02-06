@@ -5,8 +5,8 @@
  */
 #pragma once
 
-#include <stdint.h>
 #include "driver/rmt_encoder.h"
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,7 +29,7 @@ typedef struct {
  *      - ESP_ERR_NO_MEM out of memory when creating led strip encoder
  *      - ESP_OK if creating encoder successfully
  */
-esp_err_t rmt_new_led_strip_encoder(const led_strip_encoder_config_t *config, rmt_encoder_handle_t *ret_encoder);
+esp_err_t rmt_new_led_strip_encoder(led_strip_encoder_config_t const * config, rmt_encoder_handle_t* ret_encoder);
 
 #ifdef __cplusplus
 }

@@ -82,7 +82,7 @@ AllowShortLoopsOnASingleLine: true # allow single-line loops
 SpaceBeforeAssignmentOperators: true
 
 # configure pointers:
-QualifierAlignment: Right # The const is to the left of the type (unless the pointer is also a constant).
+QualifierAlignment: Left # The const is to the left of the type (unless the pointer is also a constant).
 SpaceAroundPointerQualifiers: After
 
 # include sorting:
