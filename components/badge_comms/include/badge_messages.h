@@ -28,10 +28,12 @@ static_assert(
 typedef struct {
     char nickname[nicknamelength];
     char payload[messagelength];
-} badge_message_str;
-static_assert(sizeof(badge_message_str) < BADGE_COMMS_USER_DATA_MAX_LEN, "badge_message_timestamp_t is too big");
+} badge_message_str_t;
+static_assert(sizeof(badge_message_str_t) < BADGE_COMMS_USER_DATA_MAX_LEN, "badge_message_timestamp_t is too big");
 
 typedef struct {
     char nickname[nicknamelength];
-} badge_message_repertoire;
-static_assert(sizeof(badge_message_repertoire) < BADGE_COMMS_USER_DATA_MAX_LEN, "badge_message_timestamp_t is too big");
+} badge_message_repertoire_t;
+static_assert(
+    sizeof(badge_message_repertoire_t) < BADGE_COMMS_USER_DATA_MAX_LEN, "badge_message_timestamp_t is too big"
+);

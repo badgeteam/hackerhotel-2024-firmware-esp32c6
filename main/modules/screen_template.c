@@ -30,7 +30,7 @@ extern const uint8_t border1_png_end[] asm("_binary_border1_png_end");
 
 void receive_strb(void) {
     // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
-    QueueHandle_t str_queue = badge_comms_add_listener(MESSAGE_TYPE_STRING, sizeof(badge_message_str));
+    QueueHandle_t str_queue = badge_comms_add_listener(MESSAGE_TYPE_STRING, sizeof(badge_message_str_t));
     // check if an error occurred (check logs for the reason)
     if (str_queue == NULL) {
         ESP_LOGE(TAG, "Failed to add listener");
@@ -46,7 +46,7 @@ void receive_strb(void) {
         xQueueReceive(str_queue, &message, portMAX_DELAY);
 
         // typecast the message data to the expected message type
-        badge_message_str* ts = (badge_message_str*)message.data;
+        badge_message_str_t* ts = (badge_message_str_t*)message.data;
 
 
         // show we got a message, and its contents
@@ -72,7 +72,7 @@ void receive_strb(void) {
 
 void send_strb(void) {
     // first we create a struct with the data, as we would like to receive on the other side
-    badge_message_str data;
+    badge_message_str_t data;
     char              _nickname[nicknamelength] = "banana";
     char              _payload[messagelength]   = "bread";
     strcpy(data.nickname, _nickname);

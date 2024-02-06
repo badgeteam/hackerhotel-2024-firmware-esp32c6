@@ -76,7 +76,7 @@ int GetRepertoire(char _repertoryIDlist[maxIDrepertoire][nicknamelength], uint8_
 void receive_repertoire(void) {
     // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
     QueueHandle_t repertoire_queue =
-        badge_comms_add_listener(MESSAGE_TYPE_REPERTOIRE, sizeof(badge_message_repertoire));
+        badge_comms_add_listener(MESSAGE_TYPE_REPERTOIRE, sizeof(badge_message_repertoire_t));
     // check if an error occurred (check logs for the reason)
     if (repertoire_queue == NULL) {
         ESP_LOGE(TAG, "Failed to add listener");
@@ -92,7 +92,7 @@ void receive_repertoire(void) {
         xQueueReceive(repertoire_queue, &message, portMAX_DELAY);
 
         // typecast the message data to the expected message type
-        badge_message_repertoire* ts = (badge_message_repertoire*)message.data;
+        badge_message_repertoire_t* ts = (badge_message_repertoire_t*)message.data;
 
         // show we got a message, and its contents
         ESP_LOGI(TAG, "Got a string: %s \n", ts->nickname);
@@ -114,8 +114,8 @@ void receive_repertoire(void) {
 
 void send_repertoire(void) {
     // first we create a struct with the data, as we would like to receive on the other side
-    badge_message_repertoire data;
-    char                     _nickname[nicknamelength] = "Guru-san";
+    badge_message_repertoire_t data;
+    char                       _nickname[nicknamelength] = "Guru-san";
     // nvs_get_str_wrapped("owner", "nickname", _nickname, sizeof(_nickname));
 
     strcpy(data.nickname, _nickname);
@@ -290,7 +290,7 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
     // init broadcast receive
     // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
     QueueHandle_t repertoire_queue =
-        badge_comms_add_listener(MESSAGE_TYPE_REPERTOIRE, sizeof(badge_message_repertoire));
+        badge_comms_add_listener(MESSAGE_TYPE_REPERTOIRE, sizeof(badge_message_repertoire_t));
     // check if an error occurred (check logs for the reason)
     if (repertoire_queue == NULL) {
         ESP_LOGE(TAG, "Failed to add listener");
@@ -310,9 +310,9 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
 
         // upon receiving a message
         if (xQueueReceive(repertoire_queue, &message, pdMS_TO_TICKS(1)) == pdTRUE) {
-            badge_message_repertoire* ts                          = (badge_message_repertoire*)message.data;
-            char                      inboundnick[nicknamelength] = "";
-            uint8_t                   _inbound_mac[8];
+            badge_message_repertoire_t* ts                          = (badge_message_repertoire_t*)message.data;
+            char                        inboundnick[nicknamelength] = "";
+            uint8_t                     _inbound_mac[8];
             strcpy(inboundnick, ts->nickname);
             for (int i = 0; i < 8; i++) {
                 _inbound_mac[i] = message.from_mac[i];
