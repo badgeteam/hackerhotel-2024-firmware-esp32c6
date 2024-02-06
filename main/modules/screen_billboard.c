@@ -30,8 +30,8 @@ int  messagecursor = 0;
 int  initflag      = 0;
 
 // void receive_repertoire(void) {
-//     // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
-//     QueueHandle_t str_queue = badge_comms_add_listener(MESSAGE_TYPE_STRING, sizeof(badge_message_str_t));
+//     // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_time_t
+//     QueueHandle_t str_queue = badge_comms_add_listener(MESSAGE_TYPE_STRING, sizeof(badge_message_chat_t));
 //     // check if an error occurred (check logs for the reason)
 //     if (str_queue == NULL) {
 //         ESP_LOGE(TAG, "Failed to add listener");
@@ -47,7 +47,7 @@ int  initflag      = 0;
 //         xQueueReceive(str_queue, &message, portMAX_DELAY);
 
 //         // typecast the message data to the expected message type
-//         badge_message_str_t* ts = (badge_message_str_t*)message.data;
+//         badge_message_chat_t* ts = (badge_message_chat_t*)message.data;
 
 //         // show we got a message, and its contents
 //         ESP_LOGI(TAG, "Got a string: %s \n", ts->nickname);
@@ -70,7 +70,7 @@ int  initflag      = 0;
 
 // void send_repertoire(void) {
 //     // first we create a struct with the data, as we would like to receive on the other side
-//     badge_message_str_t data;
+//     badge_message_chat_t data;
 //     char              nickname[nicknamelength]     = "dwawdawda";
 //     char              playermessage[messagelength] = "babnannan";
 //     strcpy(data.nickname, nickname);
@@ -90,8 +90,8 @@ int  initflag      = 0;
 // }
 
 void receive_str(void) {
-    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
-    QueueHandle_t str_queue = badge_comms_add_listener(MESSAGE_TYPE_STRING, sizeof(badge_message_str_t));
+    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_time_t
+    QueueHandle_t str_queue = badge_comms_add_listener(MESSAGE_TYPE_STRING, sizeof(badge_message_chat_t));
     // check if an error occurred (check logs for the reason)
     if (str_queue == NULL) {
         ESP_LOGE(TAG, "Failed to add listener");
@@ -107,7 +107,7 @@ void receive_str(void) {
         xQueueReceive(str_queue, &message, portMAX_DELAY);
 
         // typecast the message data to the expected message type
-        badge_message_str_t* ts = (badge_message_str_t*)message.data;
+        badge_message_chat_t* ts = (badge_message_chat_t*)message.data;
 
         // show we got a message, and its contents
         ESP_LOGI(TAG, "Got a string: %s \n", ts->nickname);
@@ -130,7 +130,7 @@ void receive_str(void) {
 
 void send_str(char _nickname[nicknamelength], char _payload[messagelength]) {
     // first we create a struct with the data, as we would like to receive on the other side
-    badge_message_str_t data;
+    badge_message_chat_t data;
     strcpy(data.nickname, _nickname);
     strcpy(data.payload, _payload);
 
@@ -229,8 +229,8 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
     char playermessage[messagelength] = "";
 
     // init broadcast receive
-    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
-    QueueHandle_t str_queue = badge_comms_add_listener(MESSAGE_TYPE_STRING, sizeof(badge_message_str_t));
+    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_time_t
+    QueueHandle_t str_queue = badge_comms_add_listener(MESSAGE_TYPE_STRING, sizeof(badge_message_chat_t));
     // check if an error occurred (check logs for the reason)
     if (str_queue == NULL) {
         ESP_LOGE(TAG, "Failed to add listener");
@@ -247,7 +247,7 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
 
         // upon receiving a message
         if (xQueueReceive(str_queue, &message, pdMS_TO_TICKS(1)) == pdTRUE) {
-            badge_message_str_t* ts = (badge_message_str_t*)message.data;
+            badge_message_chat_t* ts = (badge_message_chat_t*)message.data;
             ESP_LOGI(TAG, "Got a string: %s \n", ts->nickname);
             ESP_LOGI(TAG, "Got a string: %s \n", ts->payload);
             DisplayBillboard(1, ts->nickname, ts->payload);

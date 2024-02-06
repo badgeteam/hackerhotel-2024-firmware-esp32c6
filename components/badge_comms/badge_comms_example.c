@@ -8,8 +8,8 @@
 static char const * TAG = "bodge comms example";
 
 void receive_timestamp(void) {
-    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
-    QueueHandle_t timestamp_queue = badge_comms_add_listener(MESSAGE_TYPE_TIMESTAMP, sizeof(badge_message_timestamp_t));
+    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_time_t
+    QueueHandle_t timestamp_queue = badge_comms_add_listener(MESSAGE_TYPE_TIMESTAMP, sizeof(badge_message_time_t));
     // check if an error occurred (check logs for the reason)
     if (timestamp_queue == NULL) {
         ESP_LOGE(TAG, "Failed to add listener");
@@ -24,7 +24,7 @@ void receive_timestamp(void) {
         xQueueReceive(timestamp_queue, &message, portMAX_DELAY);
 
         // typecast the message data to the expected message type
-        badge_message_timestamp_t* ts = (badge_message_timestamp_t*)message.data;
+        badge_message_time_t* ts = (badge_message_time_t*)message.data;
 
         // show we got a message, and its contents
         ESP_LOGI(TAG, "Got a timestamp: %lld (%08llX)\n", ts->unix_time, ts->unix_time);
@@ -46,7 +46,7 @@ void receive_timestamp(void) {
 
 void send_timestamp(void) {
     // first we create a struct with the data, as we would like to receive on the other side
-    badge_message_timestamp_t data = {
+    badge_message_time_t data = {
         .unix_time = time(NULL)  // add the system timestamp to the message
     };
 

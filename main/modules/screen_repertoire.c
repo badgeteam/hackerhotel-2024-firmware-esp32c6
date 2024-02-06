@@ -74,7 +74,7 @@ int GetRepertoire(char _repertoryIDlist[maxIDrepertoire][nicknamelength], uint8_
 }
 
 void receive_repertoire(void) {
-    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
+    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_time_t
     QueueHandle_t repertoire_queue =
         badge_comms_add_listener(MESSAGE_TYPE_REPERTOIRE, sizeof(badge_message_repertoire_t));
     // check if an error occurred (check logs for the reason)
@@ -288,7 +288,7 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
 
 
     // init broadcast receive
-    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
+    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_time_t
     QueueHandle_t repertoire_queue =
         badge_comms_add_listener(MESSAGE_TYPE_REPERTOIRE, sizeof(badge_message_repertoire_t));
     // check if an error occurred (check logs for the reason)
