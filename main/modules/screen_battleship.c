@@ -703,8 +703,8 @@ screen_t screen_battleship_entry(QueueHandle_t application_event_queue, QueueHan
     uint8_t ennemy_data[BSpayload];
 
     for (int i = 0; i < BSpayload; i++) {
-        player_data[i] = -1;
-        ennemy_data[i] = -1;
+        player_data[i] = BS_default;
+        ennemy_data[i] = BS_default;
     }
     for (int i = 0; i < 20; i++) {
         playerboard[i] = 0;
@@ -783,26 +783,17 @@ screen_t screen_battleship_splash(
     uint8_t       player_data[BSpayload],
     uint8_t       ennemy_data[BSpayload]
 ) {
-    InitKeyboard(keyboard_event_queue);
-    configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
-
     pax_font_t const * font = pax_font_sky;
     pax_buf_t*         gfx  = bsp_get_gfx_buffer();
 
-    bsp_apply_lut(lut_4s);
-    pax_background(gfx, WHITE);
-    pax_insert_png_buf(gfx, caronl_png_start, caronl_png_end - caronl_png_start, 0, 0, 0);
-    AddOneTextSWtoBuffer(SWITCH_1, "Exit");
-    AddOneTextSWtoBuffer(SWITCH_2, "Offline");
-    AddOneTextSWtoBuffer(SWITCH_4, "Replay");
-    AddOneTextSWtoBuffer(SWITCH_5, "Online");
-    bsp_display_flush();
+    int  timer_track = esp_timer_get_time() / 5000000;
+    bool sendflag    = false;
+    bool listenflag  = true;
+    bool invitesent  = 0;
+    bool displayflag = 1;
 
-    int           timer_track = esp_timer_get_time() / 5000000;
-    bool          sendflag    = false;
-    bool          listenflag  = true;
     // init radio
-    QueueHandle_t BS_queue    = badge_comms_add_listener(MESSAGE_TYPE_BATTLESHIP, sizeof(badge_message_battleship));
+    QueueHandle_t BS_queue = badge_comms_add_listener(MESSAGE_TYPE_BATTLESHIP, sizeof(badge_message_battleship));
     if (BS_queue == NULL) {
         ESP_LOGE(TAG, "Failed to add listener");
     } else
@@ -811,10 +802,24 @@ screen_t screen_battleship_splash(
 
     while (1) {
         if ((esp_timer_get_time() / 1000000) > (timer_track * BroadcastInterval / 5)) {
-            if (sendflag)
+            if (sendflag) {
                 send_battleship(player_data);
-            bsp_set_addressable_led(LED_YELLOW);
+                bsp_set_addressable_led(LED_YELLOW);
+            }
             timer_track++;
+        }
+        if (displayflag) {
+            InitKeyboard(keyboard_event_queue);
+            configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
+            bsp_apply_lut(lut_4s);
+            pax_background(gfx, WHITE);
+            pax_insert_png_buf(gfx, caronl_png_start, caronl_png_end - caronl_png_start, 0, 0, 0);
+            AddOneTextSWtoBuffer(SWITCH_1, "Exit");
+            AddOneTextSWtoBuffer(SWITCH_2, "Offline");
+            AddOneTextSWtoBuffer(SWITCH_4, "Replay");
+            AddOneTextSWtoBuffer(SWITCH_5, "Online");
+            bsp_display_flush();
+            displayflag = 0;
         }
         event_t event = {0};
         if (listenflag)
@@ -832,6 +837,16 @@ screen_t screen_battleship_splash(
                 bsp_set_addressable_led(LED_PURPLE);
                 vTaskDelay(pdMS_TO_TICKS(100));
                 bsp_set_addressable_led(LED_OFF);
+                if (ennemy_data[BS_invite] == invitation_sent) {
+                    char const invite_s[128] = "[placeholder] sent you and invitation to play battleship";
+                    Screen_Confirmation(invite_s, application_event_queue, keyboard_event_queue);
+                } else if (ennemy_data[BS_invite] == invitation_accepted) {
+                    char const invite_a[128] = "invitation accepted";
+                    Screen_Confirmation(invite_a, application_event_queue, keyboard_event_queue);
+                } else if (ennemy_data[BS_invite] == invitation_declined) {
+                    char const invite_d[128] = "invitation declined";
+                    Screen_Confirmation(invite_d, application_event_queue, keyboard_event_queue);
+                }
                 // DisplayBillboard(1, ts->nickname, ts->payload);
             }
         if (xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE) {
@@ -839,9 +854,17 @@ screen_t screen_battleship_splash(
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
-                        case SWITCH_1:  // exit
-                            badge_comms_remove_listener(BS_queue);
-                            return screen_home;
+                        case SWITCH_1:
+                            switch (player_data[BS_invite] == invitation_sent) {
+                                case 1:  // abort from invite sent
+                                    displayflag            = 1;
+                                    player_data[BS_invite] = BS_default;
+                                    break;
+                                default:  // else exit
+                                    badge_comms_remove_listener(BS_queue);
+                                    return screen_home;
+                                    break;
+                            }
                             break;
                         case SWITCH_2:  // offline
                             badge_comms_remove_listener(BS_queue);
@@ -852,9 +875,11 @@ screen_t screen_battleship_splash(
                         case SWITCH_5:                                 // online
                             badge_comms_remove_listener(BS_queue);
                             screen_repertoire_entry(application_event_queue, keyboard_event_queue, 1);
+                            BS_queue =
+                                badge_comms_add_listener(MESSAGE_TYPE_BATTLESHIP, sizeof(badge_message_battleship));
                             sendflag               = true;
-                            listenflag             = false;
-                            player_data[BS_invite] = 1;
+                            listenflag             = true;
+                            player_data[BS_invite] = invitation_sent;
                             WaitingforOpponent("Waiting for reply", application_event_queue, keyboard_event_queue);
                             break;
                         default: break;

@@ -21,4 +21,10 @@
 #define BS_shottypereport  10
 #define BS_abort           11
 
+#define invitation_sent     1
+#define invitation_accepted 2
+#define invitation_declined 3
+
+#define BS_default 255
+
 screen_t screen_battleship_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
