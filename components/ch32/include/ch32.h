@@ -100,7 +100,7 @@ bool ch32_reset_microprocessor_and_halt();
 bool ch32_reset_debug_module();
 bool ch32_write_cpu_reg(uint16_t regno, uint32_t value);
 bool ch32_read_cpu_reg(uint16_t regno, uint32_t* value_out);
-bool ch32_run_debug_code(void const * code, size_t code_size);
+bool ch32_run_debug_code(const void* code, size_t code_size);
 // If halted, overwrite a0 and a1 in order to write memory.
 bool ch32_write_memory_word(uint32_t address, uint32_t value);
 // If halted, overwrite a0 and a1 in order to read memory.
@@ -114,9 +114,9 @@ bool ch32_erase_flash();
 // If unlocked: Erase a 64-byte block of FLASH.
 bool ch32_erase_flash_block(uint32_t addr);
 // If unlocked: Write the FLASH.
-bool ch32_write_flash(uint32_t addr, void const * data, size_t data_len);
+bool ch32_write_flash(uint32_t addr, const void* data, size_t data_len);
 // If unlocked: Write a 64-byte block of FLASH.
-bool ch32_write_flash_block(uint32_t addr, void const * data);
+bool ch32_write_flash_block(uint32_t addr, const void* data);
 // If unlocked: Set the NRST mode on startup.
 // If true: use as reset pit, false: use as GPIO pin.
 bool ch32_set_nrst_mode(bool use_as_reset);

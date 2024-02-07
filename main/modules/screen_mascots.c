@@ -16,10 +16,10 @@
 #include <stdio.h>
 #include <string.h>
 
-extern uint8_t const mascots_png_start[] asm("_binary_mascots_png_start");
-extern uint8_t const mascots_png_end[] asm("_binary_mascots_png_end");
+extern const uint8_t mascots_png_start[] asm("_binary_mascots_png_start");
+extern const uint8_t mascots_png_end[] asm("_binary_mascots_png_end");
 
-static char const * TAG = "mascots";
+static const char* TAG = "mascots";
 
 screen_t screen_mascots_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     if (log)

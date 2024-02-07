@@ -34,19 +34,21 @@ void Addborder1toBuffer(void);
 void Addborder2toBuffer(void);
 void AddSWborder1toBuffer(void);
 void AddSWborder2toBuffer(void);
+
 void AddSWtoBuffer(
     char const * SW1str, char const * SW2str, char const * SW3str, char const * SW4str, char const * SW5str
 );
 void AddSWtoBufferL(char const * SW1str);
 void AddSWtoBufferLR(char const * SW1str, char const * SW5str);
+
 void AddBlocktoBuffer(int _x, int _y);
 
 // Parse _message[] into an array of _nbwords
-// and makes them into up to _maxnblines which are _maxlinelenght pixel long
+// and makes them into up to _maxnblines which are _maxlinelength pixel long
 // can be centered if the _centered flag is high
 void DisplayWallofTextWords(
     int  _fontsize,
-    int  _maxlinelenght,
+    int  _maxlinelength,
     int  _maxnblines,
     int  _nbwords,
     int  _xoffset,
@@ -56,14 +58,15 @@ void DisplayWallofTextWords(
 );
 pax_vec1_t WallofText(int _yoffset, char const * _message, int _centered, int _cursor);
 // Parse _message[] into lines
-// and makes them into up to _maxnblines which are _maxlinelenght pixel long
+// and makes them into up to _maxnblines which are _maxlinelength pixel long
 // can be centered if the _centered flag is high
+
 void       DisplayWallofText(
           int _fontsize, int _maxlinelenght, int _maxnblines, int _xoffset, int _yoffset, char _message[500], int _centered
       );
 
 void Justify_right_text(
-    pax_buf_t* buf, pax_col_t color, pax_font_t const * font, float font_size, float x, float y, char const * text
+    pax_buf_t* buf, pax_col_t color, const pax_font_t* font, float font_size, float x, float y, const char* text
 );
 
 int Screen_Information(char const * _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
@@ -72,7 +75,7 @@ int Screen_Confirmation(
 );
 int WaitingforOpponent(char const * _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
 void AddSwitchesBoxtoBuffer(int _switch);
-void AddOneTextSWtoBuffer(int _SW, char const * SWstr);
+void AddOneTextSWtoBuffer(int _SW, const char* SWstr);
 void DisplayTelegraph(int _colour, int _position);
 int  InputtoNum(char _inputletter);
 
@@ -114,3 +117,4 @@ Delay:
 
 
 */
+

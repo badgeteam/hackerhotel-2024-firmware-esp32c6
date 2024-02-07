@@ -33,6 +33,7 @@ void Display_credits_entry(int cursor) {
     switch (cursor) {
         case badgeteam_mascot:
             pax_insert_png_buf(gfx, mascots_png_start, mascots_png_end - mascots_png_start, 0, 0, 0);
+
             break;
         case hh2024_team:
             Addborder2toBuffer();
@@ -65,6 +66,7 @@ void Display_credits_entry(int cursor) {
 
         default: break;
     }
+
     bsp_display_flush();
 }
 
@@ -73,6 +75,7 @@ screen_t screen_credits_entry(QueueHandle_t application_event_queue, QueueHandle
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
     int cursor = 0;
     Display_credits_entry(cursor);
+
     while (1) {
         event_t event = {0};
         if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {

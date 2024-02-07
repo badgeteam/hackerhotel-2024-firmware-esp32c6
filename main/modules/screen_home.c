@@ -28,7 +28,7 @@ extern uint8_t const diamondt_png_end[] asm("_binary_diamondt_png_end");
 extern uint8_t const diamondb_png_start[] asm("_binary_diamondb_png_start");
 extern uint8_t const diamondb_png_end[] asm("_binary_diamondb_png_end");
 
-static char const * TAG = "homescreen";
+static const char* TAG = "homescreen";
 
 // THIS LIST NEED TO MATCH SCREEN.H
 char const screen_name[13][30] = {
@@ -145,7 +145,9 @@ void DisplayHomeEntry(int cursor) {
 screen_t screen_Nametag(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     ESP_LOGE(TAG, "Enter screen_Nametag");
     // set screen font and buffer
+
     pax_buf_t* gfx = bsp_get_gfx_buffer();
+
     pax_background(gfx, WHITE);
 
     // memory

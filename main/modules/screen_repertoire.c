@@ -27,12 +27,12 @@
 #include <esp_random.h>
 #include <string.h>
 
-static char const * TAG = "repertoire";
+static const char* TAG = "repertoire";
 
-extern uint8_t const b_arrow1_png_start[] asm("_binary_b_arrow1_png_start");
-extern uint8_t const b_arrow1_png_end[] asm("_binary_b_arrow1_png_end");
-extern uint8_t const b_arrow2_png_start[] asm("_binary_b_arrow2_png_start");
-extern uint8_t const b_arrow2_png_end[] asm("_binary_b_arrow2_png_end");
+extern const uint8_t b_arrow1_png_start[] asm("_binary_b_arrow1_png_start");
+extern const uint8_t b_arrow1_png_end[] asm("_binary_b_arrow1_png_end");
+extern const uint8_t b_arrow2_png_start[] asm("_binary_b_arrow2_png_start");
+extern const uint8_t b_arrow2_png_end[] asm("_binary_b_arrow2_png_end");
 
 bool SettNBrepertoryID(uint16_t _ID) {
     bool res = nvs_set_u16_wrapped("Repertoire", "IDcount", _ID);
@@ -97,9 +97,9 @@ bool GetRepertoire(char _repertoryIDlist[nicknamelenght], uint8_t mac[8], uint16
 }
 
 void receive_repertoire(void) {
-    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
+    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_time_t
     QueueHandle_t repertoire_queue =
-        badge_comms_add_listener(MESSAGE_TYPE_REPERTOIRE, sizeof(badge_message_repertoire));
+        badge_comms_add_listener(MESSAGE_TYPE_REPERTOIRE, sizeof(badge_message_repertoire_t));
     // check if an error occurred (check logs for the reason)
     if (repertoire_queue == NULL) {
         ESP_LOGE(TAG, "Failed to add listener");
@@ -115,7 +115,7 @@ void receive_repertoire(void) {
         xQueueReceive(repertoire_queue, &message, portMAX_DELAY);
 
         // typecast the message data to the expected message type
-        badge_message_repertoire* ts = (badge_message_repertoire*)message.data;
+        badge_message_repertoire_t* ts = (badge_message_repertoire_t*)message.data;
 
         // show we got a message, and its contents
         ESP_LOGI(TAG, "Got a string: %s \n", ts->nickname);
@@ -287,6 +287,7 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
     uint8_t surrounding_mac[maxIDsurrounding][8];
 
     for (int i = 0; i < maxperpage; i++) {
+
         strcpy(repertoryIDlist[i], "");
         for (int y = 0; y < 8; y++) {
             repertory_mac[i][y] = 0;
@@ -340,9 +341,9 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
     configure_keyboard_presses(keyboard_event_queue, true, false, false, true, true);
 
     // init broadcast receive
-    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
+    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_time_t
     QueueHandle_t repertoire_queue =
-        badge_comms_add_listener(MESSAGE_TYPE_REPERTOIRE, sizeof(badge_message_repertoire));
+        badge_comms_add_listener(MESSAGE_TYPE_REPERTOIRE, sizeof(badge_message_repertoire_t));
     // check if an error occurred (check logs for the reason)
     if (repertoire_queue == NULL) {
         ESP_LOGE(TAG, "Failed to add listener");
@@ -494,9 +495,9 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
 
         // upon receiving a message
         if (xQueueReceive(repertoire_queue, &message, pdMS_TO_TICKS(1)) == pdTRUE) {
-            badge_message_repertoire* ts                          = (badge_message_repertoire*)message.data;
-            char                      inboundnick[nicknamelenght] = "";
-            uint8_t                   _inbound_mac[8];
+            badge_message_repertoire_t* ts                          = (badge_message_repertoire_t*)message.data;
+            char                        inboundnick[nicknamelength] = "";
+            uint8_t                     _inbound_mac[8];
             strcpy(inboundnick, ts->nickname);
             for (int i = 0; i < 8; i++) {
                 _inbound_mac[i] = message.from_mac[i];

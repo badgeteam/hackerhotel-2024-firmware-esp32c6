@@ -127,9 +127,13 @@ bool      bsp_wait_for_button();
 uint8_t   bsp_wait_for_button_number();
 void      bsp_flush_button_queue();
 esp_err_t bsp_set_addressable_led(uint32_t color);
-esp_err_t bsp_set_addressable_leds(const uint8_t *data, int length);
+esp_err_t bsp_set_addressable_leds(const uint8_t* data, int length);
 bool      bsp_passed_factory_test();
 esp_err_t bsp_factory_test();
 esp_err_t bsp_set_relay(bool state);
 float     bsp_battery_voltage();
 bool      bsp_battery_charging();
+
+esp_err_t bsp_sao_addressable_led_enable();
+esp_err_t bsp_sao_addressable_led_disable();
+esp_err_t bsp_sao_addressable_led_set(const uint8_t* data, int length);

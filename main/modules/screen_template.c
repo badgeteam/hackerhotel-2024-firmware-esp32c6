@@ -24,15 +24,15 @@
 #include <esp_random.h>
 #include <string.h>
 
-
 static char const * TAG = "template";
 
-extern uint8_t const border1_png_start[] asm("_binary_border1_png_start");
-extern uint8_t const border1_png_end[] asm("_binary_border1_png_end");
+extern const uint8_t border1_png_start[] asm("_binary_border1_png_start");
+extern const uint8_t border1_png_end[] asm("_binary_border1_png_end");
 
 void receive_strb(void) {
     // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
     QueueHandle_t BS_queue = badge_comms_add_listener(MESSAGE_TYPE_BATTLESHIP, sizeof(badge_message_battleship));
+
     // check if an error occurred (check logs for the reason)
     if (BS_queue == NULL) {
         ESP_LOGE(TAG, "Failed to add listener");
@@ -49,6 +49,7 @@ void receive_strb(void) {
 
         // typecast the message data to the expected message type
         badge_message_battleship* ts = (badge_message_battleship*)message.data;
+
 
 
         // show we got a message, and its contents

@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <string.h>
 
-static char const * TAG = "CH32";
+static const char* TAG = "CH32";
 
 // Initialization functions
 
@@ -239,7 +239,7 @@ bool ch32_read_cpu_reg(uint16_t regno, uint32_t* value_out) {
     return true;
 }
 
-bool ch32_run_debug_code(void const * code, size_t code_size) {
+bool ch32_run_debug_code(const void* code, size_t code_size) {
     if (code_size > 8 * 4) {
         ESP_LOGE(TAG, "Debug program is too long (%zd/%zd)", code_size, (size_t)8 * 4);
         return false;
@@ -340,10 +340,10 @@ bool ch32_erase_flash_block(uint32_t addr) {
 }
 
 // If unlocked: Erase and write a range of FLASH memory.
-bool ch32_write_flash(uint32_t addr, void const * _data, size_t data_len) {
+bool ch32_write_flash(uint32_t addr, const void* _data, size_t data_len) {
     if (addr % 64)
         return false;
-    uint8_t const * data = _data;
+    const uint8_t* data = _data;
 
     for (size_t i = 0; i < data_len; i += 64) {
         if (!ch32_erase_flash_block(addr + i)) {
@@ -360,7 +360,7 @@ bool ch32_write_flash(uint32_t addr, void const * _data, size_t data_len) {
 }
 
 // If unlocked: Write a 64-byte block of FLASH.
-bool ch32_write_flash_block(uint32_t addr, void const * data) {
+bool ch32_write_flash_block(uint32_t addr, const void* data) {
     if (addr % 64)
         return false;
 

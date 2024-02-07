@@ -22,7 +22,8 @@
 #include <esp_random.h>
 #include <string.h>
 
-char const forfeitprompt[128] = "Do you want to exit and declare forfeit";
+const char forfeitprompt[128] = "Do you want to exit and declare forfeit";
+
 
 extern uint8_t const deibler01_png_start[] asm("_binary_deibler01_png_start");
 extern uint8_t const deibler01_png_end[] asm("_binary_deibler01_png_end");
@@ -25709,6 +25710,7 @@ int      screen_hangman_wordtype(QueueHandle_t application_event_queue, QueueHan
 screen_t screen_hangman_definition(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int _chosenwordID
 );
+
 screen_t screen_hangman_victory(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int _vflag);
 
 void DisplayHangman(
