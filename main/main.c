@@ -8,6 +8,7 @@
 #include "esp_err.h"
 #include "esp_ieee802154.h"
 #include "esp_log.h"
+#include "esp_mac.h"
 #include "esp_ota_ops.h"
 #include "esp_sleep.h"
 #include "esp_system.h"
@@ -26,12 +27,15 @@
 #include "printer.h"
 #include "resources.h"
 #include "riscv/rv_utils.h"
+#include "screen_battleship.h"
 #include "screen_billboard.h"
 #include "screen_hangman.h"
 #include "screen_home.h"
+#include "screen_library.h"
 #include "screen_mascots.h"
 #include "screen_pointclick.h"
 #include "screen_repertoire.h"
+#include "screen_scrambled.h"
 #include "screen_settings.h"
 #include "screen_shades.h"
 #include "screen_template.h"
@@ -125,6 +129,25 @@ void app_main(void) {
         return;
     }
 
+    // LONG ADDRESS OWNER
+    uint8_t mac_owner[8];
+    for (int y = 0; y < 8; y++) {
+        esp_read_mac(mac_owner, ESP_MAC_IEEE802154);
+    }
+    // SET SHORT ADDRESS OWNER
+    uint16_t short_address_owner = (mac_owner[6] << 8) | mac_owner[7];
+    if (esp_ieee802154_get_short_address() != short_address_owner) {
+        esp_ieee802154_set_short_address(short_address_owner);
+    }
+
+    if (log) {
+        for (int y = 0; y < 8; y++) {
+            ESP_LOGE(TAG, "MAC address owner: %02x", mac_owner[y]);
+        }
+        ESP_LOGE(TAG, "short address owner: %04x", short_address_owner);
+        ESP_LOGE(TAG, "stored owner short address: %04x", esp_ieee802154_get_short_address());
+    }
+
     // Printer
     if (printer_initialize()) {
         char teststring[] = "Hello from ESP32C6\r\n";
@@ -158,12 +181,9 @@ void app_main(void) {
     // Main application
     screen_t current_screen = screen_home;
     while (1) {
+        ESP_LOGE(TAG, "Screen: %d", current_screen);
         switch (current_screen) {
-            case screen_mascots:
-                {
-                    current_screen = screen_mascots_entry(application_event_queue, keyboard_event_queue);
-                    break;
-                }
+
             case screen_home:
                 {
                     current_screen = screen_home_entry(application_event_queue, keyboard_event_queue);
@@ -171,6 +191,7 @@ void app_main(void) {
                 }
             case screen_settings:
                 {
+                    ESP_LOGE(TAG, "sAAAAAAAAAAAAAAAA ");
                     current_screen = screen_settings_entry(application_event_queue, keyboard_event_queue);
                     break;
                 }
@@ -196,7 +217,7 @@ void app_main(void) {
                 }
             case screen_repertoire:
                 {
-                    current_screen = screen_repertoire_entry(application_event_queue, keyboard_event_queue);
+                    current_screen = screen_repertoire_entry(application_event_queue, keyboard_event_queue, 0);
                     break;
                 }
             case screen_template:
@@ -207,6 +228,36 @@ void app_main(void) {
             case screen_hangman:
                 {
                     current_screen = screen_hangman_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_scrambled:
+                {
+                    current_screen = screen_scrambled_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_nametag:
+                {
+                    current_screen = screen_Nametag(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_library:
+                {
+                    current_screen = screen_library_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_credits:
+                {
+                    current_screen = screen_credits_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_batterystatus:
+                {
+                    current_screen = screen_batterystatus_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_mascots:
+                {
+                    current_screen = screen_mascots_entry(application_event_queue, keyboard_event_queue);
                     break;
                 }
             default: current_screen = screen_home;

@@ -57,11 +57,27 @@ extern const uint8_t switchframe1_png_start[] asm("_binary_switchframe1_png_star
 extern const uint8_t switchframe1_png_end[] asm("_binary_switchframe1_png_end");
 extern const uint8_t switchframe2_png_start[] asm("_binary_switchframe2_png_start");
 extern const uint8_t switchframe2_png_end[] asm("_binary_switchframe2_png_end");
+extern const uint8_t border2lsw_png_start[] asm("_binary_border2lsw_png_start");
+extern const uint8_t border2lsw_png_end[] asm("_binary_border2lsw_png_end");
+extern const uint8_t border2lrsw_png_start[] asm("_binary_border2lrsw_png_start");
+extern const uint8_t border2lrsw_png_end[] asm("_binary_border2lrsw_png_end");
 
 extern const uint8_t diamondl_png_start[] asm("_binary_diamondl_png_start");
 extern const uint8_t diamondl_png_end[] asm("_binary_diamondl_png_end");
 extern const uint8_t diamondr_png_start[] asm("_binary_diamondr_png_start");
 extern const uint8_t diamondr_png_end[] asm("_binary_diamondr_png_end");
+
+extern const uint8_t b_arrow1_png_start[] asm("_binary_b_arrow1_png_start");
+extern const uint8_t b_arrow1_png_end[] asm("_binary_b_arrow1_png_end");
+extern const uint8_t b_arrow2_png_start[] asm("_binary_b_arrow2_png_start");
+extern const uint8_t b_arrow2_png_end[] asm("_binary_b_arrow2_png_end");
+
+// 272 x 9
+extern const uint8_t squi1_png_start[] asm("_binary_squi1_png_start");
+extern const uint8_t squi1_png_end[] asm("_binary_squi1_png_end");
+// 286 x 13
+extern const uint8_t squi2_png_start[] asm("_binary_squi2_png_start");
+extern const uint8_t squi2_png_end[] asm("_binary_squi2_png_end");
 
 event_t kbsettings;
 
@@ -69,6 +85,62 @@ const int telegraph_X[20] = {0, -8, 8, -16, 0, 16, -24, -8, 8, 24, -24, -8, 8, 2
 const int telegraph_Y[20] = {12, 27, 27, 42, 42, 42, 57, 57, 57, 57, 71, 71, 71, 71, 86, 86, 86, 101, 101, 116};
 
 static const char* TAG = "application utilities";
+
+void DisplayError(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, const char* errorstr) {
+    event_t    tempkbsettings = kbsettings;
+    pax_buf_t* gfx            = bsp_get_gfx_buffer();
+
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
+
+    int text_x = gfx->height / 2;
+    int text_y = 40;
+
+    pax_background(gfx, WHITE);
+    AddSWtoBuffer("", "", "", "", "");
+    pax_center_text(gfx, BLACK, font1, fontsizeS, text_x, text_y, errorstr);
+    bsp_display_flush();
+
+    while (1) {
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        default:
+                            configure_keyboard_kb(keyboard_event_queue, tempkbsettings);
+                            return;
+                            break;
+                    }
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type); break;
+            }
+        }
+    }
+}
+
+void DrawArrowVertical(int _sw) {
+    pax_insert_png_buf(
+        bsp_get_gfx_buffer(),
+        b_arrow2_png_start,
+        b_arrow2_png_end - b_arrow2_png_start,
+        60 * _sw + 7,
+        118,
+        0
+    );
+}
+
+void DrawArrowHorizontal(int _sw) {
+    pax_insert_png_buf(
+        bsp_get_gfx_buffer(),
+        b_arrow1_png_start,
+        b_arrow1_png_end - b_arrow1_png_start,
+        60 * _sw + 7,
+        118,
+        0
+    );
+}
 
 void Addborder1toBuffer(void) {
 
@@ -109,7 +181,7 @@ void AddSWborder2toBuffer(void) {
 void AddSWtoBuffer(const char* SW1str, const char* SW2str, const char* SW3str, const char* SW4str, const char* SW5str) {
     Addborder2toBuffer();
     pax_buf_t* gfx = bsp_get_gfx_buffer();
-    pax_insert_png_buf(gfx, switchframe2_png_start, switchframe2_png_end - switchframe2_png_start, 0, 127 - 11, 0);
+    pax_insert_png_buf(gfx, switchframe2_png_start, switchframe2_png_end - switchframe2_png_start, 0, 127 - 12, 0);
     int gapx = 60;
     int o_x  = 28;
     int o_y  = 118;
@@ -120,7 +192,27 @@ void AddSWtoBuffer(const char* SW1str, const char* SW2str, const char* SW3str, c
     pax_center_text(gfx, BLACK, font1, 9, o_x + gapx * 4, o_y, SW5str);
 }
 
+void AddSWtoBufferL(const char* SW1str) {
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_insert_png_buf(gfx, border2lsw_png_start, border2lsw_png_end - border2lsw_png_start, 0, 0, 0);
+    int gapx = 60;
+    int o_x  = 28;
+    int o_y  = 118;
+    pax_center_text(gfx, BLACK, font1, 9, o_x + gapx * 0, o_y, SW1str);
+}
+
+void AddSWtoBufferLR(const char* SW1str, const char* SW5str) {
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_insert_png_buf(gfx, border2lrsw_png_start, border2lrsw_png_end - border2lrsw_png_start, 0, 0, 0);
+    int gapx = 60;
+    int o_x  = 28;
+    int o_y  = 118;
+    pax_center_text(gfx, BLACK, font1, 9, o_x + gapx * 0, o_y, SW1str);
+    pax_center_text(gfx, BLACK, font1, 9, o_x + gapx * 4, o_y, SW5str);
+}
+
 void AddOneTextSWtoBuffer(int _SW, const char* SWstr) {
+
     pax_buf_t* gfx  = bsp_get_gfx_buffer();
     int        gapx = 60;
     int        o_x  = 28;
@@ -141,36 +233,50 @@ void Justify_right_text(
     pax_draw_text(buf, color, font, font_size, _xoffset, y, text);
 }
 
-int DisplayExitConfirmation(char _prompt[128], QueueHandle_t keyboard_event_queue) {
-    event_t kbsettings = {
-        .type                                     = event_control_keyboard,
-        .args_control_keyboard.enable_typing      = true,
-        .args_control_keyboard.enable_actions     = {true, false, false, false, true},
-        .args_control_keyboard.enable_leds        = true,
-        .args_control_keyboard.enable_relay       = true,
-        kbsettings.args_control_keyboard.capslock = false,
-    };
-    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
+// screen that stop the game loop from running and display information until the player press any inputs
+int Screen_Information(const char* _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+    event_t    tempkbsettings = kbsettings;
+    pax_buf_t* gfx            = bsp_get_gfx_buffer();
 
-    int text_x = 50;
-    int text_y = 20;
-    // int text_fontsize = 18;
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
 
-    const pax_font_t* font = pax_font_sky;
-    pax_buf_t*        gfx  = bsp_get_gfx_buffer();
-    bsp_apply_lut(lut_1s);
+    int text_x = gfx->height / 2;
+    int text_y = 40;
+
     pax_background(gfx, WHITE);
-    Addborder2toBuffer();
-    pax_draw_text(gfx, BLACK, font, 9, text_x, text_y, _prompt);
-    AddSwitchesBoxtoBuffer(SWITCH_1);
-    pax_draw_text(gfx, BLACK, font, 9, 8 + SWITCH_1 * 62, 116, "yes");
-    AddSwitchesBoxtoBuffer(SWITCH_5);
-    pax_draw_text(gfx, BLACK, font, 9, 8 + SWITCH_5 * 62, 116, "no");
+    AddSWtoBuffer("", "", "", "", "");
+    pax_center_text(gfx, BLACK, font1, fontsizeS, text_x, text_y, _prompt);
     bsp_display_flush();
-    return 1;
+
+    while (1) {
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        // case SWITCH_1:
+                        // case SWITCH_2:
+                        // case SWITCH_3:
+                        // case SWITCH_4:
+                        // case SWITCH_5:
+                        default:
+                            configure_keyboard_kb(keyboard_event_queue, tempkbsettings);
+                            return 0;
+                            break;
+                    }
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type); break;
+            }
+        }
+    }
 }
 
-int Screen_Confirmation(char _prompt[128], QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+// screen that stop the game loop from running, asking for a prompt and return 1 (yes) or 0 (no)
+int Screen_Confirmation(
+    const char* _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue
+) {
     event_t    tempkbsettings = kbsettings;
     pax_buf_t* gfx            = bsp_get_gfx_buffer();
 
@@ -182,7 +288,6 @@ int Screen_Confirmation(char _prompt[128], QueueHandle_t application_event_queue
 
     pax_background(gfx, WHITE);
     AddSWtoBuffer("yes", "", "", "", "no");
-    ESP_LOGE(TAG, "text_x %d", text_x);
     pax_center_text(gfx, BLACK, font1, fontsizeS, text_x, text_y, _prompt);
     bsp_display_flush();
 
@@ -211,6 +316,22 @@ int Screen_Confirmation(char _prompt[128], QueueHandle_t application_event_queue
             }
         }
     }
+}
+
+int WaitingforOpponent(const char* _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, true, false, false, false, false);
+
+    int text_x = gfx->height / 2;
+    int text_y = 40;
+
+    AddSWtoBufferL("Abort");
+    pax_center_text(gfx, BLACK, font1, fontsizeS * 2, text_x, text_y, _prompt);
+    bsp_display_flush();
+    bsp_set_addressable_led(LED_YELLOW);
+    return 1;
 }
 // Parse _message[] into an array of _nbwords
 // and makes them into up to _maxnblines which are _maxlinelength pixel long
@@ -308,14 +429,7 @@ void DisplayWallofTextWords(
 // and makes them into up to _maxnblines which are _maxlinelength pixel long
 // can be centered if the _centered flag is high
 void DisplayWallofText(
-    int  _fontsize,
-    int  _maxlinelength,
-    int  _maxnblines,
-    int  _nbwords,
-    int  _xoffset,
-    int  _yoffset,
-    char _message[500],
-    int  _centered
+    int _fontsize, int _maxlinelength, int _maxnblines, int _xoffset, int _yoffset, char _message[500], int _centered
 ) {
     // set screen font and buffer
     const pax_font_t* font = pax_font_sky;
@@ -393,6 +507,119 @@ void DisplayWallofText(
     // bsp_display_flush();
 }
 
+pax_vec1_t WallofText(int _yoffset, const char* _message, int _centered, int _cursor) {
+    pax_buf_t* gfx  = bsp_get_gfx_buffer();
+    pax_vec1_t dims = {
+        .x = 999,
+        .y = 999,
+    };
+    pax_vec1_t cursorloc = {
+        .x = 0,
+        .y = 0,
+    };
+
+
+
+    ESP_LOGE(TAG, "Unhandled event type %s", _message);
+    ESP_LOGE(TAG, "Unhandled event type %d", strlen(_message));
+    // char message[128]       = "The quick brown fox jumps over the lazy dog, The quick brie da";  // message to parse
+    char linetodisplay[128] = "";
+    char Words[64];  // Parsed Word
+    int  _xoffset       = 6;
+    int  _maxlinelength = gfx->height - _xoffset * 2;
+
+    // counters
+    int nblines     = 0;
+    int j           = 0;
+    int wordcount   = 0;
+    int cursorfound = 0;
+
+    if (_cursor == 0) {
+        cursorloc.x = _xoffset;
+        cursorloc.y = _yoffset;
+        cursorfound = 1;
+    }
+
+    // pax_background(gfx, WHITE);
+
+    // goes through each character until the end of the string (unless nblines >= maxnblines)
+    for (int i = 0; i <= (strlen(_message)); i++) {
+        // If space or end of string found, process word/lines
+        if (_message[i] == ' ' || _message[i] == '\0') {
+            Words[j] = '\0';  // end of string terminate the word
+            j        = 0;
+            strcat(linetodisplay, Words);  // add word to linetodisplay
+            strcat(linetodisplay, " ");    // and a space that was not parsed
+
+            // if longer than maxlinelenght, go to the next line
+            dims = pax_text_size(font1, fontsizeS, linetodisplay);
+            if ((int)dims.x > _maxlinelength || _message[i] == '\0') {
+                if (_message[i] != '\0')
+                    linetodisplay[strlen(linetodisplay) - (strlen(Words) + 2)] =
+                        '\0';  // remove the last word and 2 spaces
+
+                // center the text
+                if (_centered) {
+                    dims     = pax_text_size(font1, fontsizeS, linetodisplay);
+                    _xoffset = gfx->height / 2 - (int)(dims.x / 2);
+                }
+
+                ESP_LOGE(TAG, "line to display length: %d", strlen(linetodisplay));
+
+                pax_draw_text(
+                    gfx,
+                    BLACK,
+                    font1,
+                    fontsizeS,
+                    _xoffset,
+                    _yoffset + nblines * fontsizeS,
+                    linetodisplay
+                );  // displays the line
+
+                // calculate the cursor position
+
+                if ((_cursor < strlen(linetodisplay)) && !cursorfound) {
+                    ESP_LOGE(TAG, "cursor on: %c", linetodisplay[_cursor]);
+                    linetodisplay[_cursor] = '\0';
+                    cursorloc              = pax_text_size(font1, fontsizeS, linetodisplay);
+                    cursorloc.x            = cursorloc.x + _xoffset;
+                    cursorloc.y            = _yoffset + nblines * fontsizeS;
+                    cursorfound            = 1;
+                } else {
+                    _cursor = _cursor - strlen(linetodisplay);
+                    if (!_cursor) {
+                        cursorloc.x = _xoffset;
+                        cursorloc.y = _yoffset + (nblines + 1) * fontsizeS;
+                        cursorfound = 1;
+                    }
+                }
+                ESP_LOGE(TAG, "cursor x: %f", cursorloc.x);
+                ESP_LOGE(TAG, "cursor y: %f", cursorloc.y);
+
+
+                strcpy(linetodisplay, Words);  // Add the latest word that was parsed to the next line
+                strcat(linetodisplay, " ");
+                nblines++;
+                if (nblines >= 8) {
+                    break;
+                }
+            }
+
+            // If it is the last word of the string
+            // if (_message[i] == '\0') {
+            //     pax_draw_text(gfx, BLACK, font1, fontsizeS, _xoffset, _yoffset + nblines * fontsizeS, linetodisplay);
+            // }
+            wordcount++;  // Move to the next word
+
+        } else {
+            Words[j] = _message[i];  // Store the character into newString
+            j++;                     // Move to the next character within the word
+        }
+    }
+    return cursorloc;
+}
+
+
 void AddSwitchesBoxtoBuffer(int _switch)  // in black
 {
     pax_buf_t* gfx = bsp_get_gfx_buffer();
@@ -421,10 +648,16 @@ void DisplayTelegraph(int _colour, int _position) {
         _position = 36;  // prevent to draw outside of buffer
 
     // Diamond
+    pax_draw_line(gfx, WHITE, _position - 3, 1, _position + 4, 1);        // white over the border
+    pax_draw_line(gfx, WHITE, _position - 4, 4, _position + 5, 4);        // white over the border
+    pax_draw_line(gfx, WHITE, _position - 4, 123, _position + 5, 123);    // white over the border
+    pax_draw_line(gfx, WHITE, _position - 3, 126, _position + 4, 126);    // white over the border
     pax_draw_line(gfx, _colour, _position - 36, 64, _position - 3, 127);  // Left to top
     pax_draw_line(gfx, _colour, _position - 36, 63, _position - 3, 0);    // Left to bottom
     pax_draw_line(gfx, _colour, _position + 37, 64, _position + 4, 127);  // Right to top
     pax_draw_line(gfx, _colour, _position + 37, 63, _position + 4, 0);    // Right to bottom
+    pax_draw_line(gfx, _colour, _position - 3, 0, _position + 4, 0);      // horizontal top
+    pax_draw_line(gfx, _colour, _position - 3, 127, _position + 4, 127);  // horizontal bottom
 
     // Letter circles
 
@@ -463,6 +696,7 @@ int InputtoNum(char _inputletter) {
     }
 }
 
+// debug to refactor
 void configure_keyboard_guru(QueueHandle_t keyboard_event_queue, bool SW1, bool SW2, bool SW3, bool SW4, bool SW5) {
     // update the keyboard event handler settings
     event_t kbsettings = {
@@ -485,7 +719,7 @@ void InitKeyboard(QueueHandle_t keyboard_event_queue) {
     kbsettings.type                                = event_control_keyboard;
     kbsettings.args_control_keyboard.enable_typing = false;
     for (int i = 0; i < NUM_ROTATION; i++) kbsettings.args_control_keyboard.enable_rotations[i] = false;
-    for (int i = 0; i < NUM_LETTER; i++) kbsettings.args_control_keyboard.enable_characters[i] = true;
+    for (int i = 0; i < NUM_CHARACTERS; i++) kbsettings.args_control_keyboard.enable_characters[i] = true;
     for (int i = 0; i < NUM_SWITCHES; i++) kbsettings.args_control_keyboard.enable_actions[i] = false;
     kbsettings.args_control_keyboard.enable_leds  = true;
     kbsettings.args_control_keyboard.enable_relay = true;
@@ -554,7 +788,7 @@ void DebugKeyboardSettings(void) {
     for (int i = 0; i < NUM_ROTATION; i++)
         ESP_LOGE(TAG, "%d: %d", i, kbsettings.args_control_keyboard.enable_rotations[i]);
     ESP_LOGE(TAG, "enable_characters:");
-    for (int i = 0; i < NUM_LETTER; i++)
+    for (int i = 0; i < NUM_CHARACTERS; i++)
         ESP_LOGE(TAG, "%d: %d", i, kbsettings.args_control_keyboard.enable_characters[i]);
     ESP_LOGE(TAG, "enable_actions:");
     for (int i = 0; i < NUM_SWITCHES; i++)
@@ -566,14 +800,14 @@ void DebugKeyboardSettings(void) {
 
 int Increment(int _num, int _max) {
     _num++;
-    if (_num > _max)
+    if (_num >= _max)
         _num = 0;
     return _num;
 }
 int Decrement(int _num, int _max) {
     _num--;
     if (_num < 0)
-        _num = _max;
+        _num = _max - 1;
     return _num;
 }
 
@@ -610,7 +844,40 @@ void AddDiamondSelecttoBuf(int _x, int _y, int _gap) {
     //             pax_draw_line(gfx, BLACK, _x + od[i][0], _y + od[i][1], _x + od[i + 1][0], _y + od[i + 1][1]);
 }
 
+uint32_t ChartoLED(char _letter) {
+    switch (_letter) {
+        case 'a': return LED_A; break;
+        case 'b': return LED_B; break;
+        // case 'c': return LED_; break;
+        case 'd': return LED_D; break;
+        case 'e': return LED_E; break;
+        case 'f': return LED_F; break;
+        case 'g': return LED_G; break;
+        case 'h': return LED_H; break;
+        case 'i': return LED_I; break;
+        // case 'j': return LED_; break;
+        case 'k': return LED_K; break;
+        case 'l': return LED_L; break;
+        case 'm': return LED_M; break;
+        case 'n': return LED_N; break;
+        case 'o': return LED_O; break;
+        case 'p': return LED_P; break;
+        // case 'q': return LED_; break;
+        case 'r': return LED_R; break;
+        case 's': return LED_S; break;
+        case 't': return LED_T; break;
+        // case 'u': return LED_; break;
+        case 'v': return LED_V; break;
+        case 'w': return LED_W; break;
+        // case 'x': return LED_; break;
+        case 'y': return LED_Y; break;
+        // case 'z': return LED_; break;
+        default: return 0; break;
+    }
+}
+
 esp_err_t nvs_get_str_wrapped(const char* namespace, const char* key, char* buffer, size_t buffer_size) {
+
     nvs_handle_t handle;
     esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
     if (res == ESP_OK) {
@@ -663,7 +930,31 @@ esp_err_t nvs_set_u8_wrapped(const char* namespace, const char* key, uint8_t val
     return res;
 }
 
+esp_err_t nvs_get_u16_wrapped(const char* namespace, const char* key, uint16_t* value) {
+    nvs_handle_t handle;
+    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+    if (res != ESP_OK) {
+        return res;
+    }
+    res = nvs_get_u16(handle, key, value);
+    nvs_close(handle);
+    return res;
+}
+
+esp_err_t nvs_set_u16_wrapped(const char* namespace, const char* key, uint16_t value) {
+    nvs_handle_t handle;
+    esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
+    if (res != ESP_OK) {
+        return res;
+    }
+    res = nvs_set_u16(handle, key, value);
+    nvs_commit(handle);
+    nvs_close(handle);
+    return res;
+}
+
 esp_err_t nvs_get_u8_blob_wrapped(const char* namespace, const char* key, uint8_t* value, size_t length) {
+
     nvs_handle_t handle;
     esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
     if (res != ESP_OK) {

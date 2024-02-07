@@ -1,4 +1,5 @@
 #include "screen_mascots.h"
+#include "application.h"
 #include "bsp.h"
 #include "esp_err.h"
 #include "esp_log.h"
@@ -21,6 +22,8 @@ extern const uint8_t mascots_png_end[] asm("_binary_mascots_png_end");
 static const char* TAG = "mascots";
 
 screen_t screen_mascots_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+    if (log)
+        ESP_LOGE(TAG, "Enter screen_mascots_entry");
     event_t kbsettings = {
         .type                                     = event_control_keyboard,
         .args_control_keyboard.enable_typing      = false,

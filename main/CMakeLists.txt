@@ -28,8 +28,11 @@ idf_component_register(
                 ${project_dir}/resources/carond.png
                 ${project_dir}/resources/switchframe1.png
                 ${project_dir}/resources/switchframe2.png
-                ${project_dir}/resources/diamondl.png
-                ${project_dir}/resources/diamondr.png
+                ${project_dir}/resources/border2lsw.png
+                ${project_dir}/resources/border2lrsw.png
+                ${project_dir}/resources/library.png
+                ${project_dir}/resources/battery1.png
+                ${project_dir}/resources/battery2.png
                 ${project_dir}/resources/pointclick/dock1n.png
                 ${project_dir}/resources/pointclick/dock1e.png
                 ${project_dir}/resources/pointclick/dock1s.png
@@ -44,6 +47,24 @@ idf_component_register(
                 ${project_dir}/resources/pointclick/dune2s.png
                 ${project_dir}/resources/sprites/b_arrow1.png
                 ${project_dir}/resources/sprites/b_arrow2.png
-                ${project_dir}/resources/hangman/deibler1.png
+                ${project_dir}/resources/sprites/b_arrow1t.png
+                ${project_dir}/resources/sprites/circl12.png
+                ${project_dir}/resources/sprites/diamondl.png
+                ${project_dir}/resources/sprites/diamondr.png
+                ${project_dir}/resources/sprites/diamondt.png
+                ${project_dir}/resources/sprites/diamondb.png
+                ${project_dir}/resources/sprites/squi1.png
+                ${project_dir}/resources/sprites/squi2.png
+                ${project_dir}/resources/hangman/deibler01.png
+                ${project_dir}/resources/hangman/deibler02.png
+                ${project_dir}/resources/hangman/deibler03.png
+                ${project_dir}/resources/hangman/deibler04.png
+                ${project_dir}/resources/hangman/deibler05.png
+                ${project_dir}/resources/hangman/deibler06.png
+                ${project_dir}/resources/hangman/deibler07.png
+                ${project_dir}/resources/hangman/deibler08.png
+                ${project_dir}/resources/hangman/deibler09.png
+                ${project_dir}/resources/hangman/deibler10.png
                 ${project_dir}/resources/hangman/deiblerl.png
+                ${project_dir}/resources/hangman/deiblers.png
 )
