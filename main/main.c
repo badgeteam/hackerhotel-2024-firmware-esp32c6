@@ -148,7 +148,7 @@ void app_main(void) {
     }
 
     // Main application
-    screen_t current_screen = screen_library;
+    screen_t current_screen = screen_credits;
     while (1) {
         switch (current_screen) {
             case screen_mascots:
@@ -213,7 +213,12 @@ void app_main(void) {
                 }
             case screen_library:
                 {
-                    current_screen = screen_library_entry(application_event_queue, keyboard_event_queue, 0);
+                    current_screen = screen_library_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_credits:
+                {
+                    current_screen = screen_credits_entry(application_event_queue, keyboard_event_queue);
                     break;
                 }
             default: current_screen = screen_home;

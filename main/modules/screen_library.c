@@ -264,9 +264,10 @@ screen_t screen_library_content(QueueHandle_t application_event_queue, QueueHand
 }
 
 
-screen_t screen_library_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int cursor) {
+screen_t screen_library_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     ESP_LOGE(TAG, "Enter screen_home_entry");
     bsp_apply_lut(lut_4s);
+    int cursor = 0;
     // update the keyboard event handler settings
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, false, false, true);

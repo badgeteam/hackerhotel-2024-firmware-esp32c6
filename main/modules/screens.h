@@ -21,6 +21,7 @@ typedef enum _screen {
 
     screen_settings,
     screen_home,
+    screen_credits,
 
     screen_BS_splash,
     screen_BS_placeships,
