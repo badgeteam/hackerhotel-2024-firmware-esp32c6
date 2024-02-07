@@ -49,7 +49,7 @@ uint16_t GetNBrepertoryID(void) {
     return value;
 }
 
-bool StoreRepertoire(char _repertoryIDlist[nicknamelenght], uint8_t mac[8], uint16_t _ID) {
+bool StoreRepertoire(char _repertoryIDlist[nicknamelength], uint8_t mac[8], uint16_t _ID) {
     char strnick[15] = "nickname";
     char strmac[15]  = "MAC";
     char nb[15];
@@ -71,12 +71,12 @@ bool StoreRepertoire(char _repertoryIDlist[nicknamelenght], uint8_t mac[8], uint
     return res;
 }
 
-bool GetRepertoire(char _repertoryIDlist[nicknamelenght], uint8_t mac[8], uint16_t _ID) {
+bool GetRepertoire(char _repertoryIDlist[nicknamelength], uint8_t mac[8], uint16_t _ID) {
     char strnick[15] = "nickname";
     char strmac[15]  = "MAC";
     char nb[15];
     // This is used as I can't get nvs_get_str_wrapped to populate a 1 dimension char array
-    char value[2][nicknamelenght] = {"", ""};
+    char value[2][nicknamelength] = {"", ""};
     snprintf(nb, 15, "%d", _ID);
     strcat(strnick, nb);
     strcat(strmac, nb);
@@ -137,8 +137,8 @@ void receive_repertoire(void) {
 
 void send_repertoire(void) {
     // first we create a struct with the data, as we would like to receive on the other side
-    badge_message_repertoire data;
-    char                     _nickname[nicknamelenght] = "Error get owner nickname";
+    badge_message_repertoire_t data;
+    char                       _nickname[nicknamelength] = "Error get owner nickname";
     nvs_get_str_wrapped("owner", "nickname", _nickname, sizeof(_nickname));
 
     strcpy(data.nickname, _nickname);
@@ -164,8 +164,8 @@ void Display_repertoire(
     int             _nbsurroundingID,
     uint16_t        nb_item_rep,
     int             nb_item_sur,
-    char            _repertoryIDlist[maxperpage][nicknamelenght],
-    char            _surroundingIDlist[maxIDsurrounding][nicknamelenght],
+    char            _repertoryIDlist[maxperpage][nicknamelength],
+    char            _surroundingIDlist[maxIDsurrounding][nicknamelength],
     uint8_t         repertory_mac[maxperpage][8],
     uint8_t         surrounding_mac[maxIDsurrounding][8],
     struct cursor_t cursor,
@@ -226,8 +226,8 @@ void Display_repertoire(
     // display repertoire and surrounding name/mac content
     for (int i = 0; i < maxperpage; i++) {
         int  text_IDs_y                 = box_o_y + box_y * i;
-        char leftfield[nicknamelenght]  = "";
-        char rightfield[nicknamelenght] = "";
+        char leftfield[nicknamelength]  = "";
+        char rightfield[nicknamelength] = "";
         char buf[10]                    = "";
         if (!show_name_or_mac) {
             strcpy(leftfield, _repertoryIDlist[i]);
@@ -281,8 +281,8 @@ void Display_repertoire(
 screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int _app) {
     event_t tempkbsettings = kbsettings;
 
-    char    repertoryIDlist[maxperpage][nicknamelenght];
-    char    surroundingIDlist[maxIDsurrounding][nicknamelenght];
+    char    repertoryIDlist[maxperpage][nicknamelength];
+    char    surroundingIDlist[maxIDsurrounding][nicknamelength];
     uint8_t repertory_mac[maxperpage][8];
     uint8_t surrounding_mac[maxIDsurrounding][8];
 
@@ -515,7 +515,7 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
             int     flag_already_exist    = 0;
             int     flag_line_repertory   = 0;
             int     flag_line_surrounding = 0;
-            char    stored_nick[nicknamelenght];
+            char    stored_nick[nicknamelength];
             uint8_t stored_mac[8];
 
             for (int i = 0; i < nbrepertoryID; i++) {

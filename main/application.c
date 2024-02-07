@@ -49,35 +49,35 @@
 #include <string.h>
 #include <time.h>
 
-extern uint8_t const border1_png_start[] asm("_binary_border1_png_start");
-extern uint8_t const border1_png_end[] asm("_binary_border1_png_end");
-extern uint8_t const border2_png_start[] asm("_binary_border2_png_start");
-extern uint8_t const border2_png_end[] asm("_binary_border2_png_end");
-extern uint8_t const switchframe1_png_start[] asm("_binary_switchframe1_png_start");
-extern uint8_t const switchframe1_png_end[] asm("_binary_switchframe1_png_end");
-extern uint8_t const switchframe2_png_start[] asm("_binary_switchframe2_png_start");
-extern uint8_t const switchframe2_png_end[] asm("_binary_switchframe2_png_end");
-extern uint8_t const border2lsw_png_start[] asm("_binary_border2lsw_png_start");
-extern uint8_t const border2lsw_png_end[] asm("_binary_border2lsw_png_end");
-extern uint8_t const border2lrsw_png_start[] asm("_binary_border2lrsw_png_start");
-extern uint8_t const border2lrsw_png_end[] asm("_binary_border2lrsw_png_end");
+extern const uint8_t border1_png_start[] asm("_binary_border1_png_start");
+extern const uint8_t border1_png_end[] asm("_binary_border1_png_end");
+extern const uint8_t border2_png_start[] asm("_binary_border2_png_start");
+extern const uint8_t border2_png_end[] asm("_binary_border2_png_end");
+extern const uint8_t switchframe1_png_start[] asm("_binary_switchframe1_png_start");
+extern const uint8_t switchframe1_png_end[] asm("_binary_switchframe1_png_end");
+extern const uint8_t switchframe2_png_start[] asm("_binary_switchframe2_png_start");
+extern const uint8_t switchframe2_png_end[] asm("_binary_switchframe2_png_end");
+extern const uint8_t border2lsw_png_start[] asm("_binary_border2lsw_png_start");
+extern const uint8_t border2lsw_png_end[] asm("_binary_border2lsw_png_end");
+extern const uint8_t border2lrsw_png_start[] asm("_binary_border2lrsw_png_start");
+extern const uint8_t border2lrsw_png_end[] asm("_binary_border2lrsw_png_end");
 
-extern uint8_t const diamondl_png_start[] asm("_binary_diamondl_png_start");
-extern uint8_t const diamondl_png_end[] asm("_binary_diamondl_png_end");
-extern uint8_t const diamondr_png_start[] asm("_binary_diamondr_png_start");
-extern uint8_t const diamondr_png_end[] asm("_binary_diamondr_png_end");
+extern const uint8_t diamondl_png_start[] asm("_binary_diamondl_png_start");
+extern const uint8_t diamondl_png_end[] asm("_binary_diamondl_png_end");
+extern const uint8_t diamondr_png_start[] asm("_binary_diamondr_png_start");
+extern const uint8_t diamondr_png_end[] asm("_binary_diamondr_png_end");
 
-extern uint8_t const b_arrow1_png_start[] asm("_binary_b_arrow1_png_start");
-extern uint8_t const b_arrow1_png_end[] asm("_binary_b_arrow1_png_end");
-extern uint8_t const b_arrow2_png_start[] asm("_binary_b_arrow2_png_start");
-extern uint8_t const b_arrow2_png_end[] asm("_binary_b_arrow2_png_end");
+extern const uint8_t b_arrow1_png_start[] asm("_binary_b_arrow1_png_start");
+extern const uint8_t b_arrow1_png_end[] asm("_binary_b_arrow1_png_end");
+extern const uint8_t b_arrow2_png_start[] asm("_binary_b_arrow2_png_start");
+extern const uint8_t b_arrow2_png_end[] asm("_binary_b_arrow2_png_end");
 
 // 272 x 9
-extern uint8_t const squi1_png_start[] asm("_binary_squi1_png_start");
-extern uint8_t const squi1_png_end[] asm("_binary_squi1_png_end");
+extern const uint8_t squi1_png_start[] asm("_binary_squi1_png_start");
+extern const uint8_t squi1_png_end[] asm("_binary_squi1_png_end");
 // 286 x 13
-extern uint8_t const squi2_png_start[] asm("_binary_squi2_png_start");
-extern uint8_t const squi2_png_end[] asm("_binary_squi2_png_end");
+extern const uint8_t squi2_png_start[] asm("_binary_squi2_png_start");
+extern const uint8_t squi2_png_end[] asm("_binary_squi2_png_end");
 
 event_t kbsettings;
 
@@ -86,7 +86,7 @@ const int telegraph_Y[20] = {12, 27, 27, 42, 42, 42, 57, 57, 57, 57, 71, 71, 71,
 
 static const char* TAG = "application utilities";
 
-void DisplayError(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, char const * errorstr) {
+void DisplayError(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, const char* errorstr) {
     event_t    tempkbsettings = kbsettings;
     pax_buf_t* gfx            = bsp_get_gfx_buffer();
 
@@ -192,7 +192,7 @@ void AddSWtoBuffer(const char* SW1str, const char* SW2str, const char* SW3str, c
     pax_center_text(gfx, BLACK, font1, 9, o_x + gapx * 4, o_y, SW5str);
 }
 
-void AddSWtoBufferL(char const * SW1str) {
+void AddSWtoBufferL(const char* SW1str) {
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_insert_png_buf(gfx, border2lsw_png_start, border2lsw_png_end - border2lsw_png_start, 0, 0, 0);
     int gapx = 60;
@@ -201,7 +201,7 @@ void AddSWtoBufferL(char const * SW1str) {
     pax_center_text(gfx, BLACK, font1, 9, o_x + gapx * 0, o_y, SW1str);
 }
 
-void AddSWtoBufferLR(char const * SW1str, char const * SW5str) {
+void AddSWtoBufferLR(const char* SW1str, const char* SW5str) {
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_insert_png_buf(gfx, border2lrsw_png_start, border2lrsw_png_end - border2lrsw_png_start, 0, 0, 0);
     int gapx = 60;
@@ -234,9 +234,7 @@ void Justify_right_text(
 }
 
 // screen that stop the game loop from running and display information until the player press any inputs
-int Screen_Information(
-    char const * _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue
-) {
+int Screen_Information(const char* _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     event_t    tempkbsettings = kbsettings;
     pax_buf_t* gfx            = bsp_get_gfx_buffer();
 
@@ -277,7 +275,7 @@ int Screen_Information(
 
 // screen that stop the game loop from running, asking for a prompt and return 1 (yes) or 0 (no)
 int Screen_Confirmation(
-    char const * _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue
+    const char* _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue
 ) {
     event_t    tempkbsettings = kbsettings;
     pax_buf_t* gfx            = bsp_get_gfx_buffer();
@@ -320,9 +318,7 @@ int Screen_Confirmation(
     }
 }
 
-int WaitingforOpponent(
-    char const * _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue
-) {
+int WaitingforOpponent(const char* _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     pax_buf_t* gfx = bsp_get_gfx_buffer();
 
     InitKeyboard(keyboard_event_queue);
@@ -433,7 +429,7 @@ void DisplayWallofTextWords(
 // and makes them into up to _maxnblines which are _maxlinelength pixel long
 // can be centered if the _centered flag is high
 void DisplayWallofText(
-    int _fontsize, int _maxlinelenght, int _maxnblines, int _xoffset, int _yoffset, char _message[500], int _centered
+    int _fontsize, int _maxlinelength, int _maxnblines, int _xoffset, int _yoffset, char _message[500], int _centered
 ) {
     // set screen font and buffer
     const pax_font_t* font = pax_font_sky;
@@ -511,7 +507,7 @@ void DisplayWallofText(
     // bsp_display_flush();
 }
 
-pax_vec1_t WallofText(int _yoffset, char const * _message, int _centered, int _cursor) {
+pax_vec1_t WallofText(int _yoffset, const char* _message, int _centered, int _cursor) {
     pax_buf_t* gfx  = bsp_get_gfx_buffer();
     pax_vec1_t dims = {
         .x = 999,
@@ -934,7 +930,7 @@ esp_err_t nvs_set_u8_wrapped(const char* namespace, const char* key, uint8_t val
     return res;
 }
 
-esp_err_t nvs_get_u16_wrapped(char const * namespace, char const * key, uint16_t* value) {
+esp_err_t nvs_get_u16_wrapped(const char* namespace, const char* key, uint16_t* value) {
     nvs_handle_t handle;
     esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
     if (res != ESP_OK) {
@@ -945,7 +941,7 @@ esp_err_t nvs_get_u16_wrapped(char const * namespace, char const * key, uint16_t
     return res;
 }
 
-esp_err_t nvs_set_u16_wrapped(char const * namespace, char const * key, uint16_t value) {
+esp_err_t nvs_set_u16_wrapped(const char* namespace, const char* key, uint16_t value) {
     nvs_handle_t handle;
     esp_err_t    res = nvs_open(namespace, NVS_READWRITE, &handle);
     if (res != ESP_OK) {

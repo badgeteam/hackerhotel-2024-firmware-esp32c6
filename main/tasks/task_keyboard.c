@@ -13,8 +13,6 @@
 #define SW4_CP 0x08
 #define SW5_CP 0x10
 
-static char const * TAG = "keyboard";
-=======
 static const char* TAG = "keyboard";
 
 typedef struct _keyboard_state {

@@ -26,12 +26,12 @@
 #include <string.h>
 
 
-extern uint8_t const caronl_png_start[] asm("_binary_caronl_png_start");
-extern uint8_t const caronl_png_end[] asm("_binary_caronl_png_end");
-extern uint8_t const caronv_png_start[] asm("_binary_caronv_png_start");
-extern uint8_t const caronv_png_end[] asm("_binary_caronv_png_end");
-extern uint8_t const carond_png_start[] asm("_binary_carond_png_start");
-extern uint8_t const carond_png_end[] asm("_binary_carond_png_end");
+extern const uint8_t caronl_png_start[] asm("_binary_caronl_png_start");
+extern const uint8_t caronl_png_end[] asm("_binary_caronl_png_end");
+extern const uint8_t caronv_png_start[] asm("_binary_caronv_png_start");
+extern const uint8_t caronv_png_end[] asm("_binary_caronv_png_end");
+extern const uint8_t carond_png_start[] asm("_binary_carond_png_start");
+extern const uint8_t carond_png_end[] asm("_binary_carond_png_end");
 
 #define water         0
 #define boat          1
@@ -55,8 +55,8 @@ extern uint8_t const carond_png_end[] asm("_binary_carond_png_end");
 
 #define invalid -1
 
-static char const * TAG                = "testscreen";
-static char const   forfeitprompt[128] = "Do you want to exit and declare forfeit";
+static const char* TAG                = "testscreen";
+static const char  forfeitprompt[128] = "Do you want to exit and declare forfeit";
 
 screen_t screen_battleship_splash(
     QueueHandle_t application_event_queue,
@@ -239,8 +239,8 @@ void Display_battleship_placeships(
 void Display_battleship_battle(
     uint8_t playerboard[20],
     uint8_t ennemyboard[20],
-    char    _nickname[nicknamelenght],
-    char    _ennemyname[nicknamelenght],
+    char    _nickname[nicknamelength],
+    char    _ennemyname[nicknamelength],
     int     _turn,
     uint8_t _position[20],
     uint8_t playership[6],
@@ -1031,8 +1031,8 @@ void Display_battleship_placeships(
     int gapinstruction_y = 50;
     int fontsize         = 9;
 
-    pax_font_t const * font = pax_font_sky;
-    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
+    const pax_font_t* font = pax_font_sky;
+    pax_buf_t*        gfx  = bsp_get_gfx_buffer();
 
     // ESP_LOGE(TAG, "ship placed: %d", _shipplaced);
     // debugboardstatus(playerboard);
@@ -1158,8 +1158,8 @@ screen_t screen_battleship_battle(
 
     bool oppenenttype               = human;
     bool turn                       = esp_random() % 2;
-    char nickname[nicknamelenght]   = "";
-    char ennemyname[nicknamelenght] = "AI";
+    char nickname[nicknamelength]   = "";
+    char ennemyname[nicknamelength] = "AI";
     bool displayflag                = false;
     bool sendflag                   = true;
     bool listenflag                 = true;
@@ -1378,15 +1378,15 @@ screen_t screen_battleship_battle(
 void Display_battleship_battle(
     uint8_t playerboard[20],
     uint8_t ennemyboard[20],
-    char    _nickname[nicknamelenght],
-    char    _ennemyname[nicknamelenght],
+    char    _nickname[nicknamelength],
+    char    _ennemyname[nicknamelength],
     int     _turn,
     uint8_t _position[20],
     uint8_t playership[6],
     uint8_t ennemyship[6]
 ) {
-    pax_font_t const * font = pax_font_sky;
-    pax_buf_t*         gfx  = bsp_get_gfx_buffer();
+    const pax_font_t* font = pax_font_sky;
+    pax_buf_t*        gfx  = bsp_get_gfx_buffer();
 
     int telegraphplayer_x = 100;
     int telegraphennemy_x = gfx->height - telegraphplayer_x;

@@ -3,8 +3,8 @@
 #include "badge_messages.h"
 #include "freertos/FreeRTOS.h"
 
-#define nicknamelenght 32
-#define messagelenght  67
+#define nicknamelength 32
+#define messagelength  67
 #define BSpayload      25
 
 // please no more userdata than this, else we might not have enough buffer for the message structure
@@ -38,22 +38,10 @@ typedef struct _badge_message_repertoire {
 } __attribute__((packed)) badge_message_repertoire_t;
 
 static_assert(
-    sizeof(badge_message_timestamp_t) < BADGE_COMMS_USER_DATA_MAX_LEN, "badge_message_timestamp_t is too big"
+    sizeof(badge_message_repertoire_t) < BADGE_COMMS_USER_DATA_MAX_LEN, "badge_message_repertoire_t is too big"
 );
-
-typedef struct {
-    char nickname[nicknamelenght];
-    char payload[messagelenght];
-} badge_message_str;
-static_assert(sizeof(badge_message_str) < BADGE_COMMS_USER_DATA_MAX_LEN, "badge_message_timestamp_t is too big");
-
-typedef struct {
-    char nickname[nicknamelenght];
-} badge_message_repertoire;
-static_assert(sizeof(badge_message_repertoire) < BADGE_COMMS_USER_DATA_MAX_LEN, "badge_message_timestamp_t is too big");
 
 typedef struct {
     uint8_t dataBS[BSpayload];
 } badge_message_battleship;
 static_assert(sizeof(badge_message_battleship) < BADGE_COMMS_USER_DATA_MAX_LEN, "badge_message_timestamp_t is too big");
-

@@ -55,7 +55,7 @@ screen_t screen_pointclick_dock2(QueueHandle_t application_event_queue, QueueHan
 screen_t screen_pointclick_dune1(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
 screen_t screen_pointclick_dune2(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
 
-bool StoreRepertoire1(char _repertoryIDlist[nicknamelenght], uint8_t mac[8], uint16_t _ID) {
+bool StoreRepertoire1(char _repertoryIDlist[nicknamelength], uint8_t mac[8], uint16_t _ID) {
     char strnick[15] = "nickname";
     char strmac[15]  = "MAC";
     char nb[15];
@@ -77,7 +77,7 @@ bool StoreRepertoire1(char _repertoryIDlist[nicknamelenght], uint8_t mac[8], uin
     return res;
 }
 
-bool GetRepertoire1(char _repertoryIDlist[2][nicknamelenght], uint8_t mac[8], uint16_t _ID) {
+bool GetRepertoire1(char _repertoryIDlist[2][nicknamelength], uint8_t mac[8], uint16_t _ID) {
     char strnick[15] = "nickname";
     char strmac[15]  = "MAC";
     char nb[15];

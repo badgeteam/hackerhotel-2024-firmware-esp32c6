@@ -22,7 +22,6 @@ typedef enum _screen {
     screen_template,
     screen_mascots,
     screen_home,
-    screen_credits,
 
     screen_BS_splash,
     screen_BS_placeships,
