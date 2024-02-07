@@ -2,24 +2,25 @@
 
 typedef enum _screen {
     screen_scrambled,
-    screen_mascots,
+    screen_batterystatus,
     screen_billboard,
     screen_nametag,
     screen_library,
 
     screen_hangman,
     screen_repertoire,
-    screen_template,
-    screen_test,
+    screen_pointclick,
+    screen_settings,
     screen_battleship,
 
+    screen_credits,
     screen_settings_nickname,
     screen_settings_wifi,
     screen_morse,
     screen_shades,
-    screen_pointclick,
 
-    screen_settings,
+    screen_template,
+    screen_mascots,
     screen_home,
     screen_credits,
 

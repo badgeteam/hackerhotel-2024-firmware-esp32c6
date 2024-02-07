@@ -4,6 +4,7 @@
 #include "bsp.h"
 #include "esp_err.h"
 #include "esp_log.h"
+#include "esp_timer.h"
 #include "esp_wifi_types.h"
 #include "events.h"
 #include "freertos/FreeRTOS.h"
@@ -22,8 +23,13 @@
 #include <stdio.h>
 #include <string.h>
 
+
 extern uint8_t const settings_png_start[] asm("_binary_settings_png_start");
 extern uint8_t const settings_png_end[] asm("_binary_settings_png_end");
+extern uint8_t const battery1_png_start[] asm("_binary_battery1_png_start");
+extern uint8_t const battery1_png_end[] asm("_binary_battery1_png_end");
+extern uint8_t const battery2_png_start[] asm("_binary_battery2_png_start");
+extern uint8_t const battery2_png_end[] asm("_binary_battery2_png_end");
 
 static char const * TAG = "settings";
 
@@ -386,6 +392,8 @@ static void draw() {
 }
 
 screen_t screen_settings_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+    if (log)
+        ESP_LOGE(TAG, "Enter screen_settings_entry");
     configure_keyboard(keyboard_event_queue);
     draw();
 
@@ -404,6 +412,66 @@ screen_t screen_settings_entry(QueueHandle_t application_event_queue, QueueHandl
                         default: break;
                     }
                     draw();
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+
+float const OCVLut[32][2] = {{0, 2.7296},      {0.0164, 3.0857}, {0.0328, 3.2497}, {0.0492, 3.3247}, {0.0656, 3.3609},
+                             {0.082, 3.3821},  {0.0984, 3.3991}, {0.1092, 3.41},   {0.12, 3.4212},   {0.1308, 3.4329},
+                             {0.1416, 3.4448}, {0.1523, 3.457},  {0.188, 3.4963},  {0.2237, 3.5314}, {0.2594, 3.5611},
+                             {0.2951, 3.5865}, {0.3308, 3.6099}, {0.3867, 3.6471}, {0.4426, 3.6893}, {0.4985, 3.7382},
+                             {0.5544, 3.7931}, {0.6103, 3.8511}, {0.6709, 3.9139}, {0.7315, 3.9728}, {0.792, 4.025},
+                             {0.8526, 4.0694}, {0.9132, 4.108},  {0.9306, 4.1187}, {0.9479, 4.1297}, {0.9653, 4.1412},
+                             {0.9826, 4.1537}, {1, 4.1676}};
+
+screen_t screen_batterystatus_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+    if (log)
+        ESP_LOGE(TAG, "Enter screen_home_entry");
+    // update the keyboard event handler settings
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
+    char voltage[15]    = "";
+    char SoC[15]        = "";
+    char oldvoltage[15] = "";
+    char oldSoC[15]     = "";
+    int  timer_track    = 0;
+
+    while (1) {
+        if ((esp_timer_get_time() / 1000000) > (timer_track * timer_battery_screen)) {
+            timer_track = (esp_timer_get_time() / (timer_battery_screen * 1000000)) + 1;
+
+            pax_buf_t* gfx = bsp_get_gfx_buffer();
+            if (bsp_battery_charging())
+                pax_insert_png_buf(gfx, battery1_png_start, battery1_png_end - battery1_png_start, 0, 0, 0);
+            else
+                pax_insert_png_buf(gfx, battery2_png_start, battery2_png_end - battery2_png_start, 0, 0, 0);
+
+            float SoCfromlut = 0;
+            for (int i = 0; i < 32; i++)
+                if (OCVLut[i][1] < bsp_battery_voltage())
+                    SoCfromlut = OCVLut[i][0] * 100;
+            snprintf(SoC, 15, "%.0f", SoCfromlut);
+            ESP_LOGE(TAG, "SoCfromlut %f", SoCfromlut);
+            snprintf(voltage, 15, "%.2fV", bsp_battery_voltage());
+            pax_center_text(gfx, BLACK, font1, fontsizeS, 32, 20, voltage);
+            pax_center_text(gfx, BLACK, font1, fontsizeS, 31, 50, SoC);
+            if (strcmp(voltage, oldvoltage) || strcmp(SoC, oldSoC))
+                bsp_display_flush();
+            strcpy(oldvoltage, voltage);
+            strcpy(oldSoC, SoC);
+        }
+
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        default: return screen_home; break;
+                    }
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
             }

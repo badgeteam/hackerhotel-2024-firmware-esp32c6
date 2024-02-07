@@ -31,6 +31,8 @@ idf_component_register(
                 ${project_dir}/resources/border2lsw.png
                 ${project_dir}/resources/border2lrsw.png
                 ${project_dir}/resources/library.png
+                ${project_dir}/resources/battery1.png
+                ${project_dir}/resources/battery2.png
                 ${project_dir}/resources/pointclick/dock1n.png
                 ${project_dir}/resources/pointclick/dock1e.png
                 ${project_dir}/resources/pointclick/dock1s.png

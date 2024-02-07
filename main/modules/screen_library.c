@@ -270,19 +270,19 @@ screen_t screen_library_entry(QueueHandle_t application_event_queue, QueueHandle
     int cursor = 0;
     // update the keyboard event handler settings
     InitKeyboard(keyboard_event_queue);
-    configure_keyboard_presses(keyboard_event_queue, false, false, false, false, true);
+    configure_keyboard_presses(keyboard_event_queue, true, false, false, false, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, true);
     DisplayLibraryEntry(cursor);
 
     while (1) {
         event_t event = {0};
-        ESP_LOGE(TAG, "test screen_home_entry");
+        ESP_LOGE(TAG, "screen_library_entry");
         if (xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE) {
             switch (event.type) {
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
-                        case SWITCH_1: return 0; break;
+                        case SWITCH_1: return screen_home; break;
                         case SWITCH_2: break;
                         case SWITCH_3: break;
                         case SWITCH_L3: cursor = Decrement(cursor, Nb_item_library); break;

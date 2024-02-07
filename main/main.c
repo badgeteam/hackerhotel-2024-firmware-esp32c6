@@ -148,14 +148,11 @@ void app_main(void) {
     }
 
     // Main application
-    screen_t current_screen = screen_credits;
+    screen_t current_screen = screen_home;
     while (1) {
+        ESP_LOGE(TAG, "Screen: %d", current_screen);
         switch (current_screen) {
-            case screen_mascots:
-                {
-                    current_screen = screen_mascots_entry(application_event_queue, keyboard_event_queue);
-                    break;
-                }
+
             case screen_home:
                 {
                     current_screen = screen_home_entry(application_event_queue, keyboard_event_queue);
@@ -163,6 +160,7 @@ void app_main(void) {
                 }
             case screen_settings:
                 {
+                    ESP_LOGE(TAG, "sAAAAAAAAAAAAAAAA ");
                     current_screen = screen_settings_entry(application_event_queue, keyboard_event_queue);
                     break;
                 }
@@ -219,6 +217,16 @@ void app_main(void) {
             case screen_credits:
                 {
                     current_screen = screen_credits_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_batterystatus:
+                {
+                    current_screen = screen_batterystatus_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_mascots:
+                {
+                    current_screen = screen_mascots_entry(application_event_queue, keyboard_event_queue);
                     break;
                 }
             default: current_screen = screen_home;

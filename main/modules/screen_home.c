@@ -31,7 +31,7 @@ extern uint8_t const diamondb_png_end[] asm("_binary_diamondb_png_end");
 static char const * TAG = "homescreen";
 
 // THIS LIST NEED TO MATCH SCREEN.H
-char const screen_name[10][30] = {
+char const screen_name[13][30] = {
     "Lighthouse",
     "Engine room",
     "Billboard",
@@ -40,12 +40,16 @@ char const screen_name[10][30] = {
 
     "Deibler",
     "Repertoire",
-    "template",
-    "test",
+    "Point & Click",
+    "settings",
     "Carondelet",
+
+    "placeholder",
+    "placeholder",
+    "placeholder",
 };
 
-uint8_t const screen_pos[10][2] = {
+uint8_t const screen_pos[13][2] = {
     {48, 100},
     {200, 36},
     {50, 50},
@@ -54,6 +58,10 @@ uint8_t const screen_pos[10][2] = {
 
     {50, 50},
     {50, 50},
+    {50, 50},
+    {50, 50},
+    {50, 50},
+
     {50, 50},
     {50, 50},
     {50, 50},
@@ -69,7 +77,7 @@ screen_t screen_home_entry(QueueHandle_t application_event_queue, QueueHandle_t 
     configure_keyboard_presses(keyboard_event_queue, false, false, false, false, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_1, true);
 
-    int cursor = screen_battleship;
+    int cursor = 3;
     DisplayHomeEntry(cursor);
     int timer_track = (esp_timer_get_time() / (Home_screen_timeout * 1000000)) + 1;
 
@@ -91,7 +99,21 @@ screen_t screen_home_entry(QueueHandle_t application_event_queue, QueueHandle_t 
                         case SWITCH_2: break;
                         case SWITCH_3: break;
                         case SWITCH_4: break;
-                        case SWITCH_5: return cursor; break;
+                        case SWITCH_5:
+                            switch (cursor) {
+                                case 0: return screen_scrambled;
+                                case 1: return screen_batterystatus;
+                                case 2: return screen_billboard;
+                                case 3: return screen_nametag;
+                                case 4: return screen_library;
+
+                                case 5: return screen_hangman;
+                                case 6: return screen_repertoire;
+                                case 7: return screen_pointclick;
+                                case 8: return screen_settings;
+                                case 9: return screen_battleship;
+                            }
+                            break;
                         default: break;
                     }
                     ESP_LOGE(TAG, "Cursor %d", cursor);
