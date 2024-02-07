@@ -27,6 +27,9 @@ extern int const telegraph_Y[20];
 extern event_t   kbsettings;
 
 void DisplayError(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, char const * errorstr);
+
+void DrawArrowVertical(int _sw);
+void DrawArrowHorizontal(int _sw);
 void Addborder1toBuffer(void);
 void Addborder2toBuffer(void);
 void AddSWborder1toBuffer(void);

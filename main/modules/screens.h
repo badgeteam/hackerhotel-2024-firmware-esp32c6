@@ -1,21 +1,26 @@
 #pragma once
 
 typedef enum _screen {
+    screen_scrambled,
     screen_mascots,
-    screen_home,
-    screen_settings,
-    screen_settings_nickname,
-    screen_settings_wifi,
-    screen_battleship,
-    screen_shades,
-    screen_test,
     screen_billboard,
-    screen_pointclick,
+    screen_nametag,
+    screen_library,
+
+    screen_hangman,
     screen_repertoire,
     screen_template,
-    screen_hangman,
+    screen_test,
+    screen_battleship,
+
+    screen_settings_nickname,
+    screen_settings_wifi,
     screen_morse,
-    screen_scrambled,
+    screen_shades,
+    screen_pointclick,
+
+    screen_settings,
+    screen_home,
 
     screen_BS_splash,
     screen_BS_placeships,

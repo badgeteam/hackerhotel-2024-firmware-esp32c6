@@ -67,6 +67,18 @@ extern uint8_t const diamondl_png_end[] asm("_binary_diamondl_png_end");
 extern uint8_t const diamondr_png_start[] asm("_binary_diamondr_png_start");
 extern uint8_t const diamondr_png_end[] asm("_binary_diamondr_png_end");
 
+extern uint8_t const b_arrow1_png_start[] asm("_binary_b_arrow1_png_start");
+extern uint8_t const b_arrow1_png_end[] asm("_binary_b_arrow1_png_end");
+extern uint8_t const b_arrow2_png_start[] asm("_binary_b_arrow2_png_start");
+extern uint8_t const b_arrow2_png_end[] asm("_binary_b_arrow2_png_end");
+
+// 272 x 9
+extern uint8_t const squi1_png_start[] asm("_binary_squi1_png_start");
+extern uint8_t const squi1_png_end[] asm("_binary_squi1_png_end");
+// 286 x 13
+extern uint8_t const squi2_png_start[] asm("_binary_squi2_png_start");
+extern uint8_t const squi2_png_end[] asm("_binary_squi2_png_end");
+
 event_t kbsettings;
 
 int const telegraph_X[20] = {0, -8, 8, -16, 0, 16, -24, -8, 8, 24, -24, -8, 8, 24, -16, 0, 16, -8, 8, 0};
@@ -106,6 +118,28 @@ void DisplayError(QueueHandle_t application_event_queue, QueueHandle_t keyboard_
             }
         }
     }
+}
+
+void DrawArrowVertical(int _sw) {
+    pax_insert_png_buf(
+        bsp_get_gfx_buffer(),
+        b_arrow2_png_start,
+        b_arrow2_png_end - b_arrow2_png_start,
+        60 * _sw + 7,
+        118,
+        0
+    );
+}
+
+void DrawArrowHorizontal(int _sw) {
+    pax_insert_png_buf(
+        bsp_get_gfx_buffer(),
+        b_arrow1_png_start,
+        b_arrow1_png_end - b_arrow1_png_start,
+        60 * _sw + 7,
+        118,
+        0
+    );
 }
 
 void Addborder1toBuffer(void) {
@@ -771,14 +805,14 @@ void DebugKeyboardSettings(void) {
 
 int Increment(int _num, int _max) {
     _num++;
-    if (_num > _max)
+    if (_num >= _max)
         _num = 0;
     return _num;
 }
 int Decrement(int _num, int _max) {
     _num--;
     if (_num < 0)
-        _num = _max;
+        _num = _max - 1;
     return _num;
 }
 
