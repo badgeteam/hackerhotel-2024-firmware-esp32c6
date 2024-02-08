@@ -867,7 +867,7 @@ screen_t screen_pointclick_entry(QueueHandle_t application_event_queue, QueueHan
             case screen_PC_dialogue_post_office:
                 {
                     current_screen_PC =
-                        screen_dialogue_post_office(application_event_queue, keyboard_event_queue, main_cursor);
+                        screen_postoffice_closeup_d(application_event_queue, keyboard_event_queue, main_cursor);
                     break;
                 }
             case screen_home:
@@ -887,7 +887,6 @@ screen_t screen_pointclick_dock1(
     int displayflag  = 1;
     int nbdirection  = 4;
     int move_forward = 0;
-    int move_back    = 0;
     ESP_LOGE(TAG, "dock 1");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     while (1) {
@@ -901,10 +900,6 @@ screen_t screen_pointclick_dock1(
                     }
                 case screen_PC_e:
                     {
-                        if (move_back) {
-                            main_cursor[0] = screen_PC_e;
-                            return screen_PC_dock2;
-                        }
                         pax_insert_png_buf(gfx, dock1_e_S, dock1_e_E - dock1_e_S, 0, 0, 0);
                         break;
                     }
@@ -928,7 +923,6 @@ screen_t screen_pointclick_dock1(
             displayflag = 0;
         }
         move_forward  = 0;
-        move_back     = 0;
         event_t event = {0};
         if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
             switch (event.type) {
@@ -940,7 +934,7 @@ screen_t screen_pointclick_dock1(
                         case SWITCH_L5: cursor--; break;
                         case SWITCH_R5: cursor++; break;
                         case SWITCH_1: return screen_home; break;
-                        case SWITCH_2: move_back++; break;
+                        case SWITCH_2: break;
                         case SWITCH_3: move_forward++; break;
                         case SWITCH_4: break;
                         case SWITCH_5: break;
@@ -970,7 +964,6 @@ screen_t screen_pointclick_dock2(
     int displayflag  = 1;
     int nbdirection  = 4;
     int move_forward = 0;
-    int move_back    = 0;
     ESP_LOGE(TAG, "dock 2");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     while (1) {
@@ -988,10 +981,6 @@ screen_t screen_pointclick_dock2(
                             main_cursor[0] = screen_PC_e;
                             return screen_PC_dock1;
                         }
-                        if (move_back) {
-                            main_cursor[0] = screen_PC_e;
-                            return screen_PC_land1;
-                        }
                         pax_insert_png_buf(gfx, dock2_e_S, dock2_e_E - dock2_e_S, 0, 0, 0);
                         break;
                     }
@@ -1002,10 +991,6 @@ screen_t screen_pointclick_dock2(
                     }
                 case screen_PC_w:
                     {
-                        if (move_back) {
-                            main_cursor[0] = screen_PC_w;
-                            return screen_PC_dock1;
-                        }
                         if (move_forward) {
                             main_cursor[0] = screen_PC_w;
                             return screen_PC_land1;
@@ -1019,7 +1004,6 @@ screen_t screen_pointclick_dock2(
             displayflag = 0;
         }
         move_forward  = 0;
-        move_back     = 0;
         event_t event = {0};
         if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
             switch (event.type) {
@@ -1031,7 +1015,7 @@ screen_t screen_pointclick_dock2(
                         case SWITCH_L5: cursor--; break;
                         case SWITCH_R5: cursor++; break;
                         case SWITCH_1: return screen_home; break;
-                        case SWITCH_2: move_back++; break;
+                        case SWITCH_2: break;
                         case SWITCH_3: move_forward++; break;
                         case SWITCH_4: break;
                         case SWITCH_5: break;
@@ -1061,7 +1045,6 @@ screen_t screen_pointclick_land1(
     int displayflag  = 1;
     int nbdirection  = 4;
     int move_forward = 0;
-    int move_back    = 0;
     ESP_LOGE(TAG, "land1");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     while (1) {
@@ -1083,10 +1066,6 @@ screen_t screen_pointclick_land1(
                             main_cursor[0] = screen_PC_e;
                             return screen_PC_dock2;
                         }
-                        if (move_back) {
-                            main_cursor[0] = screen_PC_s2;
-                            return screen_PC_dune1;
-                        }
                         pax_insert_png_buf(gfx, land1_e_S, land1_e_E - land1_e_S, 0, 0, 0);
                         break;
                     }
@@ -1097,10 +1076,6 @@ screen_t screen_pointclick_land1(
                     }
                 case screen_PC_w:
                     {
-                        if (move_back) {
-                            main_cursor[0] = screen_PC_w;
-                            return screen_PC_dock2;
-                        }
                         pax_insert_png_buf(gfx, land1_w_S, land1_w_E - land1_w_S, 0, 0, 0);
                         break;
                     }
@@ -1110,7 +1085,6 @@ screen_t screen_pointclick_land1(
             displayflag = 0;
         }
         move_forward  = 0;
-        move_back     = 0;
         event_t event = {0};
         if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
             switch (event.type) {
@@ -1122,7 +1096,7 @@ screen_t screen_pointclick_land1(
                         case SWITCH_L5: cursor--; break;
                         case SWITCH_R5: cursor++; break;
                         case SWITCH_1: return screen_home; break;
-                        case SWITCH_2: move_back++; break;
+                        case SWITCH_2: break;
                         case SWITCH_3: move_forward++; break;
                         case SWITCH_4: break;
                         case SWITCH_5: break;
@@ -1161,10 +1135,6 @@ screen_t screen_pointclick_dune1(
             switch (cursor) {
                 case screen_PC_n2:  // North
                     {
-                        if (move_back) {
-                            main_cursor[0] = screen_PC_n;
-                            return screen_PC_land1;
-                        }
                         if (move_forward) {
                             main_cursor[0] = screen_PC_e;
                             return screen_PC_land1;
@@ -1174,10 +1144,6 @@ screen_t screen_pointclick_dune1(
                     }
                 case screen_PC_s2:  // South
                     {
-                        if (move_back) {
-                            main_cursor[0] = screen_PC_s2;
-                            return screen_PC_dune2;
-                        }
                         if (move_forward) {
                             main_cursor[0] = screen_PC_n2;
                             return screen_PC_dune2;
@@ -1242,10 +1208,6 @@ screen_t screen_pointclick_dune2(
             switch (cursor) {
                 case screen_PC_n2:  // North
                     {
-                        if (move_back) {
-                            main_cursor[0] = screen_PC_s2;
-                            return screen_PC_dune1;
-                        }
                         if (move_forward) {
                             main_cursor[0] = screen_PC_n;
                             return screen_PC_town1;
@@ -1255,10 +1217,6 @@ screen_t screen_pointclick_dune2(
                     }
                 case screen_PC_s2:  // South
                     {
-                        if (move_back) {
-                            main_cursor[0] = screen_PC_s;
-                            return screen_PC_town1;
-                        }
                         if (move_forward) {
                             main_cursor[0] = screen_PC_s2;
                             return screen_PC_dune1;
@@ -1323,10 +1281,6 @@ screen_t screen_pointclick_town1(
             switch (cursor) {
                 case screen_PC_n:
                     {
-                        if (move_back) {
-                            main_cursor[0] = screen_PC_n2;
-                            return screen_PC_dune2;
-                        }
                         pax_insert_png_buf(gfx, town1_n_S, town1_n_E - town1_n_S, 0, 0, 0);
                         break;
                     }
@@ -1414,10 +1368,6 @@ screen_t screen_pointclick_town2(
             switch (cursor) {
                 case screen_PC_n2:  // North
                     {
-                        if (move_back) {
-                            main_cursor[0] = screen_PC_s;
-                            return screen_PC_town1;
-                        }
                         if (move_forward) {
                             main_cursor[0] = screen_PC_road1_w;
                             return screen_PC_road1;
@@ -1427,10 +1377,6 @@ screen_t screen_pointclick_town2(
                     }
                 case screen_PC_s2:  // South
                     {
-                        if (move_back) {
-                            main_cursor[0] = screen_PC_road1_e;
-                            return screen_PC_road1;
-                        }
                         if (move_forward) {
                             main_cursor[0] = screen_PC_e;
                             return screen_PC_town1;
@@ -1508,19 +1454,11 @@ screen_t screen_pointclick_road1(
                             main_cursor[0] = screen_PC_s2;
                             return screen_PC_town2;
                         }
-                        if (move_back) {
-                            main_cursor[0] = screen_PC_dune3_s;
-                            return screen_PC_dune3;
-                        }
                         pax_insert_png_buf(gfx, road1_e_S, road1_e_E - road1_e_S, 0, 0, 0);
                         break;
                     }
                 case screen_PC_road1_w:  // West
                     {
-                        if (move_back) {
-                            main_cursor[0] = screen_PC_n2;
-                            return screen_PC_town2;
-                        }
                         pax_insert_png_buf(gfx, road1_w_S, road1_w_E - road1_w_S, 0, 0, 0);
                         break;
                     }
@@ -1581,10 +1519,6 @@ screen_t screen_pointclick_dune3(
             switch (cursor) {
                 case screen_PC_dune3_gate:  // East - but not really to sort - gate
                     {
-                        if (move_back) {
-                            main_cursor[0] = screen_PC_road1_n;
-                            return screen_PC_road1;
-                        }
                         if (move_forward) {
                             main_cursor[0] = screen_PC_n2;
                             return screen_PC_lighthouse1;
@@ -1601,10 +1535,6 @@ screen_t screen_pointclick_dune3(
                         if (move_forward) {
                             main_cursor[0] = screen_PC_road1_e;
                             return screen_PC_road1;
-                        }
-                        if (move_back) {
-                            main_cursor[0] = screen_PC_s2;
-                            return screen_PC_lighthouse1;
                         }
                         pax_insert_png_buf(gfx, dune3_s_S, dune3_s_E - dune3_s_S, 0, 0, 0);
 
@@ -1675,10 +1605,6 @@ screen_t screen_pointclick_lighthouse1(
             switch (cursor) {
                 case screen_PC_n2:  // North
                     {
-                        if (move_back) {
-                            main_cursor[0] = screen_PC_dune3_gate;
-                            return screen_PC_dune3;
-                        }
                         if (main_cursor[state_locklighthouse] == locklighthouse_locked)
                             pax_insert_png_buf(
                                 gfx,
@@ -1706,12 +1632,6 @@ screen_t screen_pointclick_lighthouse1(
                     }
                 case screen_PC_s2:  // South
                     {
-                        if (main_cursor[state_locklighthouse] == locklighthouse_unlocked) {
-                            if (move_back) {
-                                main_cursor[0] = screen_PC_s;
-                                return screen_PC_lighthouse2;
-                            }
-                        }
                         if (move_forward) {
                             main_cursor[0] = screen_PC_dune3_s;
                             return screen_PC_dune3;
@@ -1776,10 +1696,6 @@ screen_t screen_pointclick_lighthouse2(
             switch (cursor) {
                 case screen_PC_n:
                     {
-                        if (move_back) {
-                            main_cursor[0] = screen_PC_n2;
-                            return screen_PC_lighthouse1;
-                        }
                         pax_insert_png_buf(gfx, lighthouse2_n_S, lighthouse2_n_E - lighthouse2_n_S, 0, 0, 0);
                         break;
                     }
@@ -1800,38 +1716,6 @@ screen_t screen_pointclick_lighthouse2(
                 case screen_PC_w:
                     {
                         pax_insert_png_buf(gfx, lighthouse2_w_S, lighthouse2_w_E - lighthouse2_w_S, 0, 0, 0);
-                        pax_insert_png_buf(
-                            gfx,
-                            postoffice_closeup_d2_S,
-                            postoffice_closeup_d2_E - postoffice_closeup_d2_S,
-                            0,
-                            0,
-                            0
-                        );
-                        pax_insert_png_buf(
-                            gfx,
-                            postoffice_closeup_d3_S,
-                            postoffice_closeup_d3_E - postoffice_closeup_d3_S,
-                            0,
-                            0,
-                            0
-                        );
-                        pax_insert_png_buf(
-                            gfx,
-                            postoffice_closeup_d4_S,
-                            postoffice_closeup_d4_E - postoffice_closeup_d4_S,
-                            0,
-                            0,
-                            0
-                        );
-                        pax_insert_png_buf(
-                            gfx,
-                            postoffice_closeup_d5_S,
-                            postoffice_closeup_d5_E - postoffice_closeup_d5_S,
-                            0,
-                            0,
-                            0
-                        );
                         break;
                     }
                 default: break;

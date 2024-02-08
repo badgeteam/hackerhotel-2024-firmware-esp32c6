@@ -19,19 +19,19 @@
 #include <stdio.h>
 #include <string.h>
 
-extern uint8_t const diamondl_png_start[] asm("_binary_diamondl_png_start");
-extern uint8_t const diamondl_png_end[] asm("_binary_diamondl_png_end");
-extern uint8_t const diamondr_png_start[] asm("_binary_diamondr_png_start");
-extern uint8_t const diamondr_png_end[] asm("_binary_diamondr_png_end");
-extern uint8_t const diamondt_png_start[] asm("_binary_diamondt_png_start");
-extern uint8_t const diamondt_png_end[] asm("_binary_diamondt_png_end");
-extern uint8_t const diamondb_png_start[] asm("_binary_diamondb_png_start");
-extern uint8_t const diamondb_png_end[] asm("_binary_diamondb_png_end");
+extern const uint8_t diamondl_png_start[] asm("_binary_diamondl_png_start");
+extern const uint8_t diamondl_png_end[] asm("_binary_diamondl_png_end");
+extern const uint8_t diamondr_png_start[] asm("_binary_diamondr_png_start");
+extern const uint8_t diamondr_png_end[] asm("_binary_diamondr_png_end");
+extern const uint8_t diamondt_png_start[] asm("_binary_diamondt_png_start");
+extern const uint8_t diamondt_png_end[] asm("_binary_diamondt_png_end");
+extern const uint8_t diamondb_png_start[] asm("_binary_diamondb_png_start");
+extern const uint8_t diamondb_png_end[] asm("_binary_diamondb_png_end");
 
 static const char* TAG = "homescreen";
 
 // THIS LIST NEED TO MATCH SCREEN.H
-char const screen_name[13][30] = {
+const char screen_name[13][30] = {
     "Lighthouse",
     "Engine room",
     "Billboard",
@@ -44,12 +44,12 @@ char const screen_name[13][30] = {
     "settings",
     "Carondelet",
 
-    "placeholder",
+    "Memorium",
     "placeholder",
     "placeholder",
 };
 
-uint8_t const screen_pos[13][2] = {
+const uint8_t screen_pos[13][2] = {
     {48, 100},
     {200, 36},
     {50, 50},
@@ -87,7 +87,6 @@ screen_t screen_home_entry(QueueHandle_t application_event_queue, QueueHandle_t 
         if ((esp_timer_get_time() / 1000000) > (timer_track * Home_screen_timeout)) {
             return screen_nametag;
         }
-        ESP_LOGE(TAG, "test screen_home_entry");
         if (xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE) {
             switch (event.type) {
                 case event_input_button: break;  // Ignore raw button input
@@ -188,7 +187,6 @@ screen_t screen_Nametag(QueueHandle_t application_event_queue, QueueHandle_t key
 
     while (1) {
         event_t event = {0};
-        ESP_LOGE(TAG, "test screen_home_entry");
         if (xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE) {
             switch (event.type) {
                 case event_input_button: break;  // Ignore raw button input

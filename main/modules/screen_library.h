@@ -4,7 +4,7 @@
 #include "freertos/queue.h"
 #include "screens.h"
 
-#define Nb_item_library 13
+#define Nb_item_library 6
 
 #define Y_offset_library 20
 

@@ -22,11 +22,11 @@
 
 #define log 1
 
-extern int const telegraph_X[20];
-extern int const telegraph_Y[20];
+extern const int telegraph_X[20];
+extern const int telegraph_Y[20];
 extern event_t   kbsettings;
 
-void DisplayError(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, char const * errorstr);
+void DisplayError(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, const char* errorstr);
 
 void DrawArrowVertical(int _sw);
 void DrawArrowHorizontal(int _sw);
@@ -35,11 +35,9 @@ void Addborder2toBuffer(void);
 void AddSWborder1toBuffer(void);
 void AddSWborder2toBuffer(void);
 
-void AddSWtoBuffer(
-    char const * SW1str, char const * SW2str, char const * SW3str, char const * SW4str, char const * SW5str
-);
-void AddSWtoBufferL(char const * SW1str);
-void AddSWtoBufferLR(char const * SW1str, char const * SW5str);
+void AddSWtoBuffer(const char* SW1str, const char* SW2str, const char* SW3str, const char* SW4str, const char* SW5str);
+void AddSWtoBufferL(const char* SW1str);
+void AddSWtoBufferLR(const char* SW1str, const char* SW5str);
 
 void AddBlocktoBuffer(int _x, int _y);
 
@@ -56,24 +54,23 @@ void DisplayWallofTextWords(
     char _message[200],
     int  _centered
 );
-pax_vec1_t WallofText(int _yoffset, char const * _message, int _centered, int _cursor);
+pax_vec1_t WallofText(int _yoffset, const char* _message, int _centered, int _cursor);
+pax_vec1_t WallofTextnb_line(int _yoffset, const char* _message, int _centered, int _cursor, int _maxlinelength);
 // Parse _message[] into lines
 // and makes them into up to _maxnblines which are _maxlinelength pixel long
 // can be centered if the _centered flag is high
 
-void       DisplayWallofText(
-          int _fontsize, int _maxlinelenght, int _maxnblines, int _xoffset, int _yoffset, char _message[500], int _centered
-      );
+void DisplayWallofText(
+    int _fontsize, int _maxlinelenght, int _maxnblines, int _xoffset, int _yoffset, char _message[500], int _centered
+);
 
 void Justify_right_text(
     pax_buf_t* buf, pax_col_t color, const pax_font_t* font, float font_size, float x, float y, const char* text
 );
 
-int Screen_Information(char const * _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
-int Screen_Confirmation(
-    char const * _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue
-);
-int WaitingforOpponent(char const * _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
+int Screen_Information(const char* _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
+int Screen_Confirmation(const char* _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
+int WaitingforOpponent(const char* _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
 void AddSwitchesBoxtoBuffer(int _switch);
 void AddOneTextSWtoBuffer(int _SW, const char* SWstr);
 void DisplayTelegraph(int _colour, int _position);
@@ -98,14 +95,14 @@ int      Decrement(int _num, int _max);
 void     AddDiamondSelecttoBuf(int _x, int _y, int _gap);
 uint32_t ChartoLED(char _letter);
 
-esp_err_t nvs_get_str_wrapped(char const * namespace, char const * key, char* buffer, size_t buffer_size);
-esp_err_t nvs_set_str_wrapped(char const * namespace, char const * key, char* buffer);
-esp_err_t nvs_get_u8_wrapped(char const * namespace, char const * key, uint8_t* value);
-esp_err_t nvs_set_u8_wrapped(char const * namespace, char const * key, uint8_t value);
-esp_err_t nvs_get_u16_wrapped(char const * namespace, char const * key, uint16_t* value);
-esp_err_t nvs_set_u16_wrapped(char const * namespace, char const * key, uint16_t value);
-esp_err_t nvs_get_u8_blob_wrapped(char const * namespace, char const * key, uint8_t* value, size_t length);
-esp_err_t nvs_set_u8_blob_wrapped(char const * namespace, char const * key, uint8_t* value, size_t length);
+esp_err_t nvs_get_str_wrapped(const char* namespace, const char* key, char* buffer, size_t buffer_size);
+esp_err_t nvs_set_str_wrapped(const char* namespace, const char* key, char* buffer);
+esp_err_t nvs_get_u8_wrapped(const char* namespace, const char* key, uint8_t* value);
+esp_err_t nvs_set_u8_wrapped(const char* namespace, const char* key, uint8_t value);
+esp_err_t nvs_get_u16_wrapped(const char* namespace, const char* key, uint16_t* value);
+esp_err_t nvs_set_u16_wrapped(const char* namespace, const char* key, uint16_t value);
+esp_err_t nvs_get_u8_blob_wrapped(const char* namespace, const char* key, uint8_t* value, size_t length);
+esp_err_t nvs_set_u8_blob_wrapped(const char* namespace, const char* key, uint8_t* value, size_t length);
 
 /*  USEFUL bit of code
 Delay:
@@ -117,4 +114,3 @@ Delay:
 
 
 */
-
