@@ -252,6 +252,540 @@ screen_t screen_pointclick_lighthouse2(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 );
 
+screen_t screen_postoffice_closeup_d(
+    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
+) {
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
+    int cursor      = main_cursor[0];
+    int displayflag = 1;
+    int nbdirection = 14;
+    ESP_LOGE(TAG, "dialogue post office");
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    while (1) {
+        if (displayflag) {
+            pax_background(gfx, WHITE);
+            switch (cursor) {
+                case 0:
+                    {
+                        pax_insert_png_buf(
+                            gfx,
+                            postoffice_closeup_d1_S,
+                            postoffice_closeup_d1_E - postoffice_closeup_d1_S,
+                            0,
+                            0,
+                            0
+                        );
+                        break;
+                    }
+                case 1:
+                    {
+                        pax_insert_png_buf(
+                            gfx,
+                            postoffice_closeup_d2_S,
+                            postoffice_closeup_d2_E - postoffice_closeup_d2_S,
+                            0,
+                            0,
+                            0
+                        );
+                        break;
+                    }
+                case 2:
+                    {
+                        pax_insert_png_buf(
+                            gfx,
+                            postoffice_closeup_d3_S,
+                            postoffice_closeup_d3_E - postoffice_closeup_d3_S,
+                            0,
+                            0,
+                            0
+                        );
+                        break;
+                    }
+                case 3:
+                    {
+                        pax_insert_png_buf(
+                            gfx,
+                            postoffice_closeup_d4_S,
+                            postoffice_closeup_d4_E - postoffice_closeup_d4_S,
+                            0,
+                            0,
+                            0
+                        );
+                        break;
+                    }
+                case 4:
+                    {
+                        pax_insert_png_buf(
+                            gfx,
+                            postoffice_closeup_d5_S,
+                            postoffice_closeup_d5_E - postoffice_closeup_d5_S,
+                            0,
+                            0,
+                            0
+                        );
+                        break;
+                    }
+                case 5:
+                    {
+                        pax_insert_png_buf(
+                            gfx,
+                            postoffice_closeup_d6_S,
+                            postoffice_closeup_d6_E - postoffice_closeup_d6_S,
+                            0,
+                            0,
+                            0
+                        );
+                        break;
+                    }
+                case 6:
+                    {
+                        pax_insert_png_buf(
+                            gfx,
+                            postoffice_closeup_d7_S,
+                            postoffice_closeup_d7_E - postoffice_closeup_d7_S,
+                            0,
+                            0,
+                            0
+                        );
+                        break;
+                    }
+                case 7:
+                    {
+                        pax_insert_png_buf(
+                            gfx,
+                            postoffice_closeup_d8_S,
+                            postoffice_closeup_d8_E - postoffice_closeup_d8_S,
+                            0,
+                            0,
+                            0
+                        );
+                        break;
+                    }
+                case 8:
+                    {
+                        pax_insert_png_buf(
+                            gfx,
+                            postoffice_closeup_d9_S,
+                            postoffice_closeup_d9_E - postoffice_closeup_d9_S,
+                            0,
+                            0,
+                            0
+                        );
+                        break;
+                    }
+                case 9:
+                    {
+                        pax_insert_png_buf(
+                            gfx,
+                            postoffice_closeup_d10_S,
+                            postoffice_closeup_d10_E - postoffice_closeup_d10_S,
+                            0,
+                            0,
+                            0
+                        );
+                        break;
+                    }
+                case 10:
+                    {
+                        pax_insert_png_buf(
+                            gfx,
+                            postoffice_closeup_d11_S,
+                            postoffice_closeup_d11_E - postoffice_closeup_d11_S,
+                            0,
+                            0,
+                            0
+                        );
+                        break;
+                    }
+                case 11:
+                    {
+                        pax_insert_png_buf(
+                            gfx,
+                            postoffice_closeup_d12_S,
+                            postoffice_closeup_d12_E - postoffice_closeup_d12_S,
+                            0,
+                            0,
+                            0
+                        );
+                        break;
+                    }
+                case 12:
+                    {
+                        pax_insert_png_buf(
+                            gfx,
+                            postoffice_closeup_d13_S,
+                            postoffice_closeup_d13_E - postoffice_closeup_d13_S,
+                            0,
+                            0,
+                            0
+                        );
+                        break;
+                    }
+                case 13:
+                    {
+                        main_cursor[0] = screen_PC_e;
+                        return screen_PC_town1;
+                        break;
+                    }
+                default: break;
+            }
+            bsp_display_flush();
+            displayflag = 0;
+        }
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: break;
+                        case SWITCH_2: break;
+                        case SWITCH_3: cursor++; break;
+                        case SWITCH_4: cursor--; break;
+                        case SWITCH_5: break;
+                        default: break;
+                    }
+                    if (cursor < 0)
+                        cursor = nbdirection - 1;
+                    if (cursor > (nbdirection - 1))
+                        cursor = 0;
+                    displayflag = 1;
+                    ESP_LOGE(TAG, "cursor %d", cursor);
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+
+screen_t screen_shop_closeup_d(
+    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
+) {
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
+    int cursor      = main_cursor[0];
+    int displayflag = 1;
+    int nbdirection = 5;
+    ESP_LOGE(TAG, "dialogue post office");
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    while (1) {
+        if (displayflag) {
+            pax_background(gfx, WHITE);
+            switch (cursor) {
+                case 0:
+                    {
+                        pax_insert_png_buf(gfx, shop_closeup_d1_S, shop_closeup_d1_E - shop_closeup_d1_S, 0, 0, 0);
+                        break;
+                    }
+                case 1:
+                    {
+                        pax_insert_png_buf(gfx, shop_closeup_d2_S, shop_closeup_d2_E - shop_closeup_d2_S, 0, 0, 0);
+                        break;
+                    }
+                case 2:
+                    {
+                        pax_insert_png_buf(gfx, shop_closeup_d3_S, shop_closeup_d3_E - shop_closeup_d3_S, 0, 0, 0);
+                        break;
+                    }
+                case 3:
+                    {
+                        pax_insert_png_buf(gfx, shop_closeup_d4_S, shop_closeup_d4_E - shop_closeup_d4_S, 0, 0, 0);
+                        break;
+                    }
+                case 4:
+                    {
+                        main_cursor[0] = screen_PC_w;
+                        return screen_PC_town1;
+                        break;
+                    }
+                default: break;
+            }
+            bsp_display_flush();
+            displayflag = 0;
+        }
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: break;
+                        case SWITCH_2: break;
+                        case SWITCH_3: cursor++; break;
+                        case SWITCH_4: cursor--; break;
+                        case SWITCH_5: break;
+                        default: break;
+                    }
+                    if (cursor < 0)
+                        cursor = nbdirection - 1;
+                    if (cursor > (nbdirection - 1))
+                        cursor = 0;
+                    displayflag = 1;
+                    ESP_LOGE(TAG, "cursor %d", cursor);
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+
+screen_t screen_shop_closeup_da(
+    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
+) {
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
+    int cursor      = main_cursor[0];
+    int displayflag = 1;
+    int nbdirection = 16;
+    ESP_LOGE(TAG, "dialogue post office");
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    while (1) {
+        if (displayflag) {
+            pax_background(gfx, WHITE);
+            switch (cursor) {
+                case 0:
+                    {
+                        pax_insert_png_buf(gfx, shop_closeup_d1a_S, shop_closeup_d1a_E - shop_closeup_d1a_S, 0, 0, 0);
+                        break;
+                    }
+                case 1:
+                    {
+                        pax_insert_png_buf(gfx, shop_closeup_d2a_S, shop_closeup_d2a_E - shop_closeup_d2a_S, 0, 0, 0);
+
+                        break;
+                    }
+                case 2:
+                    {
+                        pax_insert_png_buf(gfx, shop_closeup_d3a_S, shop_closeup_d3a_E - shop_closeup_d3a_S, 0, 0, 0);
+
+                        break;
+                    }
+                case 3:
+                    {
+                        pax_insert_png_buf(gfx, shop_closeup_d4a_S, shop_closeup_d4a_E - shop_closeup_d4a_S, 0, 0, 0);
+                        break;
+                    }
+                case 4:
+                    {
+                        pax_insert_png_buf(gfx, shop_closeup_d5a_S, shop_closeup_d5a_E - shop_closeup_d5a_S, 0, 0, 0);
+                        break;
+                    }
+                case 5:
+                    {
+                        pax_insert_png_buf(gfx, shop_closeup_d6a_S, shop_closeup_d6a_E - shop_closeup_d6a_S, 0, 0, 0);
+                        break;
+                    }
+                case 6:
+                    {
+                        pax_insert_png_buf(gfx, shop_closeup_d7a_S, shop_closeup_d7a_E - shop_closeup_d7a_S, 0, 0, 0);
+                        break;
+                    }
+                case 7:
+                    {
+                        pax_insert_png_buf(gfx, shop_closeup_d8a_S, shop_closeup_d8a_E - shop_closeup_d8a_S, 0, 0, 0);
+                        break;
+                    }
+                case 8:
+                    {
+                        pax_insert_png_buf(gfx, shop_closeup_d9a_S, shop_closeup_d9a_E - shop_closeup_d9a_S, 0, 0, 0);
+                        break;
+                    }
+                case 9:
+                    {
+                        pax_insert_png_buf(
+                            gfx,
+                            shop_closeup_d10a_S,
+                            shop_closeup_d10a_E - shop_closeup_d10a_S,
+                            0,
+                            0,
+                            0
+                        );
+                        break;
+                    }
+                case 10:
+                    {
+                        pax_insert_png_buf(
+                            gfx,
+                            shop_closeup_d11a_S,
+                            shop_closeup_d11a_E - shop_closeup_d11a_S,
+                            0,
+                            0,
+                            0
+                        );
+                        break;
+                    }
+                case 11:
+                    {
+                        pax_insert_png_buf(
+                            gfx,
+                            shop_closeup_d12a_S,
+                            shop_closeup_d12a_E - shop_closeup_d12a_S,
+                            0,
+                            0,
+                            0
+                        );
+                        break;
+                    }
+                case 12:
+                    {
+                        pax_insert_png_buf(
+                            gfx,
+                            shop_closeup_d13a_S,
+                            shop_closeup_d13a_E - shop_closeup_d13a_S,
+                            0,
+                            0,
+                            0
+                        );
+                        break;
+                    }
+                case 13:
+                    {
+                        pax_insert_png_buf(
+                            gfx,
+                            shop_closeup_d14a_S,
+                            shop_closeup_d14a_E - shop_closeup_d14a_S,
+                            0,
+                            0,
+                            0
+                        );
+                        break;
+                    }
+                case 14:
+                    {
+                        pax_insert_png_buf(
+                            gfx,
+                            shop_closeup_d15a_S,
+                            shop_closeup_d15a_E - shop_closeup_d15a_S,
+                            0,
+                            0,
+                            0
+                        );
+                        break;
+                    }
+                case 15:
+                    {
+                        main_cursor[0] = screen_PC_e;  // return to shop_closeup.png
+                        return screen_PC_town1;
+                        break;
+                    }
+                default: break;
+            }
+            bsp_display_flush();
+            displayflag = 0;
+        }
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: break;
+                        case SWITCH_2: break;
+                        case SWITCH_3: cursor++; break;
+                        case SWITCH_4: cursor--; break;
+                        case SWITCH_5: break;
+                        default: break;
+                    }
+                    if (cursor < 0)
+                        cursor = nbdirection - 1;
+                    if (cursor > (nbdirection - 1))
+                        cursor = 0;
+                    displayflag = 1;
+                    ESP_LOGE(TAG, "cursor %d", cursor);
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+
+screen_t screen_road1_e_jorge_d(
+    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
+) {
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
+    int cursor      = main_cursor[0];
+    int displayflag = 1;
+    int nbdirection = 8;
+    ESP_LOGE(TAG, "dialogue post office");
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    while (1) {
+        if (displayflag) {
+            pax_background(gfx, WHITE);
+            switch (cursor) {
+                case 0:
+                    {
+                        pax_insert_png_buf(gfx, road1_e_jorge_d1_S, road1_e_jorge_d1_E - road1_e_jorge_d1_S, 0, 0, 0);
+                        break;
+                    }
+                case 1:
+                    {
+                        pax_insert_png_buf(gfx, road1_e_jorge_d2_S, road1_e_jorge_d2_E - road1_e_jorge_d2_S, 0, 0, 0);
+                        break;
+                    }
+                case 2:
+                    {
+                        pax_insert_png_buf(gfx, road1_e_jorge_d3_S, road1_e_jorge_d3_E - road1_e_jorge_d3_S, 0, 0, 0);
+                        break;
+                    }
+                case 3:
+                    {
+                        pax_insert_png_buf(gfx, road1_e_jorge_d4_S, road1_e_jorge_d4_E - road1_e_jorge_d4_S, 0, 0, 0);
+                        break;
+                    }
+                case 4:
+                    {
+                        pax_insert_png_buf(gfx, road1_e_jorge_d5_S, road1_e_jorge_d5_E - road1_e_jorge_d5_S, 0, 0, 0);
+                        break;
+                    }
+                case 5:
+                    {
+                        pax_insert_png_buf(gfx, road1_e_jorge_d6_S, road1_e_jorge_d6_E - road1_e_jorge_d6_S, 0, 0, 0);
+                        break;
+                    }
+                case 6:
+                    {
+                        pax_insert_png_buf(gfx, road1_e_jorge_d7_S, road1_e_jorge_d7_E - road1_e_jorge_d7_S, 0, 0, 0);
+                        break;
+                    }
+                case 7:
+                    {
+                        main_cursor[0] = screen_PC_e;  // tbd
+                        return screen_PC_town1;        // tbd
+                        break;
+                    }
+                default: break;
+            }
+            bsp_display_flush();
+            displayflag = 0;
+        }
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: break;
+                        case SWITCH_2: break;
+                        case SWITCH_3: cursor++; break;
+                        case SWITCH_4: cursor--; break;
+                        case SWITCH_5: break;
+                        default: break;
+                    }
+                    if (cursor < 0)
+                        cursor = nbdirection - 1;
+                    if (cursor > (nbdirection - 1))
+                        cursor = 0;
+                    displayflag = 1;
+                    ESP_LOGE(TAG, "cursor %d", cursor);
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+
 screen_t screen_pointclick_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     screen_t current_screen_PC = screen_PC_dock1;
     int      main_cursor[nb_state];
@@ -328,6 +862,12 @@ screen_t screen_pointclick_entry(QueueHandle_t application_event_queue, QueueHan
                 {
                     current_screen_PC =
                         screen_pointclick_lighthouse2(application_event_queue, keyboard_event_queue, main_cursor);
+                    break;
+                }
+            case screen_PC_dialogue_post_office:
+                {
+                    current_screen_PC =
+                        screen_dialogue_post_office(application_event_queue, keyboard_event_queue, main_cursor);
                     break;
                 }
             case screen_home:

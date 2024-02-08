@@ -43,4 +43,5 @@ typedef enum _screen {
     screen_PC_dune3,
     screen_PC_lighthouse1,
     screen_PC_lighthouse2,
+    screen_PC_dialogue_post_office,
 } screen_t;
