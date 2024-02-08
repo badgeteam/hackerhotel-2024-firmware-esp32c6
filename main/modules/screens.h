@@ -34,6 +34,13 @@ typedef enum _screen {
 
     screen_PC_dock1,
     screen_PC_dock2,
+    screen_PC_land1,
     screen_PC_dune1,
-    screen_PC_dune2
+    screen_PC_dune2,
+    screen_PC_town1,
+    screen_PC_town2,
+    screen_PC_road1,
+    screen_PC_dune3,
+    screen_PC_lighthouse1,
+    screen_PC_lighthouse2,
 } screen_t;

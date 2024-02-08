@@ -33,18 +33,103 @@ idf_component_register(
                 ${project_dir}/resources/library.png
                 ${project_dir}/resources/battery1.png
                 ${project_dir}/resources/battery2.png
-                ${project_dir}/resources/pointclick/dock1n.png
-                ${project_dir}/resources/pointclick/dock1e.png
-                ${project_dir}/resources/pointclick/dock1s.png
-                ${project_dir}/resources/pointclick/dock1w.png
-                ${project_dir}/resources/pointclick/dock2n.png
-                ${project_dir}/resources/pointclick/dock2e.png
-                ${project_dir}/resources/pointclick/dock2s.png
-                ${project_dir}/resources/pointclick/dock2w.png
-                ${project_dir}/resources/pointclick/dune1n.png
-                ${project_dir}/resources/pointclick/dune1s.png
-                ${project_dir}/resources/pointclick/dune2n.png
-                ${project_dir}/resources/pointclick/dune2s.png
+                ${project_dir}/resources/pointclick/dock1_e.png
+${project_dir}/resources/pointclick/dock1_n.png
+${project_dir}/resources/pointclick/dock1_s.png
+${project_dir}/resources/pointclick/dock1_w_d1.png
+${project_dir}/resources/pointclick/dock1_w_d2.png
+${project_dir}/resources/pointclick/dock1_w.png
+${project_dir}/resources/pointclick/dock2_e.png
+${project_dir}/resources/pointclick/dock2_n.png
+${project_dir}/resources/pointclick/dock2_s.png
+${project_dir}/resources/pointclick/dock2_w.png
+${project_dir}/resources/pointclick/dune1_n.png
+${project_dir}/resources/pointclick/dune1_s.png
+${project_dir}/resources/pointclick/dune2_n_d1.png
+${project_dir}/resources/pointclick/dune2_n.png
+${project_dir}/resources/pointclick/dune2_s.png
+${project_dir}/resources/pointclick/dune3_n_gc_d1.png
+${project_dir}/resources/pointclick/dune3_n_gc_d2.png
+${project_dir}/resources/pointclick/dune3_n_gc_d3.png
+${project_dir}/resources/pointclick/dune3_n_gc_d4.png
+${project_dir}/resources/pointclick/dune3_n_gc.png
+${project_dir}/resources/pointclick/dune3_n_gc_up.png
+${project_dir}/resources/pointclick/dune3_n_go.png
+${project_dir}/resources/pointclick/dune3_n_go_up.png
+${project_dir}/resources/pointclick/dune3_s.png
+${project_dir}/resources/pointclick/land1_e.png
+${project_dir}/resources/pointclick/land1_n.png
+${project_dir}/resources/pointclick/land1_s.png
+${project_dir}/resources/pointclick/land1_w.png
+${project_dir}/resources/pointclick/library_closeup_d1.png
+${project_dir}/resources/pointclick/library_closeup.png
+${project_dir}/resources/pointclick/lighthouse1_n_gc_d1_key.png
+${project_dir}/resources/pointclick/lighthouse1_n_gc_d1.png
+${project_dir}/resources/pointclick/lighthouse1_n_gc_d2_key.png
+${project_dir}/resources/pointclick/lighthouse1_n_gc.png
+${project_dir}/resources/pointclick/lighthouse1_n_go.png
+${project_dir}/resources/pointclick/lighthouse1_s.png
+${project_dir}/resources/pointclick/lighthouse2_e.png
+${project_dir}/resources/pointclick/lighthouse2_n_go.png
+${project_dir}/resources/pointclick/lighthouse2_n.png
+${project_dir}/resources/pointclick/lighthouse2_s.png
+${project_dir}/resources/pointclick/lighthouse2_w.png
+${project_dir}/resources/pointclick/messageboard_closeup.png
+${project_dir}/resources/pointclick/postoffice_closeup_d10.png
+${project_dir}/resources/pointclick/postoffice_closeup_d11.png
+${project_dir}/resources/pointclick/postoffice_closeup_d12.png
+${project_dir}/resources/pointclick/postoffice_closeup_d13.png
+${project_dir}/resources/pointclick/postoffice_closeup_d1.png
+${project_dir}/resources/pointclick/postoffice_closeup_d2.png
+${project_dir}/resources/pointclick/postoffice_closeup_d3.png
+${project_dir}/resources/pointclick/postoffice_closeup_d4.png
+${project_dir}/resources/pointclick/postoffice_closeup_d5.png
+${project_dir}/resources/pointclick/postoffice_closeup_d6.png
+${project_dir}/resources/pointclick/postoffice_closeup_d7.png
+${project_dir}/resources/pointclick/postoffice_closeup_d8.png
+${project_dir}/resources/pointclick/postoffice_closeup_d9.png
+${project_dir}/resources/pointclick/road1_e_jorge_d1.png
+${project_dir}/resources/pointclick/road1_e_jorge_d2.png
+${project_dir}/resources/pointclick/road1_e_jorge_d3.png
+${project_dir}/resources/pointclick/road1_e_jorge_d4.png
+${project_dir}/resources/pointclick/road1_e_jorge_d5.png
+${project_dir}/resources/pointclick/road1_e_jorge_d6.png
+${project_dir}/resources/pointclick/road1_e_jorge_d7.png
+${project_dir}/resources/pointclick/road1_e_jorge.png
+${project_dir}/resources/pointclick/road1_e.png
+${project_dir}/resources/pointclick/road1_n_go.png
+${project_dir}/resources/pointclick/road1_n.png
+${project_dir}/resources/pointclick/road1_w.png
+${project_dir}/resources/pointclick/shop_closeup_d10a.png
+${project_dir}/resources/pointclick/shop_closeup_d11a.png
+${project_dir}/resources/pointclick/shop_closeup_d12a.png
+${project_dir}/resources/pointclick/shop_closeup_d13a.png
+${project_dir}/resources/pointclick/shop_closeup_d14a.png
+${project_dir}/resources/pointclick/shop_closeup_d15a.png
+${project_dir}/resources/pointclick/shop_closeup_d1a.png
+                ${project_dir}/resources/pointclick/shop_closeup_d1.png
+                ${project_dir}/resources/pointclick/shop_closeup_d2a.png
+                ${project_dir}/resources/pointclick/shop_closeup_d2.png
+                ${project_dir}/resources/pointclick/shop_closeup_d3a.png
+                ${project_dir}/resources/pointclick/shop_closeup_d3.png
+                ${project_dir}/resources/pointclick/shop_closeup_d4a.png
+                ${project_dir}/resources/pointclick/shop_closeup_d4.png
+                ${project_dir}/resources/pointclick/shop_closeup_d5a.png
+                ${project_dir}/resources/pointclick/shop_closeup_d6a.png
+                ${project_dir}/resources/pointclick/shop_closeup_d7a.png
+                ${project_dir}/resources/pointclick/shop_closeup_d8a.png
+                ${project_dir}/resources/pointclick/shop_closeup_d9a.png
+                ${project_dir}/resources/pointclick/shop_closeup.png
+                ${project_dir}/resources/pointclick/town1_e_d1.png
+                ${project_dir}/resources/pointclick/town1_e.png
+                ${project_dir}/resources/pointclick/town1_n_d1.png
+                ${project_dir}/resources/pointclick/town1_n.png
+                ${project_dir}/resources/pointclick/town1_s_d1_boat.png
+                ${project_dir}/resources/pointclick/town1_s_d1_messageboard.png
+                ${project_dir}/resources/pointclick/town1_s.png
+                ${project_dir}/resources/pointclick/town1_w.png
+                ${project_dir}/resources/pointclick/town2_n.png
+                ${project_dir}/resources/pointclick/town2_s.png
                 ${project_dir}/resources/sprites/b_arrow1.png
                 ${project_dir}/resources/sprites/b_arrow2.png
                 ${project_dir}/resources/sprites/b_arrow1t.png

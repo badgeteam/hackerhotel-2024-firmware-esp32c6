@@ -179,7 +179,7 @@ void app_main(void) {
     bsp_sao_addressable_led_set(saoleddata, sizeof(saoleddata));
 
     // Main application
-    screen_t current_screen = screen_home;
+    screen_t current_screen = screen_pointclick;
     while (1) {
         ESP_LOGE(TAG, "Screen: %d", current_screen);
         switch (current_screen) {
