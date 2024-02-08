@@ -9,7 +9,7 @@
 #include "ieee802154_header.h"
 #include "memory.h"
 
-static char const * TAG = "badge_comms";
+static const char* TAG = "badge_comms";
 
 uint16_t TargetAddress = 0xFFFF;
 
@@ -232,4 +232,12 @@ esp_err_t init_badge_comms(void) {
     }
 
     return ESP_OK;
+}
+
+esp_err_t start_badge_comms() {
+    return esp_ieee802154_receive();
+}
+
+esp_err_t stop_badge_comms() {
+    return esp_ieee802154_sleep();
 }

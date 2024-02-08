@@ -43,3 +43,6 @@ QueueHandle_t badge_comms_add_listener(badge_comms_message_type_t message_type, 
  *      - ESP_ERR_NOT_FOUND if the provided queue was not found in the list of listeners
  */
 esp_err_t badge_comms_remove_listener(QueueHandle_t queue);
+
+esp_err_t start_badge_comms();
+esp_err_t stop_badge_comms();

@@ -1,5 +1,6 @@
 #include "screen_settings.h"
 #include "application.h"
+#include "badge_comms.h"
 #include "badge_messages.h"
 #include "bsp.h"
 #include "esp_err.h"
@@ -23,12 +24,12 @@
 #include <stdio.h>
 #include <string.h>
 
-extern uint8_t const settings_png_start[] asm("_binary_settings_png_start");
-extern uint8_t const settings_png_end[] asm("_binary_settings_png_end");
-extern uint8_t const battery1_png_start[] asm("_binary_battery1_png_start");
-extern uint8_t const battery1_png_end[] asm("_binary_battery1_png_end");
-extern uint8_t const battery2_png_start[] asm("_binary_battery2_png_start");
-extern uint8_t const battery2_png_end[] asm("_binary_battery2_png_end");
+extern const uint8_t settings_png_start[] asm("_binary_settings_png_start");
+extern const uint8_t settings_png_end[] asm("_binary_settings_png_end");
+extern const uint8_t battery1_png_start[] asm("_binary_battery1_png_start");
+extern const uint8_t battery1_png_end[] asm("_binary_battery1_png_end");
+extern const uint8_t battery2_png_start[] asm("_binary_battery2_png_start");
+extern const uint8_t battery2_png_end[] asm("_binary_battery2_png_end");
 
 static const char* TAG = "settings";
 
@@ -40,6 +41,7 @@ static void configure_keyboard(QueueHandle_t keyboard_event_queue) {
 static void ota_update_wrapped(QueueHandle_t keyboard_event_queue, bool nightly) {
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_relay(keyboard_event_queue, false);
+    bsp_set_relay(false);
     // event_t kbsettings = {
     //     .type                                     = event_control_keyboard,
     //     .args_control_keyboard.enable_typing      = false,
@@ -50,7 +52,11 @@ static void ota_update_wrapped(QueueHandle_t keyboard_event_queue, bool nightly)
     // };
     // xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 
+    stop_badge_comms();
+
     ota_update(nightly);
+
+    start_badge_comms();
 
     configure_keyboard(keyboard_event_queue);
 }
@@ -418,7 +424,7 @@ screen_t screen_settings_entry(QueueHandle_t application_event_queue, QueueHandl
     }
 }
 
-float const OCVLut[32][2] = {{0, 2.7296},      {0.0164, 3.0857}, {0.0328, 3.2497}, {0.0492, 3.3247}, {0.0656, 3.3609},
+const float OCVLut[32][2] = {{0, 2.7296},      {0.0164, 3.0857}, {0.0328, 3.2497}, {0.0492, 3.3247}, {0.0656, 3.3609},
                              {0.082, 3.3821},  {0.0984, 3.3991}, {0.1092, 3.41},   {0.12, 3.4212},   {0.1308, 3.4329},
                              {0.1416, 3.4448}, {0.1523, 3.457},  {0.188, 3.4963},  {0.2237, 3.5314}, {0.2594, 3.5611},
                              {0.2951, 3.5865}, {0.3308, 3.6099}, {0.3867, 3.6471}, {0.4426, 3.6893}, {0.4985, 3.7382},
