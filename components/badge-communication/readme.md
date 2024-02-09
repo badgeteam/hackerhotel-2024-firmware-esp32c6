@@ -8,7 +8,7 @@ This component wraps the communication to a pub-sub like model.
 ### message types
 
 a message type is like the 'topic' of a pub-sub model, which identifies the contents should be read.
-these message types are defined in the struct `badge_comms_message_type_t`, which is found in `badge_messages.h`.
+these message types are defined in the struct `badge_comms_message_type_t`, which is found in `badge-communication-protocol.h`.
 
 ### listeners
 
@@ -30,7 +30,7 @@ this function broadcasts a message to all nearby bodges.
 ## adding a new message type
 
 a new feature might require a new message type.
-to add a message type goto `badge_comms_message_type_t` in `badge_messages.h`, and add a new message.
+to add a message type goto `badge_comms_message_type_t` in `badge-communication-protocol.h`, and add a new message.
 the message type should be assigned a number, this to make it explicitly clear what the message identifier are.
 
 now that we have a message type, we need a struct to define how and what data is sent.

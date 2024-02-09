@@ -1,6 +1,6 @@
 #include "screen_pointclick.h"
 #include "application.h"
-#include "badge_messages.h"
+#include "badge-communication-protocol.h"
 #include "bsp.h"
 #include "esp_err.h"
 #include "esp_log.h"

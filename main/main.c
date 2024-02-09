@@ -1,6 +1,6 @@
 #include "application.h"
-#include "badge_comms.h"
-#include "badge_messages.h"
+#include "badge-communication-protocol.h"
+#include "badge-communication.h"
 #include "bsp.h"
 #include "driver/dedic_gpio.h"
 #include "driver/gpio.h"

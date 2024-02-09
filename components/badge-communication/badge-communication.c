@@ -1,4 +1,7 @@
-#include "badge_comms.h"
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2024 Hugo Trippaers
+
+#include "badge-communication.h"
 #include "esp_check.h"
 #include "esp_err.h"
 #include "esp_ieee802154.h"
@@ -6,7 +9,7 @@
 #include "esp_mac.h"
 #include "freertos/portmacro.h"
 #include "freertos/semphr.h"
-#include "ieee802154_header.h"
+#include "ieee802154.h"
 #include "memory.h"
 
 static const char* TAG = "badge_comms";
@@ -108,7 +111,8 @@ void badge_comms_send_message(badge_comms_message_t* comms_message) {
 
     ieee802154_address_t src = {
         .mode         = ADDR_MODE_LONG,
-        .long_address = {eui64[0], eui64[1], eui64[2], eui64[3], eui64[4], eui64[5], eui64[6], eui64[7]}};
+        .long_address = {eui64[0], eui64[1], eui64[2], eui64[3], eui64[4], eui64[5], eui64[6], eui64[7]}
+    };
 
     ieee802154_address_t dst = {.mode = ADDR_MODE_SHORT, .short_address = TargetAddress};
 
