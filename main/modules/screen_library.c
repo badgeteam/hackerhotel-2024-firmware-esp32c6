@@ -111,7 +111,9 @@ const char library_item_content[Nb_item_library][5][600] = {
      "passengers, the part of the vessel occupied by each during the passage,",
 
      "the country to which each belongs, and "
-     "also the country of which it is intended by each to become an inhabitant, and that said List or Manifest truly "
+     "also the country of which it is intended by each to become an inhabitant,",
+
+     "and that said List or Manifest truly "
      "sets forth the number of said passengers who have died on said voyage, and the names and ages of those who "
      "died.\n\n So help me God. \n\n A. C. Burrows. \n\n 3rd of February, 1878."},
     // entry 5
@@ -152,7 +154,7 @@ const char library_item_content[Nb_item_library][5][600] = {
     {"Entry 13"},
 };
 
-const uint8_t library_item_nbpage[Nb_item_library] = {0, 1, 1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0};
+const uint8_t library_item_nbpage[Nb_item_library] = {0, 1, 1, 3, 2, 2, 0, 0, 0, 0, 0, 0, 0};
 
 pax_vec1_t DrawLibraryContent(int _yoffset, const char* _message) {
     pax_buf_t* gfx  = bsp_get_gfx_buffer();
@@ -171,7 +173,6 @@ pax_vec1_t DrawLibraryContent(int _yoffset, const char* _message) {
 
     ESP_LOGE(TAG, "Unhandled event type %s", _message);
     ESP_LOGE(TAG, "Unhandled event type %d", strlen(_message));
-    // char message[128]       = "The quick brown fox jumps over the lazy dog, The quick brie da";  // message to parse
     char linetodisplay[128] = "";
     char Words[64];  // Parsed Word
     int  _xoffset       = 6;
