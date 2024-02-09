@@ -277,7 +277,7 @@ bool textedit(
                     } else if (event.args_term_input == 3) {
                         // Cancel sent via le terminal.
                         return false;
-                    } else if (event.args_term_input == '\b' || event.args_term_input == 0x7e) {
+                    } else if (event.args_term_input == '\b' || event.args_term_input == 0x7f) {
                         // Backspacening.
                         size_t length = strlen(output);
                         if (length > 0) {
