@@ -560,7 +560,7 @@ screen_t screen_settings_entry(QueueHandle_t application_event_queue, QueueHandl
     }
 }
 
-screen_t screen_lut_dial(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+/*screen_t screen_lut_dial(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     if (log)
         ESP_LOGE(TAG, "Enter screen_home_entry");
     // update the keyboard event handler settings
@@ -614,4 +614,4 @@ screen_t screen_lut_dial(QueueHandle_t application_event_queue, QueueHandle_t ke
             }
         }
     }
-}
+}*/
