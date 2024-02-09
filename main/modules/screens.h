@@ -42,5 +42,17 @@ typedef enum _screen {
     screen_PC_dune3,
     screen_PC_lighthouse1,
     screen_PC_lighthouse2,
-    screen_PC_dialogue_post_office,
+    screen_PC_postoffice_closeup_d,
+    screen_PC_shop_closeup_d,
+    screen_PC_shop_closeup_da,
+    screen_PC_road1_e_jorge_d,
+
+    screen_PC_dock1_w_d,
+    screen_PC_dune2_n_d,
+    screen_PC_dune3_n_gc_d,
+    screen_PC_library_closeup,
+    lighthouse1_n_gc_d_key,
+    lighthouse1_n_gc_d,
+    messageboard_closeup,
+
 } screen_t;

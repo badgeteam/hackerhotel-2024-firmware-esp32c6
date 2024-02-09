@@ -26,7 +26,12 @@
 #define nb_state 10
 
 #define state_cursor         0
-#define state_locklighthouse 1
+#define state_tutorial_dock  1
+#define state_tutorial_dune  2
+#define state_locklighthouse 3
+
+#define tutorial_uncomplete 0
+#define tutorial_complete   1
 
 #define locklighthouse_locked   0
 #define locklighthouse_unlocked 1
