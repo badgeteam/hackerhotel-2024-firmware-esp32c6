@@ -24,7 +24,7 @@
 #include <esp_random.h>
 #include <string.h>
 
-static char const * TAG = "template";
+static const char* TAG = "template";
 
 extern const uint8_t border1_png_start[] asm("_binary_border1_png_start");
 extern const uint8_t border1_png_end[] asm("_binary_border1_png_end");

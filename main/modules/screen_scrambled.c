@@ -21,16 +21,16 @@
 #include <esp_random.h>
 #include <string.h>
 
-static char const * TAG = "scrambled";
+static const char* TAG = "scrambled";
 
-extern uint8_t const caronv_png_start[] asm("_binary_caronv_png_start");
-extern uint8_t const caronv_png_end[] asm("_binary_caronv_png_end");
-extern uint8_t const b_arrow1_png_start[] asm("_binary_b_arrow1_png_start");
-extern uint8_t const b_arrow1_png_end[] asm("_binary_b_arrow1_png_end");
-extern uint8_t const b_arrow1t_png_start[] asm("_binary_b_arrow1t_png_start");
-extern uint8_t const b_arrow1t_png_end[] asm("_binary_b_arrow1t_png_end");
+extern const uint8_t caronv_png_start[] asm("_binary_caronv_png_start");
+extern const uint8_t caronv_png_end[] asm("_binary_caronv_png_end");
+extern const uint8_t b_arrow1_png_start[] asm("_binary_b_arrow1_png_start");
+extern const uint8_t b_arrow1_png_end[] asm("_binary_b_arrow1_png_end");
+extern const uint8_t b_arrow1t_png_start[] asm("_binary_b_arrow1t_png_start");
+extern const uint8_t b_arrow1t_png_end[] asm("_binary_b_arrow1t_png_end");
 
-static char const * const scrambled[] = {"to the president of the united", ""};
+static const char* const scrambled[] = {"to the president of the united", ""};
 
 screen_t screen_scrambled_victory(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
 

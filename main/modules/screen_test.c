@@ -18,15 +18,14 @@
 #include <esp_random.h>
 #include <string.h>
 
-extern uint8_t const mascots_png_start[] asm("_binary_mascots_png_start");
-extern uint8_t const mascots_png_end[] asm("_binary_mascots_png_end");
+extern const uint8_t mascots_png_start[] asm("_binary_mascots_png_start");
+extern const uint8_t mascots_png_end[] asm("_binary_mascots_png_end");
 
-static char const * TAG = "test";
+static const char* TAG = "test";
 
 
-char const team[11][32] = {
-    "Nikolett", "Guru-san", "Renze", "Tom Clement", "CH23", "Norbert", "Zac", "SqyD", "Martijn", "Julian", "Dimitri"
-};
+const char team[11][32] = {
+    "Nikolett", "Guru-san", "Renze", "Tom Clement", "CH23", "Norbert", "Zac", "SqyD", "Martijn", "Julian", "Dimitri"};
 
 void Display_credits_entry(int cursor) {
     pax_buf_t* gfx = bsp_get_gfx_buffer();
