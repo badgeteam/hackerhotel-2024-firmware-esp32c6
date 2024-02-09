@@ -261,7 +261,7 @@ screen_t screen_postoffice_closeup_d(
     int cursor      = main_cursor[0];
     int displayflag = 1;
     int nbdirection = 14;
-    ESP_LOGE(TAG, "dialogue post office");
+    ESP_LOGE(TAG, "postoffice_closeup_d");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     while (1) {
         if (displayflag) {
@@ -468,7 +468,7 @@ screen_t screen_shop_closeup_d(
     int cursor      = main_cursor[0];
     int displayflag = 1;
     int nbdirection = 5;
-    ESP_LOGE(TAG, "dialogue post office");
+    ESP_LOGE(TAG, "shop_closeup_d");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     while (1) {
         if (displayflag) {
@@ -539,7 +539,7 @@ screen_t screen_shop_closeup_da(
     int cursor      = main_cursor[0];
     int displayflag = 1;
     int nbdirection = 16;
-    ESP_LOGE(TAG, "dialogue post office");
+    ESP_LOGE(TAG, "shop_closeup_das");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     while (1) {
         if (displayflag) {
@@ -666,7 +666,8 @@ screen_t screen_shop_closeup_da(
                     }
                 case 15:
                     {
-                        main_cursor[0] = screen_PC_e;  // return to shop_closeup.png
+                        main_cursor[state_locklighthouse] = locklighthouse_key_obtained;
+                        main_cursor[0]                    = screen_PC_e;
                         return screen_PC_town1;
                         break;
                     }
@@ -709,7 +710,7 @@ screen_t screen_road1_e_jorge_d(
     int cursor      = main_cursor[0];
     int displayflag = 1;
     int nbdirection = 8;
-    ESP_LOGE(TAG, "dialogue post office");
+    ESP_LOGE(TAG, "road1_e_jorge_d");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     while (1) {
         if (displayflag) {
@@ -752,8 +753,9 @@ screen_t screen_road1_e_jorge_d(
                     }
                 case 7:
                     {
-                        main_cursor[0] = screen_PC_e;  // tbd
-                        return screen_PC_town1;        // tbd
+                        main_cursor[state_locklighthouse] = locklighthouse_meet_lady;
+                        main_cursor[0]                    = screen_PC_s2;
+                        return screen_PC_town2;
                         break;
                     }
                 default: break;
@@ -795,7 +797,7 @@ screen_t screen_dock1_w_d(
     int cursor      = main_cursor[0];
     int displayflag = 1;
     int nbdirection = 3;
-    ESP_LOGE(TAG, "dialogue post office");
+    ESP_LOGE(TAG, "dock1_w_d");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     while (1) {
         if (displayflag) {
@@ -850,62 +852,7 @@ screen_t screen_dock1_w_d(
         }
     }
 }
-screen_t screen_dune2_n_d(
-    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
-) {
-    InitKeyboard(keyboard_event_queue);
-    configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
-    int cursor      = main_cursor[0];
-    int displayflag = 1;
-    int nbdirection = 2;
-    ESP_LOGE(TAG, "dialogue post office");
-    pax_buf_t* gfx = bsp_get_gfx_buffer();
-    while (1) {
-        if (displayflag) {
-            pax_background(gfx, WHITE);
-            switch (cursor) {
-                case 0:
-                    {
-                        pax_insert_png_buf(gfx, dune2_n_d1_S, dune2_n_d1_E - dune2_n_d1_S, 0, 0, 0);
-                        break;
-                    }
-                case 1:
-                    {
-                        main_cursor[state_tutorial_dune] = tutorial_complete;
-                        main_cursor[0]                   = screen_PC_n;
-                        return screen_PC_town1;
-                        break;
-                    }
-                default: break;
-            }
-            bsp_display_flush();
-            displayflag = 0;
-        }
-        event_t event = {0};
-        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
-            switch (event.type) {
-                case event_input_button: break;  // Ignore raw button input
-                case event_input_keyboard:
-                    switch (event.args_input_keyboard.action) {
-                        case SWITCH_1: break;
-                        case SWITCH_2: break;
-                        case SWITCH_3: cursor++; break;
-                        case SWITCH_4: cursor--; break;
-                        case SWITCH_5: break;
-                        default: break;
-                    }
-                    if (cursor < 0)
-                        cursor = nbdirection - 1;
-                    if (cursor > (nbdirection - 1))
-                        cursor = 0;
-                    displayflag = 1;
-                    ESP_LOGE(TAG, "cursor %d", cursor);
-                    break;
-                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
-            }
-        }
-    }
-}
+
 screen_t screen_dune3_n_gc_d(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
@@ -913,15 +860,15 @@ screen_t screen_dune3_n_gc_d(
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
     int cursor      = main_cursor[0];
     int displayflag = 1;
-    int nbdirection = 4;
-    ESP_LOGE(TAG, "dialogue post office");
+    int nbdirection = 5;
+    ESP_LOGE(TAG, "dune3_n_gc_d");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     while (1) {
         if (displayflag) {
             pax_background(gfx, WHITE);
             switch (cursor) {
                 case 0:
-                    {
+                    {  // tagada
                         pax_insert_png_buf(gfx, dune3_n_gc_d1_S, dune3_n_gc_d1_E - dune3_n_gc_d1_S, 0, 0, 0);
                         break;
                     }
@@ -942,7 +889,9 @@ screen_t screen_dune3_n_gc_d(
                     }
                 case 4:
                     {
-                        main_cursor[0] = screen_PC_n2;
+                        main_cursor[state_locklighthouse] = locklighthouse_lighthouse_seen_sign;
+                        main_cursor[state_tutorial_dune3] = tutorial_complete;
+                        main_cursor[0]                    = screen_PC_n2;
                         return screen_PC_lighthouse1;
                         break;
                     }
@@ -984,7 +933,7 @@ screen_t screen_lighthouse1_n_gc_d_key(
     int cursor      = main_cursor[0];
     int displayflag = 1;
     int nbdirection = 3;
-    ESP_LOGE(TAG, "lighthouse1_n_gc_d1_key");
+    ESP_LOGE(TAG, "lighthouse1_n_gc_d_key");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     while (1) {
         if (displayflag) {
@@ -1189,7 +1138,7 @@ screen_t screen_lighthouse2_n_go(
                         case SWITCH_2:
                         case SWITCH_3:
                             main_cursor[0] = 0;
-                            return screen_home;
+                            return screen_PC_end;
                             break;
                         case SWITCH_4: break;
                         case SWITCH_5: break;
@@ -1228,7 +1177,7 @@ screen_t screen_messageboard_closeup(
                             break;
                         case SWITCH_3:
                             main_cursor[0] = 0;
-                            return screen_PC_messageboard_closeup;
+                            return screen_billboard;
                             break;
                         case SWITCH_4: break;
                         case SWITCH_5: break;
@@ -1246,7 +1195,7 @@ screen_t screen_road1_e_jorge(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
     InitKeyboard(keyboard_event_queue);
-    configure_keyboard_presses(keyboard_event_queue, false, true, true, false, false);
+    configure_keyboard_presses(keyboard_event_queue, false, false, true, true, false);
     int displayflag = 1;
     ESP_LOGE(TAG, "road1_e_jorge");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
@@ -1267,8 +1216,10 @@ screen_t screen_road1_e_jorge(
                             return screen_PC_town1;
                             break;
                         case SWITCH_4:
-                            main_cursor[0] = 0;
-                            return screen_PC_road1_e_jorge_d1;
+                            if (main_cursor[state_locklighthouse] == locklighthouse_lighthouse_seen_sign) {
+                                main_cursor[0] = 0;
+                                return screen_PC_road1_e_jorge_d;
+                            }
                             break;
                         case SWITCH_5: break;
                         default: break;
@@ -1285,13 +1236,14 @@ screen_t screen_town1_n_d1(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
     InitKeyboard(keyboard_event_queue);
-    configure_keyboard_presses(keyboard_event_queue, false, true, true, false, false);
+    configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
     int displayflag = 1;
     ESP_LOGE(TAG, "town1_n_d1");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
     pax_insert_png_buf(gfx, town1_n_d1_S, town1_n_d1_E - town1_n_d1_S, 0, 0, 0);
     bsp_display_flush();
+    main_cursor[state_tutorial_town1_north] = tutorial_complete;
     while (1) {
         event_t event = {0};
         if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
@@ -1321,7 +1273,7 @@ screen_t screen_town1_e_d1(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
     InitKeyboard(keyboard_event_queue);
-    configure_keyboard_presses(keyboard_event_queue, false, true, true, false, false);
+    configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
     int displayflag = 1;
     ESP_LOGE(TAG, "town1_e_d1");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
@@ -1338,9 +1290,9 @@ screen_t screen_town1_e_d1(
                         case SWITCH_1: break;
                         case SWITCH_2: break;
                         case SWITCH_3:
-                            main_cursor[state_tutorial_town1] = tutorial_complete;
-                            main_cursor[0]                    = 0;
-                            return screen_PC_postoffice_closeup;
+                            main_cursor[state_tutorial_town1_east] = tutorial_complete;
+                            main_cursor[0]                         = 0;
+                            return screen_PC_postoffice_closeup_d;
                             break;
                         case SWITCH_4: break;
                         case SWITCH_5: break;
@@ -1358,13 +1310,14 @@ screen_t screen_town1_s_d1_boat(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
     InitKeyboard(keyboard_event_queue);
-    configure_keyboard_presses(keyboard_event_queue, false, true, true, false, false);
+    configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
     int displayflag = 1;
     ESP_LOGE(TAG, "town1_s_d1_boat");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
     pax_insert_png_buf(gfx, town1_s_d1_boat_S, town1_s_d1_boat_E - town1_s_d1_boat_S, 0, 0, 0);
     bsp_display_flush();
+    main_cursor[state_tutorial_town1_south] = tutorial_complete;
     while (1) {
         event_t event = {0};
         if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
@@ -1375,7 +1328,7 @@ screen_t screen_town1_s_d1_boat(
                         case SWITCH_1: break;
                         case SWITCH_2: break;
                         case SWITCH_3:
-                            main_cursor[0] = screen_PC_s;
+                            main_cursor[0] = screen_PC_s2;
                             return screen_PC_dune2;
                             break;
                         case SWITCH_4: break;
@@ -1394,7 +1347,7 @@ screen_t screen_town1_s_d1_messageboard(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
     InitKeyboard(keyboard_event_queue);
-    configure_keyboard_presses(keyboard_event_queue, false, true, true, false, false);
+    configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
     int displayflag = 1;
     ESP_LOGE(TAG, "town1_s_d1_messageboard");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
@@ -1425,6 +1378,118 @@ screen_t screen_town1_s_d1_messageboard(
     }
 }
 
+screen_t screen_dune2_n_d(
+    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
+) {
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
+    int displayflag = 1;
+    ESP_LOGE(TAG, "dune2_n_d");
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_background(gfx, WHITE);
+    pax_insert_png_buf(gfx, dune2_n_d1_S, dune2_n_d1_E - dune2_n_d1_S, 0, 0, 0);
+    bsp_display_flush();
+    while (1) {
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: break;
+                        case SWITCH_3:
+                            main_cursor[state_tutorial_dune2] = tutorial_complete;
+                            main_cursor[0]                    = screen_PC_n;
+                            return screen_PC_town1;
+                            break;
+                        case SWITCH_4: break;
+                        case SWITCH_5: break;
+                        default: break;
+                    }
+                    displayflag = 1;
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+
+screen_t screen_shop_closeup(
+    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
+) {
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, false, false, false, true, false);
+    int displayflag = 1;
+    ESP_LOGE(TAG, "shop_closeup");
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_background(gfx, WHITE);
+    pax_insert_png_buf(gfx, shop_closeup_S, shop_closeup_E - shop_closeup_S, 0, 0, 0);
+    bsp_display_flush();
+    while (1) {
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: break;
+                        case SWITCH_4:
+                            if (main_cursor[state_locklighthouse] == locklighthouse_meet_lady) {
+                                main_cursor[0] = 0;
+                                return screen_PC_shop_closeup_da;
+                            } else if (main_cursor[state_locklighthouse] < locklighthouse_meet_lady) {
+                                main_cursor[0] = 0;
+                                return screen_PC_shop_closeup_d;
+                            }
+                            break;
+                        case SWITCH_3: break;
+                        case SWITCH_5: break;
+                        default: break;
+                    }
+                    displayflag = 1;
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+
+screen_t screen_end(
+    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
+) {
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
+    int displayflag = 1;
+    ESP_LOGE(TAG, "end");
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_background(gfx, WHITE);
+    // pax_insert_png_buf(gfx, end_S, end_E - end_S, 0, 0, 0);
+    bsp_display_flush();
+    while (1) {
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: break;
+                        case SWITCH_2:
+                        case SWITCH_3:
+                            main_cursor[0] = 0;
+                            return screen_home;
+                            break;
+                        case SWITCH_4: break;
+                        case SWITCH_5: break;
+                        default: break;
+                    }
+                    displayflag = 1;
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+
 // entry
 screen_t screen_pointclick_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     screen_t current_screen_PC = screen_PC_dock1;
@@ -1432,14 +1497,19 @@ screen_t screen_pointclick_entry(QueueHandle_t application_event_queue, QueueHan
     for (int i = 0; i < nb_state; i++) {
         main_cursor[i] = 0;
     }
-    main_cursor[state_cursor]         = screen_PC_s;
-    main_cursor[state_locklighthouse] = locklighthouse_locked;
-    main_cursor[state_tutorial_dock]  = tutorial_uncomplete;
-    main_cursor[state_tutorial_dune]  = tutorial_uncomplete;
-    main_cursor[state_tutorial_town1] = tutorial_uncomplete;
+    main_cursor[state_cursor]               = screen_PC_s;
+    main_cursor[state_locklighthouse]       = locklighthouse_locked;
+    main_cursor[state_tutorial_dock]        = tutorial_uncomplete;
+    main_cursor[state_tutorial_dune2]       = tutorial_uncomplete;
+    main_cursor[state_tutorial_town1_north] = tutorial_uncomplete;
+    main_cursor[state_tutorial_town1_east]  = tutorial_uncomplete;
+    main_cursor[state_tutorial_town1_south] = tutorial_uncomplete;
+    main_cursor[state_tutorial_town1_west]  = tutorial_uncomplete;
+    main_cursor[state_tutorial_dune3]       = tutorial_uncomplete;
 
     bsp_apply_lut(lut_4s);
     while (1) {
+        ESP_LOGE(TAG, "state_locklighthouse: %d", main_cursor[state_locklighthouse]);
         switch (current_screen_PC) {
             case screen_PC_dock1:
                 {
@@ -1507,36 +1577,36 @@ screen_t screen_pointclick_entry(QueueHandle_t application_event_queue, QueueHan
                         screen_pointclick_lighthouse2(application_event_queue, keyboard_event_queue, main_cursor);
                     break;
                 }
-            case screen_PC_postoffice_closeup_d:
+            case screen_PC_postoffice_closeup_d:  //
                 {
                     current_screen_PC =
                         screen_postoffice_closeup_d(application_event_queue, keyboard_event_queue, main_cursor);
                     break;
                 }
-            case screen_PC_shop_closeup_d:
+            case screen_PC_shop_closeup_d:  //
                 {
                     current_screen_PC =
                         screen_shop_closeup_d(application_event_queue, keyboard_event_queue, main_cursor);
                     break;
                 }
-            case screen_PC_shop_closeup_da:
+            case screen_PC_shop_closeup_da:  //
                 {
                     current_screen_PC =
                         screen_shop_closeup_da(application_event_queue, keyboard_event_queue, main_cursor);
                     break;
                 }
-            case screen_PC_road1_e_jorge_d:
+            case screen_PC_road1_e_jorge_d:  //
                 {
                     current_screen_PC =
                         screen_road1_e_jorge_d(application_event_queue, keyboard_event_queue, main_cursor);
                     break;
                 }
-            case screen_PC_dock1_w_d:
+            case screen_PC_dock1_w_d:  //
                 {
                     current_screen_PC = screen_dock1_w_d(application_event_queue, keyboard_event_queue, main_cursor);
                     break;
                 }
-            case screen_PC_dune2_n_d:
+            case screen_PC_dune2_n_d:  //
                 {
                     current_screen_PC = screen_dune2_n_d(application_event_queue, keyboard_event_queue, main_cursor);
                     break;
@@ -1546,13 +1616,13 @@ screen_t screen_pointclick_entry(QueueHandle_t application_event_queue, QueueHan
                     current_screen_PC = screen_dune3_n_gc_d(application_event_queue, keyboard_event_queue, main_cursor);
                     break;
                 }
-            case screen_PC_library_closeup:
+            case screen_PC_library_closeup:  //
                 {
                     current_screen_PC =
                         screen_library_closeup(application_event_queue, keyboard_event_queue, main_cursor);
                     break;
                 }
-            case screen_PC_library_closeup_d1:
+            case screen_PC_library_closeup_d1:  //
                 {
                     current_screen_PC =
                         screen_library_closeup_d1(application_event_queue, keyboard_event_queue, main_cursor);
@@ -1564,7 +1634,7 @@ screen_t screen_pointclick_entry(QueueHandle_t application_event_queue, QueueHan
                         screen_lighthouse1_n_gc_d_key(application_event_queue, keyboard_event_queue, main_cursor);
                     break;
                 }
-            case screen_PC_lighthouse1_n_gc_d1:
+            case screen_PC_lighthouse1_n_gc_d1:  //
                 {
                     current_screen_PC =
                         screen_lighthouse1_n_gc_d1(application_event_queue, keyboard_event_queue, main_cursor);
@@ -1576,7 +1646,7 @@ screen_t screen_pointclick_entry(QueueHandle_t application_event_queue, QueueHan
                         screen_lighthouse2_n_go(application_event_queue, keyboard_event_queue, main_cursor);
                     break;
                 }
-            case screen_PC_messageboard_closeup:
+            case screen_PC_messageboard_closeup:  //
                 {
                     current_screen_PC =
                         screen_messageboard_closeup(application_event_queue, keyboard_event_queue, main_cursor);
@@ -1588,7 +1658,7 @@ screen_t screen_pointclick_entry(QueueHandle_t application_event_queue, QueueHan
                         screen_road1_e_jorge(application_event_queue, keyboard_event_queue, main_cursor);
                     break;
                 }
-            case screen_PC_town1_n_d1:
+            case screen_PC_town1_n_d1:  //
                 {
                     current_screen_PC = screen_town1_n_d1(application_event_queue, keyboard_event_queue, main_cursor);
                     break;
@@ -1610,8 +1680,17 @@ screen_t screen_pointclick_entry(QueueHandle_t application_event_queue, QueueHan
                         screen_town1_s_d1_messageboard(application_event_queue, keyboard_event_queue, main_cursor);
                     break;
                 }
-            case screen_home:
-            default: return screen_home; break;
+            case screen_PC_shop_closeup:
+                {
+                    current_screen_PC = screen_shop_closeup(application_event_queue, keyboard_event_queue, main_cursor);
+                    break;
+                }
+            case screen_PC_end:
+                {
+                    current_screen_PC = screen_end(application_event_queue, keyboard_event_queue, main_cursor);
+                    break;
+                }
+            default: return current_screen_PC; break;
         }
     }
 }
@@ -1620,14 +1699,14 @@ screen_t screen_pointclick_dock1(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
     InitKeyboard(keyboard_event_queue);
-    configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
+    configure_keyboard_presses(keyboard_event_queue, true, false, true, false, false);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_1, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_5, true);
     int cursor       = main_cursor[0];
     int displayflag  = 1;
     int nbdirection  = 4;
     int move_forward = 0;
-    ESP_LOGE(TAG, "dock 1");
+    ESP_LOGE(TAG, "dock1");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     while (1) {
         if (displayflag) {
@@ -1708,7 +1787,7 @@ screen_t screen_pointclick_dock2(
     int displayflag  = 1;
     int nbdirection  = 4;
     int move_forward = 0;
-    ESP_LOGE(TAG, "dock 2");
+    ESP_LOGE(TAG, "dock2");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     while (1) {
         if (displayflag) {
@@ -1871,7 +1950,7 @@ screen_t screen_pointclick_dune1(
     int nbdirection  = 2;
     int move_forward = 0;
     int move_back    = 0;
-    ESP_LOGE(TAG, "dune 1");
+    ESP_LOGE(TAG, "dune1");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     while (1) {
         if (displayflag) {
@@ -1880,8 +1959,8 @@ screen_t screen_pointclick_dune1(
                 case screen_PC_n2:  // North
                     {
                         if (move_forward) {
-                            main_cursor[0] = screen_PC_e;
-                            return screen_PC_land1;
+                            main_cursor[0] = screen_PC_n2;
+                            return screen_PC_dune2;
                         }
                         pax_insert_png_buf(gfx, dune1_n_S, dune1_n_E - dune1_n_S, 0, 0, 0);
                         break;
@@ -1889,8 +1968,8 @@ screen_t screen_pointclick_dune1(
                 case screen_PC_s2:  // South
                     {
                         if (move_forward) {
-                            main_cursor[0] = screen_PC_n2;
-                            return screen_PC_dune2;
+                            main_cursor[0] = screen_PC_e;
+                            return screen_PC_land1;
                         }
                         pax_insert_png_buf(gfx, dune1_s_S, dune1_s_E - dune1_s_S, 0, 0, 0);
                         break;
@@ -1944,7 +2023,7 @@ screen_t screen_pointclick_dune2(
     int nbdirection  = 2;
     int move_forward = 0;
     int move_back    = 0;
-    ESP_LOGE(TAG, "dune 2");
+    ESP_LOGE(TAG, "dune2");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     while (1) {
         if (displayflag) {
@@ -1953,7 +2032,7 @@ screen_t screen_pointclick_dune2(
                 case screen_PC_n2:  // North
                     {
                         if (move_forward) {
-                            if (main_cursor[state_tutorial_dune] == tutorial_uncomplete) {
+                            if (main_cursor[state_tutorial_dune2] == tutorial_uncomplete) {
                                 main_cursor[0] = 0;
                                 return screen_PC_dune2_n_d;
                             }
@@ -2035,40 +2114,52 @@ screen_t screen_pointclick_town1(
                             main_cursor[0] = 0;
                             return screen_PC_library_closeup;
                         }
-                        if (button2) {
+                        if (button2 && main_cursor[state_tutorial_town1_north] == tutorial_uncomplete) {
                             main_cursor[0] = 0;
                             return screen_PC_town1_n_d1;
+                        }
+                        if (button2 && main_cursor[state_tutorial_town1_north] == tutorial_complete) {
+                            main_cursor[0] = screen_PC_n;
+                            return screen_PC_town2;
                         }
                         pax_insert_png_buf(gfx, town1_n_S, town1_n_E - town1_n_S, 0, 0, 0);
                         break;
                     }
                 case screen_PC_e:
                     {
-                        if (button4) {
+                        if (button4 && main_cursor[state_tutorial_town1_east] == tutorial_uncomplete) {
                             main_cursor[0] = 0;
                             return screen_PC_town1_e_d1;
+                        }
+                        if (button4) {
+                            main_cursor[0] = 0;
+                            return screen_PC_postoffice_closeup_d;
                         }
                         pax_insert_png_buf(gfx, town1_e_S, town1_e_E - town1_e_S, 0, 0, 0);
                         break;
                     }
                 case screen_PC_s:
                     {
-                        if (move_forward) {
-                            main_cursor[0] = screen_PC_s2;
-                            return screen_PC_dune2;
-                        }
-                        if (button4) {
+                        if (button4 && main_cursor[state_tutorial_town1_south] == tutorial_uncomplete) {
                             main_cursor[0] = 0;
                             return screen_PC_town1_s_d1_boat;
+                        }
+                        if (button4) {  // should be sw4
+                            main_cursor[0] = screen_PC_s2;
+                            return screen_PC_dune2;
                         }
                         pax_insert_png_buf(gfx, town1_s_S, town1_s_E - town1_s_S, 0, 0, 0);
                         break;
                     }
                 case screen_PC_w:
                     {
-                        if (move_forward) {
+                        if (button2) {
                             main_cursor[0] = screen_PC_n2;
                             return screen_PC_town2;
+                        }
+                        if (move_forward) {
+                            main_cursor[0] = 0;
+                            return screen_PC_shop_closeup;
                         }
                         pax_insert_png_buf(gfx, town1_w_S, town1_w_E - town1_w_S, 0, 0, 0);
                         break;
@@ -2209,7 +2300,10 @@ screen_t screen_pointclick_road1(
                             main_cursor[0] = screen_PC_dune3_gate;
                             return screen_PC_dune3;
                         }
-                        pax_insert_png_buf(gfx, road1_n_S, road1_n_E - road1_n_S, 0, 0, 0);
+                        if (main_cursor[state_locklighthouse] == locklighthouse_unlocked)
+                            pax_insert_png_buf(gfx, road1_n_go_S, road1_n_go_E - road1_n_go_S, 0, 0, 0);
+                        else
+                            pax_insert_png_buf(gfx, road1_n_S, road1_n_E - road1_n_S, 0, 0, 0);
                         break;
                     }
                 case screen_PC_road1_e:  // East
@@ -2284,7 +2378,7 @@ screen_t screen_pointclick_dune3(
                 case screen_PC_dune3_gate:
                     {
                         if (move_forward) {
-                            if (main_cursor[state_locklighthouse] == locklighthouse_locked) {
+                            if (main_cursor[state_tutorial_dune3] == tutorial_uncomplete) {
                                 main_cursor[0] = 0;
                                 return screen_PC_dune3_n_gc_d;
                             } else if (main_cursor[state_locklighthouse] == locklighthouse_key_obtained) {
@@ -2294,17 +2388,18 @@ screen_t screen_pointclick_dune3(
                             main_cursor[0] = screen_PC_n2;
                             return screen_PC_lighthouse1;
                         }
-                        if (main_cursor[state_locklighthouse] == locklighthouse_locked) {
-                            pax_insert_png_buf(gfx, dune3_n_gc_S, dune3_n_gc_E - dune3_n_gc_S, 0, 0, 0);
-                        } else if (main_cursor[state_locklighthouse] == locklighthouse_unlocked) {
+                        if (main_cursor[state_locklighthouse] == locklighthouse_unlocked) {
                             pax_insert_png_buf(gfx, dune3_n_go_S, dune3_n_go_E - dune3_n_go_S, 0, 0, 0);
+                        } else {
+                            pax_insert_png_buf(gfx, dune3_n_gc_S, dune3_n_gc_E - dune3_n_gc_S, 0, 0, 0);
                         }
                         break;
                     }
+
                 case screen_PC_dune3_s:  // South
                     {
                         if (move_forward) {
-                            if (main_cursor[state_locklighthouse] == locklighthouse_key_obtained) {
+                            if (main_cursor[state_locklighthouse] == locklighthouse_lighthouse_seen_sign) {
                                 main_cursor[0] = 0;
                                 return screen_PC_road1_e_jorge;
                             }
@@ -2317,10 +2412,10 @@ screen_t screen_pointclick_dune3(
                     }
                 case screen_PC_dune3_up:
                     {
-                        if (main_cursor[state_locklighthouse] == locklighthouse_locked)
-                            pax_insert_png_buf(gfx, dune3_n_gc_up_S, dune3_n_gc_up_E - dune3_n_gc_up_S, 0, 0, 0);
-                        else if (main_cursor[state_locklighthouse] == locklighthouse_unlocked)
+                        if (main_cursor[state_locklighthouse] == locklighthouse_unlocked)
                             pax_insert_png_buf(gfx, dune3_n_go_up_S, dune3_n_go_up_E - dune3_n_go_up_S, 0, 0, 0);
+                        else
+                            pax_insert_png_buf(gfx, dune3_n_gc_up_S, dune3_n_gc_up_E - dune3_n_gc_up_S, 0, 0, 0);
                         break;
                     }
                 default: break;
@@ -2371,7 +2466,7 @@ screen_t screen_pointclick_lighthouse1(
     int displayflag  = 1;
     int nbdirection  = 2;
     int move_forward = 0;
-    int move_back    = 0;
+    int button2      = 0;
     ESP_LOGE(TAG, "lighthouse1");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     while (1) {
@@ -2380,7 +2475,19 @@ screen_t screen_pointclick_lighthouse1(
             switch (cursor) {
                 case screen_PC_n2:  // North
                     {
-                        if (main_cursor[state_locklighthouse] == locklighthouse_locked)
+                        if (button2 && main_cursor[state_locklighthouse] < locklighthouse_unlocked) {
+                            main_cursor[state_cursor] = 0;
+                            return screen_PC_lighthouse1_n_gc_d1;
+                        }
+                        if (button2 && main_cursor[state_locklighthouse] == locklighthouse_unlocked) {
+                            main_cursor[state_cursor] = screen_PC_dune3_gate;
+                            return screen_PC_dune3;
+                        }
+                        if (move_forward && main_cursor[state_locklighthouse] < locklighthouse_unlocked) {
+                            main_cursor[state_cursor] = screen_PC_dune3_gate;
+                            return screen_PC_dune3;
+                        }
+                        if (main_cursor[state_locklighthouse] < locklighthouse_unlocked)
                             pax_insert_png_buf(
                                 gfx,
                                 lighthouse1_n_gc_S,
@@ -2389,7 +2496,7 @@ screen_t screen_pointclick_lighthouse1(
                                 0,
                                 0
                             );
-                        else if (main_cursor[state_locklighthouse] == locklighthouse_unlocked) {
+                        if (main_cursor[state_locklighthouse] == locklighthouse_unlocked) {
                             if (move_forward) {
                                 main_cursor[0] = screen_PC_n;
                                 return screen_PC_lighthouse2;
@@ -2420,7 +2527,7 @@ screen_t screen_pointclick_lighthouse1(
             displayflag = 0;
         }
         move_forward  = 0;
-        move_back     = 0;
+        button2       = 0;
         event_t event = {0};
         if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
             switch (event.type) {
@@ -2432,7 +2539,7 @@ screen_t screen_pointclick_lighthouse1(
                         case SWITCH_L5: cursor--; break;
                         case SWITCH_R5: cursor++; break;
                         case SWITCH_1: return screen_home; break;
-                        case SWITCH_2: move_back++; break;
+                        case SWITCH_2: button2++; break;
                         case SWITCH_3: move_forward++; break;
                         case SWITCH_4: break;
                         case SWITCH_5: break;
@@ -2471,6 +2578,10 @@ screen_t screen_pointclick_lighthouse2(
             switch (cursor) {
                 case screen_PC_n:
                     {
+                        if (move_forward) {
+                            main_cursor[0] = 0;
+                            return screen_PC_lighthouse2_n_go;
+                        }
                         pax_insert_png_buf(gfx, lighthouse2_n_S, lighthouse2_n_E - lighthouse2_n_S, 0, 0, 0);
                         break;
                     }
