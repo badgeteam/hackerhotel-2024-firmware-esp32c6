@@ -8,6 +8,7 @@ typedef enum _event_type {
     event_input_keyboard,
     event_control_keyboard,
     event_communication,
+    event_term_input,
 } event_type_t;
 
 typedef struct _event_input_keyboard_args {
@@ -43,5 +44,6 @@ typedef struct _event {
         event_input_keyboard_args_t   args_input_keyboard;
         event_control_keyboard_args_t args_control_keyboard;
         event_communication_args_t    args_communication;
+        char                          args_term_input;
     };
 } event_t;
