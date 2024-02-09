@@ -618,3 +618,4 @@ screen_t screen_settings_entry(QueueHandle_t application_event_queue, QueueHandl
             }
         }
     }
+}
