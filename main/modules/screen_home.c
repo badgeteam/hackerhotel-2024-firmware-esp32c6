@@ -146,18 +146,14 @@ void DisplayHomeEntry(int cursor) {
     pax_insert_png_buf(gfx, map_png_start, map_png_end - map_png_start, 0, 0, 0);
     AddOneTextSWtoBuffer(SWITCH_5, "Select");
     DrawArrowHorizontal(SWITCH_1);
+    pax_draw_line(gfx, WHITE, screen_pos[cursor][0] + 1, 0, screen_pos[cursor][0] + 1, 100);
+    pax_draw_line(gfx, WHITE, screen_pos[cursor][0] - 1, 0, screen_pos[cursor][0] - 1, 100);
+    pax_draw_line(gfx, WHITE, 0, screen_pos[cursor][1] - 1, gfx->height, screen_pos[cursor][1] - 1);
+    pax_draw_line(gfx, WHITE, 0, screen_pos[cursor][1] + 1, gfx->height, screen_pos[cursor][1] + 1);
     pax_draw_line(gfx, RED, screen_pos[cursor][0], 0, screen_pos[cursor][0], 100);
     pax_draw_line(gfx, RED, 0, screen_pos[cursor][1], gfx->height, screen_pos[cursor][1]);
     pax_center_text(gfx, BLACK, font1, fontsizeS * 2, gfx->height / 2, gfx->width - fontsizeS * 2, screen_name[cursor]);
-    // pax_insert_png_buf(
-    //     gfx,
-    //     diamondb_png_start,
-    //     diamondb_png_end - diamondb_png_start,
-    //     screen_pos[cursor][0],
-    //     screen_pos[cursor][1],
-    //     0
-    // );
-    bsp_display_flush_with_lut(lut_1s);
+    bsp_display_flush_with_lut(lut_4s);
 }
 
 screen_t screen_Nametag(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {

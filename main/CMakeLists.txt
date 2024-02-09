@@ -132,6 +132,10 @@ idf_component_register(
                 ${project_dir}/resources/pointclick/town1_w.png
                 ${project_dir}/resources/pointclick/town2_n.png
                 ${project_dir}/resources/pointclick/town2_s.png
+                ${project_dir}/resources/pointclick/end_d1.png
+                ${project_dir}/resources/pointclick/end_d2.png
+                ${project_dir}/resources/pointclick/end_d3.png
+                ${project_dir}/resources/pointclick/end_d4.png
                 ${project_dir}/resources/sprites/b_arrow1.png
                 ${project_dir}/resources/sprites/b_arrow2.png
                 ${project_dir}/resources/sprites/b_arrow1t.png

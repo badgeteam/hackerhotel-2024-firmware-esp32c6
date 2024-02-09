@@ -217,6 +217,15 @@ extern const uint8_t dock1_n_S[] asm("_binary_dock1_n_png_start");
 extern const uint8_t dock1_n_E[] asm("_binary_dock1_n_png_end");
 extern const uint8_t dock1_e_S[] asm("_binary_dock1_e_png_start");
 extern const uint8_t dock1_e_E[] asm("_binary_dock1_e_png_end");
+extern const uint8_t end_d1_S[] asm("_binary_end_d1_png_start");
+extern const uint8_t end_d1_E[] asm("_binary_end_d1_png_end");
+extern const uint8_t end_d2_S[] asm("_binary_end_d2_png_start");
+extern const uint8_t end_d2_E[] asm("_binary_end_d2_png_end");
+extern const uint8_t end_d3_S[] asm("_binary_end_d3_png_start");
+extern const uint8_t end_d3_E[] asm("_binary_end_d3_png_end");
+extern const uint8_t end_d4_S[] asm("_binary_end_d4_png_start");
+extern const uint8_t end_d4_E[] asm("_binary_end_d4_png_end");
+
 
 screen_t screen_pointclick_dock1(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int cursor[nb_state]
@@ -1459,13 +1468,47 @@ screen_t screen_end(
 ) {
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
+    int cursor      = main_cursor[0];
+    int nbdirection = 14;
     int displayflag = 1;
     ESP_LOGE(TAG, "end");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
-    // pax_insert_png_buf(gfx, end_S, end_E - end_S, 0, 0, 0);
     bsp_display_flush();
     while (1) {
+        if (displayflag) {
+            pax_background(gfx, WHITE);
+            switch (cursor) {
+                case 0:
+                    {
+                        pax_insert_png_buf(gfx, end_d1_S, end_d1_E - end_d1_S, 0, 0, 0);
+                        break;
+                    }
+                case 1:
+                    {
+                        pax_insert_png_buf(gfx, end_d2_S, end_d2_E - end_d2_S, 0, 0, 0);
+                        break;
+                    }
+                case 2:
+                    {
+                        pax_insert_png_buf(gfx, end_d3_S, end_d3_E - end_d3_S, 0, 0, 0);
+                        break;
+                    }
+                case 3:
+                    {
+                        pax_insert_png_buf(gfx, end_d4_S, end_d4_E - end_d4_S, 0, 0, 0);
+                        break;
+                    }
+                case 4:
+                    {
+                        return screen_home;
+                        break;
+                    }
+                default: break;
+            }
+            bsp_display_flush();
+            displayflag = 0;
+        }
         event_t event = {0};
         if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
             switch (event.type) {
@@ -1473,16 +1516,18 @@ screen_t screen_end(
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
                         case SWITCH_1: break;
-                        case SWITCH_2:
-                        case SWITCH_3:
-                            main_cursor[0] = 0;
-                            return screen_home;
-                            break;
-                        case SWITCH_4: break;
+                        case SWITCH_2: break;
+                        case SWITCH_3: cursor++; break;
+                        case SWITCH_4: cursor--; break;
                         case SWITCH_5: break;
                         default: break;
                     }
+                    if (cursor < 0)
+                        cursor = nbdirection - 1;
+                    if (cursor > (nbdirection - 1))
+                        cursor = 0;
                     displayflag = 1;
+                    ESP_LOGE(TAG, "cursor %d", cursor);
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
             }
