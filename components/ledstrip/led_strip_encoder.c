@@ -7,7 +7,7 @@
 #include "led_strip_encoder.h"
 #include "esp_check.h"
 
-static char const * TAG = "led_encoder";
+static const char* TAG = "led_encoder";
 
 typedef struct {
     rmt_encoder_t     base;
@@ -20,7 +20,7 @@ typedef struct {
 static size_t rmt_encode_led_strip(
     rmt_encoder_t*       encoder,
     rmt_channel_handle_t channel,
-    void const *         primary_data,
+    const void*          primary_data,
     size_t               data_size,
     rmt_encode_state_t*  ret_state
 ) {
@@ -79,7 +79,7 @@ static esp_err_t rmt_led_strip_encoder_reset(rmt_encoder_t* encoder) {
     return ESP_OK;
 }
 
-esp_err_t rmt_new_led_strip_encoder(led_strip_encoder_config_t const * config, rmt_encoder_handle_t* ret_encoder) {
+esp_err_t rmt_new_led_strip_encoder(const led_strip_encoder_config_t* config, rmt_encoder_handle_t* ret_encoder) {
     esp_err_t                ret         = ESP_OK;
     rmt_led_strip_encoder_t* led_encoder = NULL;
     ESP_GOTO_ON_FALSE(config && ret_encoder, ESP_ERR_INVALID_ARG, err, TAG, "invalid argument");

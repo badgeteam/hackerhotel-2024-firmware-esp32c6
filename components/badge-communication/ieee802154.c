@@ -17,7 +17,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-void reverse_memcpy(uint8_t* restrict dst, uint8_t const * restrict src, size_t n) {
+void reverse_memcpy(uint8_t* restrict dst, const uint8_t* restrict src, size_t n) {
     size_t i;
 
     for (i = 0; i < n; ++i) {
@@ -26,9 +26,9 @@ void reverse_memcpy(uint8_t* restrict dst, uint8_t const * restrict src, size_t 
 }
 
 uint8_t ieee802154_header(
-    uint16_t const *      src_pan,
+    const uint16_t*       src_pan,
     ieee802154_address_t* src,
-    uint16_t const *      dst_pan,
+    const uint16_t*       dst_pan,
     ieee802154_address_t* dst,
     uint8_t               ack,
     uint8_t*              header,

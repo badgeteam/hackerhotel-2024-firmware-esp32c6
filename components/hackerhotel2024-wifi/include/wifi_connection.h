@@ -1,19 +1,18 @@
 #pragma once
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stddef.h>
-
+#include "esp_eap_client.h"
 #include "esp_wifi.h"
 #include "esp_wifi_types.h"
-#include "esp_eap_client.h"
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 // Simpler interpretation of WiFi signal strength.
 typedef enum {
-	WIFI_STRENGTH_VERY_BAD,
-	WIFI_STRENGTH_BAD,
-	WIFI_STRENGTH_GOOD,
-	WIFI_STRENGTH_VERY_GOOD,
+    WIFI_STRENGTH_VERY_BAD,
+    WIFI_STRENGTH_BAD,
+    WIFI_STRENGTH_GOOD,
+    WIFI_STRENGTH_VERY_GOOD,
 } wifi_strength_t;
 
 // Thresholds for aforementioned signal strength definitions.
@@ -46,7 +45,14 @@ bool wifi_connect(const char* aSsid, const char* aPassword, wifi_auth_mode_t aAu
 // Will wait for the connection to be established.
 // Will try at most `aRetryMax` times, or forever if it's WIFI_INFINITE_RETRIES.
 // Returns whether WiFi has successfully connected.
-bool wifi_connect_ent(const char* aSsid, const char *aIdent, const char *aAnonIdent, const char* aPassword, esp_eap_ttls_phase2_types phase2, uint8_t aRetryMax);
+bool wifi_connect_ent(
+    const char*               aSsid,
+    const char*               aIdent,
+    const char*               aAnonIdent,
+    const char*               aPassword,
+    esp_eap_ttls_phase2_types phase2,
+    uint8_t                   aRetryMax
+);
 
 // Connect to a traditional username/password WiFi network.
 // Will return right away.
@@ -56,7 +62,14 @@ void wifi_connect_async(const char* aSsid, const char* aPassword, wifi_auth_mode
 // Connect to a WPA2 enterprise WiFi network.
 // Will return right away.
 // Will try at most `aRetryMax` times, or forever if it's WIFI_INFINITE_RETRIES.
-void wifi_connect_ent_async(const char* aSsid, const char *aIdent, const char *aAnonIdent, const char* aPassword, esp_eap_ttls_phase2_types phase2, uint8_t aRetryMax);
+void wifi_connect_ent_async(
+    const char*               aSsid,
+    const char*               aIdent,
+    const char*               aAnonIdent,
+    const char*               aPassword,
+    esp_eap_ttls_phase2_types phase2,
+    uint8_t                   aRetryMax
+);
 
 // Disconnect from WiFi and do not attempt to reconnect.
 void wifi_disconnect();
@@ -71,7 +84,7 @@ bool wifi_is_connected();
 // Scan for WiFi networks.
 // Updates the APs pointer if non-null.
 // Returns the number of APs found.
-size_t wifi_scan(wifi_ap_record_t **aps);
+size_t wifi_scan(wifi_ap_record_t** aps);
 
 // Get the strength value for a given RSSI.
 wifi_strength_t wifi_rssi_to_strength(int8_t rssi);

@@ -1,10 +1,9 @@
 #pragma once
 
-#include <stdbool.h>
-
+#include "esp_eap_client.h"
 #include "esp_wifi.h"
 #include "esp_wifi_types.h"
-#include "esp_eap_client.h"
+#include <stdbool.h>
 
 // Camp WiFi settings.
 #define WIFI_DEFAULT_SSID     "Hackerhotel"

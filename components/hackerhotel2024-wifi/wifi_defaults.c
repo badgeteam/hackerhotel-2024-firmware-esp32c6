@@ -1,5 +1,5 @@
 #include "wifi_defaults.h"
-
+#include <stdio.h>
 #include <esp_err.h>
 #include <esp_log.h>
 #include <esp_system.h>
@@ -9,10 +9,9 @@
 #include <nvs.h>
 #include <nvs_flash.h>
 #include <sdkconfig.h>
-#include <stdio.h>
 #include <string.h>
 
-static const char *TAG = "wifi_defaults";
+static const char* TAG = "wifi_defaults";
 
 bool wifi_set_defaults() {
     nvs_handle_t handle;

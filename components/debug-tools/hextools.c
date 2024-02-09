@@ -1,11 +1,10 @@
 #include "hextools.h"
-
 #include <stdint.h>
 #include <stdio.h>
 
 // Bin 2 hex printer.
 void rawprinthex(uint64_t val, int digits) {
-    char const hextab[] = "0123456789ABCDEF";
+    const char hextab[] = "0123456789ABCDEF";
     for (; digits > 0; digits--) {
         putc(hextab[(val >> (digits * 4 - 4)) & 15], stdout);
     }
@@ -14,12 +13,12 @@ void rawprinthex(uint64_t val, int digits) {
 #define LOGK_HEXDUMP_COLS   16
 #define LOGK_HEXDUMP_GROUPS 4
 // Print a hexdump, override the address shown (usually for debug purposes).
-void hexdump_vaddr(char const *msg, void const *data, size_t size, size_t vaddr) {
+void hexdump_vaddr(const char* msg, const void* data, size_t size, size_t vaddr) {
     fputs(msg, stdout);
     putc('\r', stdout);
     putc('\n', stdout);
 
-    uint8_t const *ptr = data;
+    const uint8_t* ptr = data;
     for (size_t y = 0; y * LOGK_HEXDUMP_COLS < size; y++) {
         rawprinthex((size_t)vaddr + y * LOGK_HEXDUMP_COLS, sizeof(size_t) * 2);
         putc(':', stdout);
@@ -56,6 +55,6 @@ void hexdump_vaddr(char const *msg, void const *data, size_t size, size_t vaddr)
     putc('\n', stdout);
 }
 
-void hexdump(char const *msg, void const *data, size_t size) {
+void hexdump(const char* msg, const void* data, size_t size) {
     hexdump_vaddr(msg, data, size, (size_t)data);
 }

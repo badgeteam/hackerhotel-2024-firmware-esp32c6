@@ -9,7 +9,7 @@
 #include "managed_i2c.h"
 #include <string.h>
 
-static char const * TAG = "printer";
+static const char* TAG = "printer";
 
 bool printer_addon_present() {
     uint16_t  version = 0;
@@ -60,7 +60,7 @@ esp_err_t printer_addon_status(bool* select, bool* pe, bool* busy, bool* ack, bo
     return ESP_OK;
 }
 
-esp_err_t printer_addon_send(uint8_t const * data, uint8_t length) {
+esp_err_t printer_addon_send(const uint8_t* data, uint8_t length) {
     esp_err_t res = i2c_write_reg_n(I2C_BUS, PRINTER_ADDON_ADDRESS, PRINTER_ADDON_REG_DATA, data, length);
     if (res != ESP_OK) {
         ESP_LOGE(TAG, "i2c write data: error %d", res);

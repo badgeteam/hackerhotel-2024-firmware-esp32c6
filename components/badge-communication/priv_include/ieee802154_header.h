@@ -65,9 +65,9 @@ typedef struct {
 } ieee802154_address_t;
 
 uint8_t ieee802154_header(
-    uint16_t const *      src_pan,
+    const uint16_t*       src_pan,
     ieee802154_address_t* src,
-    uint16_t const *      dst_pan,
+    const uint16_t*       dst_pan,
     ieee802154_address_t* dst,
     uint8_t               ack,
     uint8_t*              header,

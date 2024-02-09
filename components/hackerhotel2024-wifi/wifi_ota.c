@@ -1,7 +1,4 @@
 #include "wifi_ota.h"
-
-#include <sys/socket.h>
-
 #include "bsp.h"
 #include "esp_event.h"
 #include "esp_http_client.h"
@@ -16,53 +13,44 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 #include "string.h"
-#include "esp_wifi.h"
 #include "wifi_cert.h"
 #include "wifi_connect.h"
+#include <sys/socket.h>
 
 #define HASH_LEN 32
 
-static const char *TAG = "OTA update";
+static const char* TAG = "OTA update";
 
-esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
+esp_err_t _http_event_handler(esp_http_client_event_t* evt) {
     switch (evt->event_id) {
-        case HTTP_EVENT_ERROR:
-            ESP_LOGD(TAG, "HTTP_EVENT_ERROR");
-            break;
-        case HTTP_EVENT_ON_CONNECTED:
-            ESP_LOGD(TAG, "HTTP_EVENT_ON_CONNECTED");
-            break;
-        case HTTP_EVENT_HEADERS_SENT:
-            ESP_LOGD(TAG, "HTTP_EVENT_HEADERS_SENT");
-            break;
+        case HTTP_EVENT_ERROR: ESP_LOGD(TAG, "HTTP_EVENT_ERROR"); break;
+        case HTTP_EVENT_ON_CONNECTED: ESP_LOGD(TAG, "HTTP_EVENT_ON_CONNECTED"); break;
+        case HTTP_EVENT_HEADERS_SENT: ESP_LOGD(TAG, "HTTP_EVENT_HEADERS_SENT"); break;
         case HTTP_EVENT_ON_HEADER:
             ESP_LOGD(TAG, "HTTP_EVENT_ON_HEADER, key=%s, value=%s", evt->header_key, evt->header_value);
             break;
-        case HTTP_EVENT_ON_DATA:
-            ESP_LOGD(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
-            break;
-        case HTTP_EVENT_ON_FINISH:
-            ESP_LOGD(TAG, "HTTP_EVENT_ON_FINISH");
-            break;
-        case HTTP_EVENT_DISCONNECTED:
-            ESP_LOGD(TAG, "HTTP_EVENT_DISCONNECTED");
-            break;
-        case HTTP_EVENT_REDIRECT:
-            ESP_LOGD(TAG, "HTTP_EVENT_REDIRECT");
-            break;
+        case HTTP_EVENT_ON_DATA: ESP_LOGD(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len); break;
+        case HTTP_EVENT_ON_FINISH: ESP_LOGD(TAG, "HTTP_EVENT_ON_FINISH"); break;
+        case HTTP_EVENT_DISCONNECTED: ESP_LOGD(TAG, "HTTP_EVENT_DISCONNECTED"); break;
+        case HTTP_EVENT_REDIRECT: ESP_LOGD(TAG, "HTTP_EVENT_REDIRECT"); break;
     }
     return ESP_OK;
 }
 
-static esp_err_t validate_image_header(esp_app_desc_t *new_app_info) {
+static esp_err_t validate_image_header(esp_app_desc_t* new_app_info) {
     if (new_app_info == NULL) {
         return ESP_ERR_INVALID_ARG;
     }
 
-    const esp_partition_t *running = esp_ota_get_running_partition();
+    const esp_partition_t* running = esp_ota_get_running_partition();
     esp_app_desc_t         running_app_info;
     if (esp_ota_get_partition_description(running, &running_app_info) == ESP_OK) {
-        ESP_LOGI(TAG, "Running firmware version: %s, available firmware version: %s", running_app_info.version, new_app_info->version);
+        ESP_LOGI(
+            TAG,
+            "Running firmware version: %s, available firmware version: %s",
+            running_app_info.version,
+            new_app_info->version
+        );
         if (memcmp(new_app_info->version, running_app_info.version, sizeof(new_app_info->version)) == 0) {
             ESP_LOGW(TAG, "Already up-to-date!");
             return ESP_FAIL;
@@ -78,7 +66,7 @@ static esp_err_t _http_client_init_cb(esp_http_client_handle_t http_client) {
     if (esp_http_client_set_header(http_client, "Badge-Type", "MCH2022") != ESP_OK) {
         ESP_LOGW(TAG, "Failed to add type header");
     }
-    const esp_partition_t *running = esp_ota_get_running_partition();
+    const esp_partition_t* running = esp_ota_get_running_partition();
     esp_app_desc_t         running_app_info;
     if (esp_ota_get_partition_description(running, &running_app_info) == ESP_OK) {
         if (esp_http_client_set_header(http_client, "Badge-Firmware", running_app_info.version) != ESP_OK) {
@@ -113,14 +101,21 @@ static void get_sha256_of_partitions(void) {
     print_sha256(sha_256, "SHA-256 for current firmware: ");
 }*/
 
-void display_ota_state(const char *text, bool nightly) {
-    pax_buf_t *pax_buffer = bsp_get_gfx_buffer();
+void display_ota_state(const char* text, bool nightly) {
+    pax_buf_t* pax_buffer = bsp_get_gfx_buffer();
     pax_noclip(pax_buffer);
-    const pax_font_t *font = pax_font_saira_regular;
+    const pax_font_t* font = pax_font_saira_regular;
     pax_background(pax_buffer, WHITE);
     pax_draw_text(pax_buffer, BLACK, font, 20, 0, 0, "OTA update");
-    pax_draw_text(pax_buffer, nightly ? RED : BLACK, font, 18, 0, 20,
-                  nightly ? "Channel: experimental" : "Channel: stable");
+    pax_draw_text(
+        pax_buffer,
+        nightly ? RED : BLACK,
+        font,
+        18,
+        0,
+        20,
+        nightly ? "Channel: experimental" : "Channel: stable"
+    );
     pax_draw_text(pax_buffer, BLACK, font, 18, 0, 60, text);
     bsp_display_flush();
 }
@@ -128,7 +123,8 @@ void display_ota_state(const char *text, bool nightly) {
 void ota_update(bool nightly) {
     display_ota_state("Connecting to WiFi...", nightly);
 
-    char *ota_url = nightly ? "https://hackerhotel2024.ota.bodge.team/hackerhotel2024_dev.bin" : "https://hackerhotel2024.ota.bodge.team/hackerhotel2024.bin";
+    char* ota_url = nightly ? "https://hackerhotel2024.ota.bodge.team/hackerhotel2024_dev.bin"
+                            : "https://hackerhotel2024.ota.bodge.team/hackerhotel2024.bin";
 
     if (!wifi_connect_to_stored()) {
         display_ota_state("Failed to connect to WiFi", nightly);
@@ -141,11 +137,16 @@ void ota_update(bool nightly) {
 
     ESP_LOGI(TAG, "Starting OTA update");
 
-    esp_http_client_config_t config = {.url = ota_url, .use_global_ca_store = true, .event_handler = _http_event_handler, .keep_alive_enable = true};
+    esp_http_client_config_t config = {
+        .url                 = ota_url,
+        .use_global_ca_store = true,
+        .event_handler       = _http_event_handler,
+        .keep_alive_enable   = true};
 
     esp_https_ota_config_t ota_config = {
-        .http_config         = &config,
-        .http_client_init_cb = _http_client_init_cb,  // Register a callback to be invoked after esp_http_client is initialized
+        .http_config = &config,
+        .http_client_init_cb =
+            _http_client_init_cb,  // Register a callback to be invoked after esp_http_client is initialized
 #ifdef CONFIG_EXAMPLE_ENABLE_PARTIAL_HTTP_DOWNLOAD
         .partial_http_download = true,
         .max_http_request_size = CONFIG_EXAMPLE_HTTP_REQUEST_SIZE,
@@ -199,7 +200,7 @@ void ota_update(bool nightly) {
         int len_read  = esp_https_ota_get_image_len_read(https_ota_handle);
         int percent   = (len_read * 100) / len_total;
 
-        if ((percent/10) != (percent_shown/10)) {
+        if ((percent / 10) != (percent_shown / 10)) {
             ESP_LOGI(TAG, "Downloading %d / %d (%d%%)", len_read, len_total, percent);
             percent_shown = percent;
             char buffer[128];

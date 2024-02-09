@@ -17,6 +17,6 @@
 bool      printer_addon_present();
 esp_err_t printer_addon_control(bool select, bool init, bool autofd);
 esp_err_t printer_addon_status(bool* select, bool* pe, bool* busy, bool* ack, bool* error);
-esp_err_t printer_addon_send(uint8_t const * data, uint8_t length);
+esp_err_t printer_addon_send(const uint8_t* data, uint8_t length);
 bool      printer_initialize();
 esp_err_t printer_print(char* text);

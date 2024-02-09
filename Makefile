@@ -116,6 +116,13 @@ luttool:
 .PHONY: format
 format:
 	find main/ -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' | xargs clang-format -i
-	find components/epaper -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' | xargs clang-format -i
-	find components/hackerhotel2024-bsp -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' | xargs clang-format -i
+	find components/addon-printer -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' | xargs clang-format -i
+	find components/badge-communication -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' | xargs clang-format -i
+	find components/bus-i2c -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' | xargs clang-format -i
 	find components/ch32 -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' | xargs clang-format -i
+	find components/debug-tools -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' | xargs clang-format -i
+	find components/epaper -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' | xargs clang-format -i
+	find components/gui-toolkit -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' | xargs clang-format -i
+	find components/hackerhotel2024-bsp -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' | xargs clang-format -i
+	find components/hackerhotel2024-wifi -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' | xargs clang-format -i
+	find components/ledstrip -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' | xargs clang-format -i

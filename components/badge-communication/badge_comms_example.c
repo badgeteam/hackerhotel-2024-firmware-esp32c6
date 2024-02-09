@@ -5,7 +5,7 @@
 #include "memory.h"
 #include "time.h"
 
-static char const * TAG = "bodge comms example";
+static const char* TAG = "bodge comms example";
 
 void receive_timestamp(void) {
     // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_time_t
