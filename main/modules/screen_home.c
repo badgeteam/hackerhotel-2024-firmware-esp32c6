@@ -157,7 +157,7 @@ void DisplayHomeEntry(int cursor) {
     //     screen_pos[cursor][1],
     //     0
     // );
-    bsp_display_flush();
+    bsp_display_flush_with_lut(lut_1s);
 }
 
 screen_t screen_Nametag(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
@@ -200,7 +200,7 @@ screen_t screen_Nametag(QueueHandle_t application_event_queue, QueueHandle_t key
     pax_background(gfx, WHITE);
     AddSWtoBufferLR("Map", "Rename");
     pax_draw_text(gfx, RED, font1, scale, (290 - dims.x) / 2, (100 - dims.y) / 2, nickname);
-    bsp_display_flush();
+    bsp_display_flush_with_lut(lut_8s);
 
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, false, false, false, true);

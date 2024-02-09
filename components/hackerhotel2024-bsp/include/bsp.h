@@ -56,6 +56,18 @@ esp_err_t bsp_display_message(const char* title, const char* message);
 
 hink_t* bsp_get_epaper();
 
+/** \brief Flushes the framebuffer to the epaper display with a temporary LUT. Restores previous LUT after refresh.
+ *
+ * \details Flushes the framebuffer to the epaper display with a temporary LUT. Restores previous LUT after refresh.
+ *
+ * \retval ESP_OK   The function succesfully executed
+ * \retval ESP_FAIL The function failed, possibly indicating hardware failure
+ *
+ * Check the esp_err header file from the ESP-IDF for a complete list of error codes
+ * returned by SDK functions.
+ */
+ esp_err_t bsp_display_flush_with_lut(epaper_lut_t lut);
+
 /** \brief Flushes the framebuffer to the epaper display
  *
  * \details Flushes the framebuffer to the epaper display.
@@ -117,6 +129,13 @@ void bsp_restart();
  */
 
 esp_err_t bsp_apply_lut(epaper_lut_t lut_type);
+
+/** \brief Get current LUT for the epaper screen
+ *
+ * \details Get current LUT for the epaper screen
+ */
+
+epaper_lut_t bsp_cur_lut(void);
 
 /** \brief Wait for a button to be pressed
  *

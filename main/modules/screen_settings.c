@@ -515,6 +515,9 @@ screen_t screen_lut_dial(QueueHandle_t application_event_queue, QueueHandle_t ke
             default: break;
         }
 
+        bsp_apply_lut(activeLut);
+        nvs_set_u8_wrapped("system", "lut", (uint8_t) activeLut);
+
         event_t event = {0};
         if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
             switch (event.type) {
