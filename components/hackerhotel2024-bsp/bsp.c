@@ -680,11 +680,7 @@ uint8_t bsp_wait_for_button_number() {
 }
 
 void bsp_flush_button_queue() {
-    QueueHandle_t               queue         = bsp_get_button_queue();
-    coprocessor_input_message_t buttonMessage = {0};
-    while (xQueueReceive(queue, &buttonMessage, 0) == pdTRUE) {
-        // empty.
-    }
+    xQueueReset(bsp_get_button_queue());
 }
 
 esp_err_t bsp_set_addressable_led(uint32_t color) {
