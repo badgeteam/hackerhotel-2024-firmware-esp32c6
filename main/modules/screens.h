@@ -2,7 +2,6 @@
 
 typedef enum _screen {
     screen_scrambled,
-    screen_batterystatus,
     screen_billboard,
     screen_nametag,
     screen_library,

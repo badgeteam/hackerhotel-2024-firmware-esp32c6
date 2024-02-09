@@ -180,6 +180,8 @@ void app_main(void) {
 
     // Main application
     screen_t current_screen = screen_pointclick;
+    if (release_type == production)
+        current_screen = screen_mascots;
     while (1) {
         ESP_LOGE(TAG, "Screen: %d", current_screen);
         switch (current_screen) {
@@ -191,7 +193,6 @@ void app_main(void) {
                 }
             case screen_settings:
                 {
-                    ESP_LOGE(TAG, "sAAAAAAAAAAAAAAAA ");
                     current_screen = screen_settings_entry(application_event_queue, keyboard_event_queue);
                     break;
                 }
@@ -248,11 +249,6 @@ void app_main(void) {
             case screen_credits:
                 {
                     current_screen = screen_credits_entry(application_event_queue, keyboard_event_queue);
-                    break;
-                }
-            case screen_batterystatus:
-                {
-                    current_screen = screen_batterystatus_entry(application_event_queue, keyboard_event_queue);
                     break;
                 }
             case screen_mascots:

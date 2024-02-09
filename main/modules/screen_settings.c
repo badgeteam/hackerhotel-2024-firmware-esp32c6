@@ -23,12 +23,12 @@
 #include <stdio.h>
 #include <string.h>
 
-extern uint8_t const settings_png_start[] asm("_binary_settings_png_start");
-extern uint8_t const settings_png_end[] asm("_binary_settings_png_end");
-extern uint8_t const battery1_png_start[] asm("_binary_battery1_png_start");
-extern uint8_t const battery1_png_end[] asm("_binary_battery1_png_end");
-extern uint8_t const battery2_png_start[] asm("_binary_battery2_png_start");
-extern uint8_t const battery2_png_end[] asm("_binary_battery2_png_end");
+extern const uint8_t settings_png_start[] asm("_binary_settings_png_start");
+extern const uint8_t settings_png_end[] asm("_binary_settings_png_end");
+extern const uint8_t battery1_png_start[] asm("_binary_battery1_png_start");
+extern const uint8_t battery1_png_end[] asm("_binary_battery1_png_end");
+extern const uint8_t battery2_png_start[] asm("_binary_battery2_png_start");
+extern const uint8_t battery2_png_end[] asm("_binary_battery2_png_end");
 
 static const char* TAG = "settings";
 
@@ -107,18 +107,6 @@ static void ota_update_wrapped(QueueHandle_t keyboard_event_queue, bool nightly)
 //     nvs_close(handle);
 //     return res;
 // }
-
-static void edit_nickname(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
-    char nickname[nicknamelength] = {0};
-    nvs_get_str_wrapped("owner", "nickname", nickname, sizeof(nickname));
-    bool res =
-        textedit("What is your name?", application_event_queue, keyboard_event_queue, nickname, sizeof(nickname));
-    if (res) {
-        nvs_set_str_wrapped("owner", "nickname", nickname);
-    }
-
-    configure_keyboard(keyboard_event_queue);
-}
 
 typedef enum _menu_wifi_action {
     /* ==== GENERIC ACTIONS ==== */
@@ -390,35 +378,35 @@ static void draw() {
     bsp_display_flush();
 }
 
-screen_t screen_settings_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
-    if (log)
-        ESP_LOGE(TAG, "Enter screen_settings_entry");
-    configure_keyboard(keyboard_event_queue);
-    draw();
+// screen_t screen_settings_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+//     if (log)
+//         ESP_LOGE(TAG, "Enter screen_settings_entry");
+//     configure_keyboard(keyboard_event_queue);
+//     draw();
 
-    while (1) {
-        event_t event = {0};
-        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
-            switch (event.type) {
-                case event_input_button: break;  // Ignore raw button input
-                case event_input_keyboard:
-                    switch (event.args_input_keyboard.action) {
-                        case SWITCH_1: return screen_home; break;
-                        case SWITCH_2: edit_nickname(application_event_queue, keyboard_event_queue); break;
-                        case SWITCH_3: edit_wifi(application_event_queue, keyboard_event_queue); break;
-                        case SWITCH_4: ota_update_wrapped(keyboard_event_queue, false); break;
-                        case SWITCH_5: ota_update_wrapped(keyboard_event_queue, true); break;
-                        default: break;
-                    }
-                    draw();
-                    break;
-                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
-            }
-        }
-    }
-}
+//     while (1) {
+//         event_t event = {0};
+//         if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+//             switch (event.type) {
+//                 case event_input_button: break;  // Ignore raw button input
+//                 case event_input_keyboard:
+//                     switch (event.args_input_keyboard.action) {
+//                         case SWITCH_1: return screen_home; break;
+//                         // case SWITCH_2: edit_nickname(application_event_queue, keyboard_event_queue); break;
+//                         case SWITCH_3: edit_wifi(application_event_queue, keyboard_event_queue); break;
+//                         case SWITCH_4: ota_update_wrapped(keyboard_event_queue, false); break;
+//                         case SWITCH_5: ota_update_wrapped(keyboard_event_queue, true); break;
+//                         default: break;
+//                     }
+//                     draw();
+//                     break;
+//                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+//             }
+//         }
+//     }
+// }
 
-float const OCVLut[32][2] = {{0, 2.7296},      {0.0164, 3.0857}, {0.0328, 3.2497}, {0.0492, 3.3247}, {0.0656, 3.3609},
+const float OCVLut[32][2] = {{0, 2.7296},      {0.0164, 3.0857}, {0.0328, 3.2497}, {0.0492, 3.3247}, {0.0656, 3.3609},
                              {0.082, 3.3821},  {0.0984, 3.3991}, {0.1092, 3.41},   {0.12, 3.4212},   {0.1308, 3.4329},
                              {0.1416, 3.4448}, {0.1523, 3.457},  {0.188, 3.4963},  {0.2237, 3.5314}, {0.2594, 3.5611},
                              {0.2951, 3.5865}, {0.3308, 3.6099}, {0.3867, 3.6471}, {0.4426, 3.6893}, {0.4985, 3.7382},
@@ -426,27 +414,36 @@ float const OCVLut[32][2] = {{0, 2.7296},      {0.0164, 3.0857}, {0.0328, 3.2497
                              {0.8526, 4.0694}, {0.9132, 4.108},  {0.9306, 4.1187}, {0.9479, 4.1297}, {0.9653, 4.1412},
                              {0.9826, 4.1537}, {1, 4.1676}};
 
-screen_t screen_batterystatus_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+screen_t screen_settings_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     if (log)
         ESP_LOGE(TAG, "Enter screen_home_entry");
     // update the keyboard event handler settings
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
-    char voltage[15]    = "";
-    char SoC[15]        = "";
-    char oldvoltage[15] = "";
-    char oldSoC[15]     = "";
-    int  timer_track    = 0;
+    char voltage[15]      = "";
+    char SoC[15]          = "";
+    char oldvoltage[15]   = "";
+    char oldSoC[15]       = "";
+    int  timer_track      = 0;
+    int  oldchargingstate = -1;
 
     while (1) {
-        if ((esp_timer_get_time() / 1000000) > (timer_track * timer_battery_screen)) {
+        if ((esp_timer_get_time() / 1000000) > (timer_track * timer_battery_screen) ||
+            (oldchargingstate != bsp_battery_charging())) {
             timer_track = (esp_timer_get_time() / (timer_battery_screen * 1000000)) + 1;
 
             pax_buf_t* gfx = bsp_get_gfx_buffer();
             if (bsp_battery_charging())
-                pax_insert_png_buf(gfx, battery1_png_start, battery1_png_end - battery1_png_start, 0, 0, 0);
-            else
                 pax_insert_png_buf(gfx, battery2_png_start, battery2_png_end - battery2_png_start, 0, 0, 0);
+            else
+                pax_insert_png_buf(gfx, battery1_png_start, battery1_png_end - battery1_png_start, 0, 0, 0);
+
+            AddOneTextSWtoBuffer(SWITCH_1, "Exit");
+            AddOneTextSWtoBuffer(SWITCH_2, "Screen");
+            AddOneTextSWtoBuffer(SWITCH_3, "WiFi");
+            AddOneTextSWtoBuffer(SWITCH_4, "OTA");
+            AddOneTextSWtoBuffer(SWITCH_5, "OTA dev");
+
 
             float SoCfromlut = 0;
             for (int i = 0; i < 32; i++)
@@ -455,12 +452,16 @@ screen_t screen_batterystatus_entry(QueueHandle_t application_event_queue, Queue
             snprintf(SoC, 15, "%.0f", SoCfromlut);
             ESP_LOGE(TAG, "SoCfromlut %f", SoCfromlut);
             snprintf(voltage, 15, "%.2fV", bsp_battery_voltage());
-            pax_center_text(gfx, BLACK, font1, fontsizeS, 32, 20, voltage);
-            pax_center_text(gfx, BLACK, font1, fontsizeS, 31, 50, SoC);
-            if (strcmp(voltage, oldvoltage) || strcmp(SoC, oldSoC))
+            pax_center_text(gfx, BLACK, font1, fontsizeS, 32, 14, voltage);
+            pax_center_text(gfx, BLACK, font1, fontsizeS, 31, 44, SoC);
+            ESP_LOGE(TAG, "bsp_battery_charging %d", bsp_battery_charging());
+
+            if (strcmp(voltage, oldvoltage) || strcmp(SoC, oldSoC) || (oldchargingstate != bsp_battery_charging())) {
                 bsp_display_flush();
-            strcpy(oldvoltage, voltage);
-            strcpy(oldSoC, SoC);
+                strcpy(oldvoltage, voltage);
+                strcpy(oldSoC, SoC);
+                oldchargingstate = bsp_battery_charging();
+            }
         }
 
         event_t event = {0};
@@ -469,7 +470,11 @@ screen_t screen_batterystatus_entry(QueueHandle_t application_event_queue, Queue
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
-                        default: return screen_home; break;
+                        case SWITCH_1: return screen_home; break;
+                        case SWITCH_2: break;
+                        case SWITCH_3: edit_wifi(application_event_queue, keyboard_event_queue); break;
+                        case SWITCH_4: ota_update_wrapped(keyboard_event_queue, false); break;
+                        case SWITCH_5: ota_update_wrapped(keyboard_event_queue, true); break;
                     }
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);

@@ -20,6 +20,13 @@
 #define font1     (&PRIVATE_pax_font_sky)
 #define fontsizeS 9
 
+#define dev        0
+#define production 1
+
+// SET PRODUCTION OR DEV HERE
+#define release_type dev
+//
+
 #define log 1
 
 extern const int telegraph_X[20];
@@ -27,7 +34,8 @@ extern const int telegraph_Y[20];
 extern event_t   kbsettings;
 
 void DisplayError(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, const char* errorstr);
-
+void draw_squi1(int y);
+void draw_squi2(int y);
 void DrawArrowVertical(int _sw);
 void DrawArrowHorizontal(int _sw);
 void Addborder1toBuffer(void);

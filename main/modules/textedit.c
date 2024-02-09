@@ -61,16 +61,21 @@ void flush_event_queue(QueueHandle_t queue) {
 // }
 
 void textedit_draw(const char* title, char* value, bool capslock) {
-    const pax_font_t* font = pax_font_saira_regular;
-    pax_buf_t*        gfx  = bsp_get_gfx_buffer();
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
-    pax_draw_text(gfx, RED, font, 18, 5, 5, title);
-    pax_draw_line(gfx, BLACK, 0, 20, 295, 20);
-    pax_draw_text(gfx, BLACK, font, 18, 5, 25, value);
-    pax_insert_png_buf(gfx, textedit_png_start, textedit_png_end - textedit_png_start, 0, gfx->width - 24, 0);
-    if (capslock) {
-        pax_insert_png_buf(gfx, capslock_png_start, capslock_png_end - capslock_png_start, 135, gfx->width - 24, 0);
-    }
+    AddSWtoBuffer("=/<", "Backsp.", "", "Exit w/s", "Save");
+    if (capslock)
+        AddOneTextSWtoBuffer(SWITCH_3, "CAPS L.");
+    else
+        AddOneTextSWtoBuffer(SWITCH_3, "caps l.");
+    pax_center_text(gfx, RED, font1, fontsizeS * 2, gfx->height / 2, 12, title);
+    draw_squi1(37);
+    // pax_draw_line(gfx, BLACK, 0, 20, 295, 20);
+    pax_draw_text(gfx, BLACK, font1, fontsizeS * 2, 8, 48, value);
+    // pax_insert_png_buf(gfx, textedit_png_start, textedit_png_end - textedit_png_start, 0, gfx->width - 24, 0);
+    // if (capslock) {
+    //     pax_insert_png_buf(gfx, capslock_png_start, capslock_png_end - capslock_png_start, 135, gfx->width - 24, 0);
+    // }
     bsp_display_flush();
 }
 
@@ -254,11 +259,12 @@ bool textedit(
     bool capslock = false;
     textedit_draw(title, output, capslock);
     // configure_keyboard(keyboard_event_queue, capslock);
-    configure_keyboard_caps(keyboard_event_queue, capslock);
-    configure_keyboard_typing(keyboard_event_queue, true);
-    configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
 
     while (1) {
+        // Kinda bodge to make sure the button presses work, should only be set once, but Guru cannot find the bug
+        configure_keyboard_caps(keyboard_event_queue, capslock);
+        configure_keyboard_typing(keyboard_event_queue, true);
+        configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
         event_t event = {0};
         if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
             switch (event.type) {

@@ -120,6 +120,24 @@ void DisplayError(QueueHandle_t application_event_queue, QueueHandle_t keyboard_
     }
 }
 
+void draw_squi1(int y) {
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    if (y < 4)
+        y = 0;
+    else
+        y = y - 4;
+    pax_insert_png_buf(gfx, squi1_png_start, squi1_png_end - squi1_png_start, (296 - 272) / 2, y, 0);
+}
+
+void draw_squi2(int y) {
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    if (y < 6)
+        y = 0;
+    else
+        y = y - 6;
+    pax_insert_png_buf(gfx, squi2_png_start, squi2_png_end - squi2_png_start, (296 - 286) / 2, y, 0);
+}
+
 void DrawArrowVertical(int _sw) {
     pax_insert_png_buf(
         bsp_get_gfx_buffer(),
