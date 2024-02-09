@@ -268,7 +268,8 @@ bool textedit(
         event_t event = {0};
         if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
             switch (event.type) {
-                case event_input_button: break;  // Ignore raw button input
+                case event_input_button: break;   // Ignore raw button input
+                case event_communication: break;  // Ignore communication
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
                         case SWITCH_5:
@@ -306,8 +307,9 @@ bool textedit(
                                 output_size
                             );
                             // configure_keyboard(keyboard_event_queue, capslock);
-                            configure_keyboard_caps(keyboard_event_queue, capslock);
-                            configure_keyboard_typing(keyboard_event_queue, true);
+                            // configure_keyboard_caps(keyboard_event_queue, capslock);
+                            // configure_keyboard_typing(keyboard_event_queue, true);
+                            InitKeyboard(keyboard_event_queue);
                             break;
                         default: break;
                     }

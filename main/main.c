@@ -59,9 +59,11 @@
 
 static const char* TAG = "main";
 
-static QueueHandle_t keyboard_event_queue    = NULL;
-static QueueHandle_t application_event_queue = NULL;
-static QueueHandle_t input_handler_queues[3] = {NULL};
+static QueueHandle_t keyboard_event_queue                 = NULL;
+static QueueHandle_t application_event_queue              = NULL;
+static QueueHandle_t background_communication_event_queue = NULL;
+static QueueHandle_t input_handler_queues[3]              = {NULL};
+static QueueHandle_t communication_handler_queues[3]      = {NULL};
 
 esp_err_t setup(void) {
     const esp_app_desc_t* app_description = esp_app_get_description();
@@ -91,11 +93,6 @@ esp_err_t setup(void) {
         return res;
     }
 
-    if ((res = init_badge_comms()) != ESP_OK) {
-        bsp_display_error("Failed to initialize\nBodge comms failed to start");
-        return res;
-    }
-
     return res;
 }
 
@@ -109,53 +106,122 @@ void app_main(void) {
     }
 
     // Create event queues
-    keyboard_event_queue    = xQueueCreate(8, sizeof(event_t));
-    application_event_queue = xQueueCreate(8, sizeof(event_t));
+    keyboard_event_queue                 = xQueueCreate(8, sizeof(event_t));
+    application_event_queue              = xQueueCreate(8, sizeof(event_t));
+    background_communication_event_queue = xQueueCreate(8, sizeof(event_t));
 
     // Set up the input handler
     input_handler_queues[0] = keyboard_event_queue;
     input_handler_queues[1] = application_event_queue;
     input_handler_queues[2] = NULL;  // Terminate the list
-    res                     = start_task_button_input_handler(input_handler_queues);
-    if (res != ESP_OK) {
+    if ((res = start_task_button_input_handler(input_handler_queues)) != ESP_OK) {
         bsp_display_error("Failed to start button input handler task");
         return;
     }
 
     // Set up the keyboard
-    res = start_task_keyboard(keyboard_event_queue, application_event_queue);
-    if (res != ESP_OK) {
+    if ((res = start_task_keyboard(keyboard_event_queue, application_event_queue)) != ESP_OK) {
         bsp_display_error("Failed to start keyboard task");
         return;
     }
 
-    // LONG ADDRESS OWNER
-    uint8_t mac_owner[8];
-    for (int y = 0; y < 8; y++) {
-        esp_read_mac(mac_owner, ESP_MAC_IEEE802154);
-    }
-    // SET SHORT ADDRESS OWNER
-    uint16_t short_address_owner = (mac_owner[6] << 8) | mac_owner[7];
-    if (esp_ieee802154_get_short_address() != short_address_owner) {
-        esp_ieee802154_set_short_address(short_address_owner);
+    // Wireless communication
+    communication_handler_queues[0] = application_event_queue;
+    communication_handler_queues[1] = background_communication_event_queue;
+    communication_handler_queues[2] = NULL;  // Terminate the list
+
+    if ((res = badge_communication_init(communication_handler_queues)) != ESP_OK) {
+        bsp_display_error("Failed to initialize\nBodge comms failed to init");
+        return;
     }
 
-    if (log) {
-        for (int y = 0; y < 8; y++) {
-            ESP_LOGE(TAG, "MAC address owner: %02x", mac_owner[y]);
-        }
-        ESP_LOGE(TAG, "short address owner: %04x", short_address_owner);
-        ESP_LOGE(TAG, "stored owner short address: %04x", esp_ieee802154_get_short_address());
+    if ((res = badge_communication_start()) != ESP_OK) {
+        bsp_display_error("Failed to initialize\nBodge comms failed to start");
+        return;
     }
 
     // Printer
     if (printer_initialize()) {
-        char teststring[] = "Hello from ESP32C6\r\n";
+        char outstring[256] = {0};
+        while (1) {
+            event_t event;
+            if (xQueueReceive(background_communication_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+                switch (event.type) {
+                    case event_communication:
+                        {
+                            switch (event.args_communication.type) {
+                                case MESSAGE_TYPE_CHAT:
+                                    char* nickname = event.args_communication.data_chat.nickname;
+                                    char* payload  = event.args_communication.data_chat.payload;
+                                    sprintf(outstring, "<%s> %s\r\n", nickname, payload);
+                                    printf("%s", outstring);
+                                    res = printer_print(outstring);
+                                    if (res != ESP_OK) {
+                                        ESP_LOGE(TAG, "Failed to print");
+                                    }
+                                    break;
+                                default:
+                                    {
+                                        ESP_LOGI(
+                                            TAG,
+                                            "Received comms messsage type %u, ignored",
+                                            event.args_communication.type
+                                        );
+                                        break;
+                                    }
+                            }
+                        }
+                    default: break;
+                }
+            }
+        }
+        /*char teststring[] = "Hello from ESP32C6\r\n";
         res               = printer_print(teststring);
         if (res != ESP_OK) {
             ESP_LOGE(TAG, "Failed to print");
-        }
+        }*/
     }
+
+    // Comms test
+
+    /*char outstring[256] = {0};
+    while (1) {
+        event_t event;
+        if (xQueueReceive(background_communication_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_communication:
+                    {
+                        switch (event.args_communication.type) {
+                            case MESSAGE_TYPE_CHAT:
+                                char* nickname = event.args_communication.data_chat.nickname;
+                                char* payload  = event.args_communication.data_chat.payload;
+                                sprintf(outstring, "<%s> %s\r\n", nickname, payload);
+                                printf("%s", outstring);
+                                break;
+                            default:
+                                {
+                                    ESP_LOGI(
+                                        TAG,
+                                        "Received comms messsage type %u, ignored",
+                                        event.args_communication.type
+                                    );
+                                    break;
+                                }
+                        }
+                    }
+                default: break;
+            }
+        }
+    }*/
+
+    /*while (1) {
+        badge_message_chat_t message = {
+            .nickname = "Test",
+            .payload  = "Hello world",
+        };
+        badge_communication_send_chat(&message);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }*/
 
     // SAO leds test
     bsp_sao_addressable_led_enable();

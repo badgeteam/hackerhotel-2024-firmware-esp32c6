@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #define FRAME_VERSION_STD_2003 0
@@ -43,7 +44,7 @@ typedef struct mac_fcs {
     uint8_t destAddrType               : 2;
     uint8_t frameVer                   : 2;
     uint8_t srcAddrType                : 2;
-} mac_fcs_t;
+} __attribute__((packed)) mac_fcs_t;
 
 typedef struct {
     uint8_t mode;  // ADDR_MODE_NONE || ADDR_MODE_SHORT || ADDR_MODE_LONG
@@ -61,4 +62,14 @@ uint8_t ieee802154_header(
     uint8_t               ack,
     uint8_t*              header,
     uint8_t               header_length
+);
+
+uint8_t ieee802154_header_parse(
+    uint8_t*              header,
+    mac_fcs_t*            fcs_out,
+    uint16_t*             src_pan,
+    ieee802154_address_t* src,
+    uint16_t*             dst_pan,
+    ieee802154_address_t* dst,
+    bool*                 ack
 );

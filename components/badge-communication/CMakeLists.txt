@@ -5,4 +5,5 @@ idf_component_register(
         REQUIRES
         "nvs_flash"
         "ieee802154"
+        "hackerhotel2024-bsp"
 )

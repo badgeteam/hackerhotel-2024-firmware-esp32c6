@@ -30,8 +30,9 @@ extern const uint8_t border1_png_start[] asm("_binary_border1_png_start");
 extern const uint8_t border1_png_end[] asm("_binary_border1_png_end");
 
 void receive_strb(void) {
-    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
-    QueueHandle_t BS_queue = badge_comms_add_listener(MESSAGE_TYPE_BATTLESHIP, sizeof(badge_message_battleship));
+    // get a queue to listen on, for message type MESSAGE_TYPE_TIME, and size badge_message_timestamp_t
+    QueueHandle_t BS_queue =
+        NULL;  // badge_comms_add_listener(MESSAGE_TYPE_BATTLESHIP, sizeof(badge_message_battleship_t));
 
     // check if an error occurred (check logs for the reason)
     if (BS_queue == NULL) {
@@ -48,7 +49,7 @@ void receive_strb(void) {
         xQueueReceive(BS_queue, &message, portMAX_DELAY);
 
         // typecast the message data to the expected message type
-        badge_message_battleship* ts = (badge_message_battleship*)message.data;
+        badge_message_battleship_t* ts = (badge_message_battleship_t*)message.data;
 
 
 
@@ -63,10 +64,10 @@ void receive_strb(void) {
 
             // to clean up a listener, call the remove listener
             // this free's the queue from heap
-            esp_err_t err = badge_comms_remove_listener(BS_queue);
+            // esp_err_t err = badge_comms_remove_listener(BS_queue);
 
             // show the result of the listener removal
-            ESP_LOGI(TAG, "unsubscription result: %s", esp_err_to_name(err));
+            // ESP_LOGI(TAG, "unsubscription result: %s", esp_err_to_name(err));
             return;
         }
     }
@@ -74,8 +75,8 @@ void receive_strb(void) {
 
 void send_strb(void) {
     // first we create a struct with the data, as we would like to receive on the other side
-    badge_message_battleship data;
-    uint8_t                  _dataBS[BSpayload];
+    badge_message_battleship_t data;
+    uint8_t                    _dataBS[BSpayload];
     for (int i = 0; i < BSpayload; i++) _dataBS[i] = 69;
     for (int i = 0; i < BSpayload; i++) data.dataBS[i] = _dataBS[i];
 
@@ -86,7 +87,7 @@ void send_strb(void) {
     memcpy(message.data, &data, message.data_len_to_send);
 
     // send the message over the comms bus
-    badge_comms_send_message(&message);
+    // badge_communication_send(&message);
     vTaskDelay(pdMS_TO_TICKS(100));  // SUPER DUPER IMPORTANT, OTHERWISE THE LEDS MESS WITH THE MESSAGE
     bsp_set_addressable_led(LED_GREEN);
     vTaskDelay(pdMS_TO_TICKS(100));
@@ -108,7 +109,8 @@ screen_t screen_template_entry(QueueHandle_t application_event_queue, QueueHandl
 
     int displayflag = 1;
 
-    QueueHandle_t BS_queue = badge_comms_add_listener(MESSAGE_TYPE_BATTLESHIP, sizeof(badge_message_battleship));
+    QueueHandle_t BS_queue =
+        NULL;  // badge_comms_add_listener(MESSAGE_TYPE_BATTLESHIP, sizeof(badge_message_battleship_t));
     if (BS_queue == NULL) {
         ESP_LOGE(TAG, "Failed to add listener");
     } else
@@ -121,7 +123,7 @@ screen_t screen_template_entry(QueueHandle_t application_event_queue, QueueHandl
             ESP_LOGI(TAG, "listening");
             badge_comms_message_t message;
             xQueueReceive(BS_queue, &message, portMAX_DELAY);
-            badge_message_battleship* ts = (badge_message_battleship*)message.data;
+            badge_message_battleship_t* ts = (badge_message_battleship_t*)message.data;
 
             for (int i = 0; i < BSpayload; i++) {
                 // ennemy_data[i] = ts->dataBS[i];
