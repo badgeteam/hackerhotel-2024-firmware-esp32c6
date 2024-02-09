@@ -55,9 +55,11 @@
 
 #define NUM_SWITCHES   5
 #define NUM_ROTATION   10
-#define NUM_CHARACTERS 36
+#define NUM_CHARACTERS 37
 // first 26 are letters,
-// last 10 are numbers 0-9
+// next 10 are numbers 0-9
+// last character is space
+
 
 // Types
 typedef struct _coprocessor_input_message {
