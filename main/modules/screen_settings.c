@@ -30,6 +30,8 @@ extern const uint8_t battery1_png_start[] asm("_binary_battery1_png_start");
 extern const uint8_t battery1_png_end[] asm("_binary_battery1_png_end");
 extern const uint8_t battery2_png_start[] asm("_binary_battery2_png_start");
 extern const uint8_t battery2_png_end[] asm("_binary_battery2_png_end");
+extern const uint8_t lutdial_png_start[] asm("_binary_lutdial_png_start");
+extern const uint8_t lutdial_png_end[] asm("_binary_lutdial_png_end");
 
 static const char* TAG = "settings";
 
@@ -482,6 +484,59 @@ screen_t screen_settings_entry(QueueHandle_t application_event_queue, QueueHandl
                         case SWITCH_4: ota_update_wrapped(keyboard_event_queue, false); break;
                         case SWITCH_5: ota_update_wrapped(keyboard_event_queue, true); break;
                     }
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+
+screen_t screen_lut_dial(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+    if (log)
+        ESP_LOGE(TAG, "Enter screen_home_entry");
+    // update the keyboard event handler settings
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, true, false, false, false, false);
+    configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_5, true);
+    int          cursor    = 0;
+    epaper_lut_t activeLut = lut_4s;
+
+    while (1) {
+        pax_buf_t* gfx = bsp_get_gfx_buffer();
+        pax_insert_png_buf(gfx, lutdial_png_start, lutdial_png_end - lutdial_png_start, 0, 0, 0);
+        AddOneTextSWtoBuffer(SWITCH_1, "Exit");
+        DrawArrowHorizontal(SWITCH_5);
+
+        switch (cursor) {
+            case 0: activeLut = lut_1s; break;
+            case 1: activeLut = lut_4s; break;
+            case 2: activeLut = lut_8s; break;
+            case 3: activeLut = lut_full; break;
+            default: break;
+        }
+
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: return screen_home; break;
+                        case SWITCH_2: break;
+                        case SWITCH_3: break;
+                        case SWITCH_4: break;
+                        case SWITCH_5: break;
+                        case SWITCH_L5:
+                            if (cursor)
+                                cursor--;
+                            break;
+                        case SWITCH_R5:
+                            if (cursor)
+                                cursor++;
+                            break;
+                    }
+
+
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
             }
