@@ -148,7 +148,7 @@ void keyboard_handle_input(keyboard_state_t* state, coprocessor_input_message_t*
             }
         }
     }
-else if ((state->button_state_left && state->button_state_right && state->enable_typing)||((state->button_state_left == 0x09) && state->enable_typing)||((state->button_state_left == 0x06) && state->enable_typing)||((state->button_state_right == 0x18) && state->enable_typing)||((state->button_state_right == 0x14) && state->enable_typing)||((state->button_state_right == 0x12) && state->enable_typing)||((state->button_state_right == 0x11) && state->enable_typing)) {
+else if ((state->button_state_left && state->button_state_right && state->enable_typing)||((state->button_state_left == 0x09) && state->enable_typing)||((state->button_state_left == 0x06) && state->enable_typing)||((state->button_state_right == 0x18) && state->enable_typing)||((state->button_state_right == 0x14) && state->enable_typing)||((state->button_state_right == 0x12) && state->enable_typing)||((state->button_state_right == 0x11) && state->enable_typing)||((state->button_state_left == 0x11) && state->enable_typing)) {
         // Select character
         if (state->button_state_left == SW1_CP && state->button_state_right == SW5_CP && state->enable_characters[0]) {
             character  = 'A';
@@ -261,8 +261,12 @@ else if ((state->button_state_left && state->button_state_right && state->enable
             character  = 'Z';
             leds      |= LED_E + LED_F + LED_G + LED_K + LED_N + LED_R + LED_S + LED_T;
         }
+        if (state->button_state_left == 0x11 && state->enable_characters[36]) {
+            character  = ' ';
+            leds      |= LED_M + LED_N + LED_O + LED_P + LED_H + LED_L;
+        }
 
-        if (character != '\0' && !state->capslock) {
+        if (character != '\0' && !state->capslock && character != ' ') {
             character += 32;  // replace uppercase character with lowercase character
         }
     }
