@@ -266,7 +266,7 @@ else if ((state->button_state_left && state->button_state_right && state->enable
             leds      |= LED_M + LED_N + LED_O + LED_P + LED_H + LED_L;
         }
 
-        if (character != '\0' && !state->capslock && character != ' ') {
+        if (character >= 'a' && character <= 'z' && !state->capslock) {
             character += 32;  // replace uppercase character with lowercase character
         }
     }
