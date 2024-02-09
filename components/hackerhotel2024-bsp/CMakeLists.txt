@@ -17,4 +17,5 @@ idf_component_register(
         "pax-codecs"
         "ledstrip"
         "app_update"
+        "badge-communication"
 )

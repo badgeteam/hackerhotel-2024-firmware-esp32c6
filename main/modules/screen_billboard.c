@@ -30,8 +30,8 @@ int  messagecursor = 0;
 int  initflag      = 0;
 
 // void receive_repertoire(void) {
-//     // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_time_t
-//     QueueHandle_t str_queue = badge_comms_add_listener(MESSAGE_TYPE_STRING, sizeof(badge_message_chat_t));
+//     // get a queue to listen on, for message type MESSAGE_TYPE_TIME, and size badge_message_time_t
+//     QueueHandle_t str_queue = badge_comms_add_listener(MESSAGE_TYPE_CHAT, sizeof(badge_message_chat_t));
 //     // check if an error occurred (check logs for the reason)
 //     if (str_queue == NULL) {
 //         ESP_LOGE(TAG, "Failed to add listener");
@@ -78,20 +78,20 @@ int  initflag      = 0;
 
 //     // then we wrap the data in something to send over the comms bus
 //     badge_comms_message_t message = {0};
-//     message.message_type          = MESSAGE_TYPE_STRING;
+//     message.message_type          = MESSAGE_TYPE_CHAT;
 //     message.data_len_to_send      = sizeof(data);
 //     memcpy(message.data, &data, message.data_len_to_send);
 
 //     // send the message over the comms bus
-//     badge_comms_send_message(&message);
+//     badge_communication_send(&message);
 //     bsp_set_addressable_led(LED_GREEN);
 //     vTaskDelay(pdMS_TO_TICKS(100));
 //     bsp_set_addressable_led(LED_OFF);
 // }
 
 void receive_str(void) {
-    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_time_t
-    QueueHandle_t str_queue = badge_comms_add_listener(MESSAGE_TYPE_STRING, sizeof(badge_message_chat_t));
+    // get a queue to listen on, for message type MESSAGE_TYPE_TIME, and size badge_message_time_t
+    QueueHandle_t str_queue = NULL;  // badge_comms_add_listener(MESSAGE_TYPE_CHAT, sizeof(badge_message_chat_t));
     // check if an error occurred (check logs for the reason)
     if (str_queue == NULL) {
         ESP_LOGE(TAG, "Failed to add listener");
@@ -119,32 +119,25 @@ void receive_str(void) {
 
             // to clean up a listener, call the remove listener
             // this free's the queue from heap
-            esp_err_t err = badge_comms_remove_listener(str_queue);
+            // esp_err_t err = badge_comms_remove_listener(str_queue);
 
             // show the result of the listener removal
-            ESP_LOGI(TAG, "unsubscription result: %s", esp_err_to_name(err));
+            // ESP_LOGI(TAG, "unsubscription result: %s", esp_err_to_name(err));
             return;
         }
     }
 }
 
 void send_str(char _nickname[nicknamelength], char _payload[messagelength]) {
-    // first we create a struct with the data, as we would like to receive on the other side
     badge_message_chat_t data;
     strcpy(data.nickname, _nickname);
     strcpy(data.payload, _payload);
-
-    // then we wrap the data in something to send over the comms bus
-    badge_comms_message_t message = {0};
-    message.message_type          = MESSAGE_TYPE_STRING;
-    message.data_len_to_send      = sizeof(data);
-    memcpy(message.data, &data, message.data_len_to_send);
-
-    // send the message over the comms bus
-    badge_comms_send_message(&message);
+    badge_communication_send_chat(&data);
 }
 
 void DisplayBillboard(int _addmessageflag, char* _nickname, char* _message) {
+    bsp_apply_lut(lut_4s);
+
     // set screen font and buffer
     const pax_font_t* font = pax_font_sky;
     pax_buf_t*        gfx  = bsp_get_gfx_buffer();
@@ -228,43 +221,19 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
     char nickname[nicknamelength]     = "";
     char playermessage[messagelength] = "";
 
-    // init broadcast receive
-    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_time_t
-    QueueHandle_t str_queue = badge_comms_add_listener(MESSAGE_TYPE_STRING, sizeof(badge_message_chat_t));
-    // check if an error occurred (check logs for the reason)
-    if (str_queue == NULL) {
-        ESP_LOGE(TAG, "Failed to add listener");
-    }
-    ESP_LOGI(TAG, "listening");
-    badge_comms_message_t message;
-
     DisplayBillboard(0, "", "");  // Draw billboard without adding message
-    // receive_repertoire();
-
 
     while (1) {
         event_t event = {0};
-
-        // upon receiving a message
-        if (xQueueReceive(str_queue, &message, pdMS_TO_TICKS(1)) == pdTRUE) {
-            badge_message_chat_t* ts = (badge_message_chat_t*)message.data;
-            ESP_LOGI(TAG, "Got a string: %s \n", ts->nickname);
-            ESP_LOGI(TAG, "Got a string: %s \n", ts->payload);
-            DisplayBillboard(1, ts->nickname, ts->payload);
-            bsp_set_addressable_led(LED_PURPLE);
-            vTaskDelay(pdMS_TO_TICKS(100));
-            bsp_set_addressable_led(LED_OFF);
-        }
-
-        if (xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE) {
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
 
             switch (event.type) {
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
                         case SWITCH_1:  // when exiting, remove the billboard channel listener
-                            esp_err_t err = badge_comms_remove_listener(str_queue);
-                            ESP_LOGI(TAG, "unsubscription result: %s", esp_err_to_name(err));
+                            // esp_err_t err = badge_comms_remove_listener(str_queue);
+                            // ESP_LOGI(TAG, "unsubscription result: %s", esp_err_to_name(err));
                             return screen_home;
                             break;
 
@@ -296,6 +265,20 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
                             break;
                         default: break;
                     }
+                case event_communication:
+                    switch (event.args_communication.type) {
+                        case MESSAGE_TYPE_CHAT:
+                            badge_message_chat_t* ts = &event.args_communication.data_chat;
+                            ESP_LOGI(TAG, "Got a string: %s \n", ts->nickname);
+                            ESP_LOGI(TAG, "Got a string: %s \n", ts->payload);
+                            DisplayBillboard(1, ts->nickname, ts->payload);
+                            bsp_set_addressable_led(LED_PURPLE);
+                            vTaskDelay(pdMS_TO_TICKS(100));
+                            bsp_set_addressable_led(LED_OFF);
+                            break;
+                        default: break;
+                    }
+                    break;
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
             }

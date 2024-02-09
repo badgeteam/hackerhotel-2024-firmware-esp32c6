@@ -89,8 +89,9 @@ screen_t screen_battleship_victory(
 );
 
 void receive_battleship(void) {
-    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_timestamp_t
-    QueueHandle_t BS_queue = badge_comms_add_listener(MESSAGE_TYPE_BATTLESHIP, sizeof(badge_message_battleship));
+    // get a queue to listen on, for message type MESSAGE_TYPE_TIME, and size badge_message_timestamp_t
+    QueueHandle_t BS_queue =
+        NULL;  // badge_comms_add_listener(MESSAGE_TYPE_BATTLESHIP, sizeof(badge_message_battleship_t));
     // check if an error occurred (check logs for the reason)
     if (BS_queue == NULL) {
         ESP_LOGE(TAG, "Failed to add listener");
@@ -106,7 +107,7 @@ void receive_battleship(void) {
         xQueueReceive(BS_queue, &message, portMAX_DELAY);
 
         // typecast the message data to the expected message type
-        badge_message_battleship* ts = (badge_message_battleship*)message.data;
+        badge_message_battleship_t* ts = (badge_message_battleship_t*)message.data;
 
 
         // show we got a message, and its contents
@@ -120,10 +121,10 @@ void receive_battleship(void) {
 
             // to clean up a listener, call the remove listener
             // this free's the queue from heap
-            esp_err_t err_ = badge_comms_remove_listener(BS_queue);
+            // esp_err_t err_ = badge_comms_remove_listener(BS_queue);
 
             // show the result of the listener removal
-            ESP_LOGI(TAG, "unsubscription result: %s", esp_err_to_name(err_));
+            // ESP_LOGI(TAG, "unsubscription result: %s", esp_err_to_name(err_));
             return;
         }
     }
@@ -131,7 +132,7 @@ void receive_battleship(void) {
 
 void send_battleship(uint8_t player_data[BSpayload]) {
     // first we create a struct with the data, as we would like to receive on the other side
-    badge_message_battleship data;
+    badge_message_battleship_t data;
     // uint8_t                  _dataBS[BSpayload];
     for (int i = 0; i < BSpayload; i++) data.dataBS[i] = player_data[i];
 
@@ -142,7 +143,7 @@ void send_battleship(uint8_t player_data[BSpayload]) {
     memcpy(message.data, &data, message.data_len_to_send);
 
     // send the message over the comms bus
-    badge_comms_send_message(&message);
+    // badge_communication_send(&message);
     vTaskDelay(pdMS_TO_TICKS(100));  // SUPER DUPER IMPORTANT, OTHERWISE THE LEDS MESS WITH THE MESSAGE
     bsp_set_addressable_led(LED_GREEN);
     vTaskDelay(pdMS_TO_TICKS(100));
@@ -796,7 +797,8 @@ screen_t screen_battleship_splash(
     bool invitationrepliedto = false;
 
     // init radio
-    QueueHandle_t BS_queue = badge_comms_add_listener(MESSAGE_TYPE_BATTLESHIP, sizeof(badge_message_battleship));
+    QueueHandle_t BS_queue =
+        NULL;  // badge_comms_add_listener(MESSAGE_TYPE_BATTLESHIP, sizeof(badge_message_battleship_t));
     if (BS_queue == NULL) {
         ESP_LOGE(TAG, "Failed to add listener");
     } else
@@ -860,7 +862,7 @@ screen_t screen_battleship_splash(
                 ESP_LOGI(TAG, "listening");
                 badge_comms_message_t message;
                 xQueueReceive(BS_queue, &message, portMAX_DELAY);
-                badge_message_battleship* ts = (badge_message_battleship*)message.data;
+                badge_message_battleship_t* ts = (badge_message_battleship_t*)message.data;
 
                 for (int i = 0; i < BSpayload; i++) {
                     ennemy_data[i] = ts->dataBS[i];
@@ -893,22 +895,23 @@ screen_t screen_battleship_splash(
                                     player_data[BS_invite] = BS_default;
                                     break;
                                 default:  // else exit
-                                    badge_comms_remove_listener(BS_queue);
+                                    // badge_comms_remove_listener(BS_queue);
                                     return screen_home;
                                     break;
                             }
                             break;
                         case SWITCH_2:  // offline
-                            badge_comms_remove_listener(BS_queue);
+                            // badge_comms_remove_listener(BS_queue);
                             return screen_BS_placeships;
                             break;
                         case SWITCH_3: DebugData(ennemy_data); break;
                         case SWITCH_4: DebugData(player_data); break;  // replay, to implement
                         case SWITCH_5:                                 // online
-                            badge_comms_remove_listener(BS_queue);  // to not clash with the listener of the repertoire
+                            // badge_comms_remove_listener(BS_queue);  // to not clash with the listener of the
+                            // repertoire
                             screen_repertoire_entry(application_event_queue, keyboard_event_queue, 1);
-                            BS_queue =
-                                badge_comms_add_listener(MESSAGE_TYPE_BATTLESHIP, sizeof(badge_message_battleship));
+                            BS_queue               = NULL;  // badge_comms_add_listener(MESSAGE_TYPE_BATTLESHIP,
+                                                            // sizeof(badge_message_battleship_t));
                             sendflag               = true;
                             listenflag             = true;
                             player_data[BS_invite] = invitation_sent;
@@ -1199,7 +1202,8 @@ screen_t screen_battleship_battle(
     playership[5] = bodge;
 
     // init radio
-    QueueHandle_t BS_queue = badge_comms_add_listener(MESSAGE_TYPE_BATTLESHIP, sizeof(badge_message_battleship));
+    QueueHandle_t BS_queue = NULL;
+    // badge_comms_add_listener(MESSAGE_TYPE_BATTLESHIP, sizeof(badge_message_battleship_t));
     if (BS_queue == NULL) {
         ESP_LOGE(TAG, "Failed to add listener");
     } else
@@ -1214,7 +1218,7 @@ screen_t screen_battleship_battle(
             vTaskDelay(pdMS_TO_TICKS(1000));
             *victoryflag = CheckforVictory(playerboard, ennemyboard);
             ESP_LOGE(TAG, "Victory flag: %d", *victoryflag);
-            badge_comms_remove_listener(BS_queue);
+            // badge_comms_remove_listener(BS_queue);
             vTaskDelay(pdMS_TO_TICKS(100));
             return screen_BS_victory;
         }
@@ -1291,7 +1295,7 @@ screen_t screen_battleship_battle(
         //         ESP_LOGI(TAG, "listening");
         //         badge_comms_message_t message;
         //         xQueueReceive(BS_queue, &message, portMAX_DELAY);
-        //         badge_message_battleship* ts = (badge_message_battleship*)message.data;
+        //         badge_message_battleship_t* ts = (badge_message_battleship_t*)message.data;
 
         //         for (int i = 0; i < BSpayload; i++) {
         //             ennemy_data[i] = ts->dataBS[i];
@@ -1332,7 +1336,7 @@ screen_t screen_battleship_battle(
                     switch (event.args_input_keyboard.action) {
                         case SWITCH_1:
                             if (Screen_Confirmation(forfeitprompt, application_event_queue, keyboard_event_queue)) {
-                                badge_comms_remove_listener(BS_queue);
+                                // badge_comms_remove_listener(BS_queue);
                                 vTaskDelay(pdMS_TO_TICKS(100));
                                 return screen_home;
                             } else

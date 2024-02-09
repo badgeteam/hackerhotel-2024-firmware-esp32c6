@@ -2,245 +2,238 @@
 // SPDX-FileCopyrightText: 2024 Hugo Trippaers
 
 #include "badge-communication.h"
+#include "badge-communication-ieee802154.h"
 #include "esp_check.h"
 #include "esp_err.h"
 #include "esp_ieee802154.h"
 #include "esp_log.h"
 #include "esp_mac.h"
+#include "events.h"
 #include "freertos/portmacro.h"
 #include "freertos/semphr.h"
-#include "ieee802154.h"
 #include "memory.h"
 
-static const char* TAG = "badge_comms";
+static const char* TAG = "communication";
 
-uint16_t TargetAddress = 0xFFFF;
+static bool initialized = false;
 
-static QueueHandle_t badge_comms_receive = NULL;
+static QueueHandle_t queue_raw_message_rx = NULL;
 
-typedef struct {
-    badge_comms_message_type_t message_type;
-    QueueHandle_t              queue;
-    uint8_t                    expected_message_len;
-    bool                       in_use;
-} badge_comms_listener_t;
+// Private functions
 
-#define BADGE_COMMS_DEFAULT_QUEUE_DEPTH (5)
-#define BADGE_COMMS_MAX_LISTENERS       (20)
-static badge_comms_listener_t badge_comms_listeners[BADGE_COMMS_MAX_LISTENERS] = {0};
-static SemaphoreHandle_t      badge_comms_listener_semaphore                   = NULL;
-
-QueueHandle_t badge_comms_add_listener(badge_comms_message_type_t message_type, uint8_t expected_message_len) {
-    if (badge_comms_listener_semaphore == NULL) {
-        ESP_LOGE(TAG, "Listener semaphore has not been initialised");
-        return NULL;
-    }
-
-    xSemaphoreTake(badge_comms_listener_semaphore, portMAX_DELAY);
-    QueueHandle_t           queue              = NULL;
-    // find the first entry in the badge_comms_listeners which is not in use
-    badge_comms_listener_t* available_listener = NULL;
-    for (uint32_t i = 0; i < BADGE_COMMS_MAX_LISTENERS; i++) {
-        if (!badge_comms_listeners[i].in_use) {
-            available_listener = &badge_comms_listeners[i];
+void print_addr(ieee802154_address_t* addr) {
+    switch (addr->mode) {
+        case ADDR_MODE_NONE: printf("NONE  ---\r\n"); break;
+        case ADDR_MODE_SHORT: printf("SHORT %04x\r\n", addr->short_address); break;
+        case ADDR_MODE_LONG:
+            printf(
+                "LONG  %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\r\n",
+                addr->long_address[0],
+                addr->long_address[1],
+                addr->long_address[2],
+                addr->long_address[3],
+                addr->long_address[4],
+                addr->long_address[5],
+                addr->long_address[6],
+                addr->long_address[7]
+            );
             break;
-        }
     }
-
-    // if no listener space is available, return NO_MEM
-    if (available_listener == NULL) {
-        ESP_LOGE(TAG, "Unable to find a free listener spot");
-        goto error;
-    }
-
-    // we only create a queue after we found a place for the queue to live
-    queue = xQueueCreate(BADGE_COMMS_DEFAULT_QUEUE_DEPTH, sizeof(badge_comms_message_t));
-    if (queue == NULL) {
-        ESP_LOGE(TAG, "Failed to allocate queue");
-        goto error;
-    }
-
-    available_listener->message_type         = message_type;
-    available_listener->queue                = queue;
-    available_listener->expected_message_len = expected_message_len;
-    available_listener->in_use               = true;
-
-error:
-    xSemaphoreGive(badge_comms_listener_semaphore);
-    return queue;
 }
 
-esp_err_t badge_comms_remove_listener(QueueHandle_t queue) {
-    if (queue == NULL) {
-        return ESP_ERR_INVALID_ARG;
-    }
-    if (badge_comms_listener_semaphore == NULL) {
-        return ESP_ERR_INVALID_STATE;
-    }
+void badge_communication_rx_task(void* param) {
+    QueueHandle_t* output_queues = (QueueHandle_t*)param;
 
-    esp_err_t err = ESP_ERR_NOT_FOUND;
-
-    xSemaphoreTake(badge_comms_listener_semaphore, portMAX_DELAY);
-
-    // find all listeners matching the message type and queue, and mark them as not in use
-    for (uint32_t i = 0; i < BADGE_COMMS_MAX_LISTENERS; i++) {
-        if (badge_comms_listeners[i].in_use && badge_comms_listeners[i].queue == queue) {
-            badge_comms_listeners[i].in_use = false;
-            err                             = ESP_OK;
-            vQueueDelete(queue);
-        }
-    }
-
-    xSemaphoreGive(badge_comms_listener_semaphore);
-    return err;
-}
-
-void esp_ieee802154_receive_done(uint8_t* frame, esp_ieee802154_frame_info_t* frame_info) {
-    BaseType_t xHigherPriorityTaskWoken = false;
-    xQueueSendToBackFromISR(badge_comms_receive, frame, &xHigherPriorityTaskWoken);
-    if (xHigherPriorityTaskWoken)
-        taskYIELD();
-}
-
-void badge_comms_send_message(badge_comms_message_t* comms_message) {
-    uint16_t pan_id = 0x1234;
-    uint8_t  buffer[256];
-
-    uint8_t eui64[8];
-    esp_ieee802154_get_extended_address(eui64);
-
-    ieee802154_address_t src = {
-        .mode         = ADDR_MODE_LONG,
-        .long_address = {eui64[0], eui64[1], eui64[2], eui64[3], eui64[4], eui64[5], eui64[6], eui64[7]}
-    };
-
-    ieee802154_address_t dst = {.mode = ADDR_MODE_SHORT, .short_address = TargetAddress};
-
-    //     ieee802154_address_t dst = {
-    //     .mode            = ADDR_MODE_LONG,
-    //     .long_address[0] = 0x40,
-    //     .long_address[1] = 0x4c,
-    //     .long_address[2] = 0xca,
-    //     .long_address[3] = 0xff,
-    //     .long_address[4] = 0xfe,
-    //     .long_address[5] = 0x49,
-    //     .long_address[6] = 0x5c,
-    //     .long_address[7] = 0x5c
-    // };
-
-    // ESP_LOGE(TAG, "Mac sent %02x", dst.long_address[0]);
-    // ESP_LOGE(TAG, "Mac sent %02x", dst.long_address[1]);
-    // ESP_LOGE(TAG, "Mac sent %02x", dst.long_address[2]);
-    // ESP_LOGE(TAG, "Mac sent %02x", dst.long_address[3]);
-    // ESP_LOGE(TAG, "Mac sent %02x", dst.long_address[4]);
-    // ESP_LOGE(TAG, "Mac sent %02x", dst.long_address[5]);
-    // ESP_LOGE(TAG, "Mac sent %02x", dst.long_address[6]);
-    // ESP_LOGE(TAG, "Mac sent %02x", dst.long_address[7]);
-
-    uint8_t hdr_len = ieee802154_header(&pan_id, &src, &pan_id, &dst, false, &buffer[1], sizeof(buffer) - 1);
-
-    buffer[hdr_len + 1] = comms_message->message_type & 0xFF;
-    memcpy(buffer + hdr_len + 2, comms_message->data, comms_message->data_len_to_send);
-
-    hdr_len += comms_message->data_len_to_send + 1;  // set userdata buffersize, and one for the message type
-    hdr_len += 2;                                    // save space for preceding protocol bytes
-
-    buffer[0] = hdr_len;  // packet length
-
-    esp_ieee802154_transmit(buffer, false);
-}
-
-void parse_message(
-    uint8_t  message[BADGE_COMMS_MAX_MESSAGE_SIZE],
-    uint8_t  userdata[BADGE_COMMS_USER_DATA_MAX_LEN],
-    uint8_t  from_mac[8],
-    uint8_t* userdata_len
-) {
-
-    uint8_t len = message[0] + 1;
-
-    //    uint16_t channel = message[5] <<8| message[4];
-    //    uint16_t to_address = message[7] <<8| message[6];
-
-    for (uint8_t i = 0; i < 8; i++) {
-        // parse and reverse the sender mac address
-        from_mac[7 - i] = message[i + 8];
-    }
-
-    *userdata_len =
-        MIN(len - 16 - 2,
-            BADGE_COMMS_USER_DATA_MAX_LEN);  // lenth - bytes till the beginning of userdata - proceeding protocol bytes
-    memcpy(userdata, message + 16, *userdata_len);
-
-    //    uint8_t rssi = message[len-2];
-    //    uint8_t lqi = message[len-1] & 0xF;
-}
-
-void badge_comms_receiver(void* param) {
-    (void)param;
-
-    uint8_t               received_message[BADGE_COMMS_MAX_MESSAGE_SIZE];
-    uint8_t               parsed_userdata[BADGE_COMMS_USER_DATA_MAX_LEN];
-    uint8_t               userdata_len;
-    badge_comms_message_t message;
-    uint8_t               from_mac[8];
+    ieee802154_message_t raw_message = {0};
 
     while (true) {
-        xQueueReceive(badge_comms_receive, received_message, portMAX_DELAY);
-        parse_message(received_message, parsed_userdata, from_mac, &userdata_len);
+        if (xQueueReceive(queue_raw_message_rx, &raw_message, portMAX_DELAY) == pdTRUE) {
+            ESP_LOGI(TAG, "Received badge communication packet");
+            uint8_t* raw_packet        = &raw_message.frame[1];
+            uint8_t  raw_packet_length = raw_message.frame[0];
 
-        message.message_type = parsed_userdata[0];
-        uint8_t data_len     = userdata_len - 1;
-        if (data_len >= BADGE_COMMS_USER_DATA_MAX_LEN) {
-            data_len = BADGE_COMMS_USER_DATA_MAX_LEN;
-        }
-        memcpy(message.data, parsed_userdata + 1, data_len);  // -1 for the message type
-        memcpy(message.from_mac, from_mac, 8);
+            if (raw_packet_length >= IEEE802154_FRAME_SIZE) {
+                ESP_LOGE(TAG, "Frame too large (%u), ignored", raw_packet_length);
+                continue;
+            }
 
-        xSemaphoreTake(badge_comms_listener_semaphore, portMAX_DELAY);
-        for (uint32_t i = 0; i < BADGE_COMMS_MAX_LISTENERS; i++) {
-            if (badge_comms_listeners[i].in_use == true &&
-                badge_comms_listeners[i].message_type == message.message_type &&
-                badge_comms_listeners[i].expected_message_len == data_len) {
-                xQueueSend(badge_comms_listeners[i].queue, &message, 0);
+            /*printf("< ");
+            for (uint8_t i = 0; i < raw_packet_length; i++) {
+                printf("%02x", raw_packet[i]);
+            }
+            printf("\r\n");*/
+
+            mac_fcs_t            fcs;
+            uint16_t             src_pan, dst_pan;
+            ieee802154_address_t src, dst;
+            bool                 ack;
+            uint8_t header_length = ieee802154_header_parse(raw_packet, &fcs, &src_pan, &src, &dst_pan, &dst, &ack);
+            /*printf("dst: %04x ", dst_pan);
+            print_addr(&dst);
+            printf("src: %04x ", src_pan);
+            print_addr(&src);
+            printf("ack: %u\r\n", ack);*/
+
+            if (fcs.frameType != FRAME_TYPE_DATA) {
+                continue;
+            }
+
+            badge_communication_packet_t* packet = (badge_communication_packet_t*)&raw_packet[header_length];
+
+            if (packet->magic != BADGE_COMMUNICATION_MAGIC) {
+                ESP_LOGE(TAG, "Invalid magic (%02x)", packet->magic);
+                continue;
+            }
+
+            if (packet->version != BADGE_COMMUNICATION_VERSION) {
+                ESP_LOGE(TAG, "Invalid version (%02x)", packet->version);
+                continue;
+            }
+
+            if (packet->repeat > 0) {
+                packet->repeat -= 1;
+                ESP_LOGW(TAG, "Repeating packet, repeat counter is %u", packet->repeat);
+                esp_ieee802154_transmit(raw_message.frame, false);
+            }
+
+            uint8_t data_length = raw_packet_length - header_length - sizeof(badge_communication_packet_t);
+
+            event_t event                 = {.type = event_communication};
+            event.args_communication.type = packet->type;
+            memcpy(event.args_communication.data, packet->content, data_length);
+
+            uint32_t index = 0;
+            while (output_queues[index] != NULL) {
+                xQueueSend(output_queues[index], &event, 0);
+                index++;
             }
         }
-        xSemaphoreGive(badge_comms_listener_semaphore);
     }
 }
 
-esp_err_t init_badge_comms(void) {
-    badge_comms_receive = xQueueCreate(5, BADGE_COMMS_MAX_MESSAGE_SIZE);
-    if (badge_comms_receive == NULL) {
+// Public functions
+
+esp_err_t badge_communication_init(QueueHandle_t* output_queues) {
+    if (initialized) {
+        ESP_LOGI(TAG, "Badge communication is already initialized");
+        return ESP_OK;
+    }
+
+    queue_raw_message_rx = xQueueCreate(BADGE_COMMS_RX_QUEUE_DEPTH, sizeof(badge_comms_message_t));
+    if (queue_raw_message_rx == NULL) {
+        ESP_LOGE(TAG, "Failed to allocate queue");
         return ESP_ERR_NO_MEM;
     }
 
-    badge_comms_listener_semaphore = xSemaphoreCreateMutex();
-    if (badge_comms_listener_semaphore == NULL) {
-        ESP_LOGE(TAG, "Failed to create listener semaphore");
-        return ESP_ERR_NO_MEM;
-    }
+    ESP_RETURN_ON_ERROR(esp_ieee802154_enable(), TAG, "Failed to enable IEEE802154");
+    ESP_RETURN_ON_ERROR(esp_ieee802154_set_promiscuous(false), TAG, "Failed to set radio mode");
+    ESP_RETURN_ON_ERROR(esp_ieee802154_set_rx_when_idle(true), TAG, "Failed to set receive when idle");
+    ESP_RETURN_ON_ERROR(esp_ieee802154_set_panid(BADGE_COMMUNICATION_PAN), TAG, "Failed to set PAN identifier");
+    ESP_RETURN_ON_ERROR(esp_ieee802154_set_channel(BADGE_COMMUNICATION_CHANNEL), TAG, "Failed ot set channel");
 
-    ESP_RETURN_ON_ERROR(esp_ieee802154_enable(), TAG, "Failed to enable antenna");
-    esp_ieee802154_set_promiscuous(false);
-    esp_ieee802154_set_rx_when_idle(true);
-    esp_ieee802154_set_panid(0x1234);
+    // ESP_RETURN_ON_ERROR(esp_ieee802154_set_panid(0x1234), TAG, "Failed to set PAN identifier");
+    // ESP_RETURN_ON_ERROR(esp_ieee802154_set_channel(11), TAG, "Failed ot set channel");
+
     uint8_t mac[8] = {0};
-    ESP_RETURN_ON_ERROR(esp_read_mac(mac, ESP_MAC_IEEE802154), TAG, "Failed to read mac");
-    esp_ieee802154_set_extended_address(mac);
-    ESP_RETURN_ON_ERROR(esp_ieee802154_receive(), TAG, "Failed to enable badge_comms_receive");
+    ESP_RETURN_ON_ERROR(esp_read_mac(mac, ESP_MAC_IEEE802154), TAG, "Failed to read mac address");
+    ESP_LOGI(
+        TAG,
+        "MAC address: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
+        mac[0],
+        mac[1],
+        mac[2],
+        mac[3],
+        mac[4],
+        mac[5],
+        mac[6],
+        mac[7]
+    );
+    ESP_RETURN_ON_ERROR(esp_ieee802154_set_extended_address(mac), TAG, "Failed to set mac address");
 
-    if (!xTaskCreate(badge_comms_receiver, "badge_comms", 2048, NULL, 8, NULL)) {
+    uint16_t short_address = (mac[6] << 8) | mac[7];
+    ESP_RETURN_ON_ERROR(esp_ieee802154_set_short_address(short_address), TAG, "Failed to set short address");
+
+    ESP_LOGI(TAG, "Short address: %04x", short_address);
+
+    if (xTaskCreate(badge_communication_rx_task, "badge-communication", 2048, (void*)output_queues, 8, NULL) !=
+        pdPASS) {
+        ESP_LOGE(TAG, "Failed to create task");
         return ESP_FAIL;
     }
+
+    initialized = true;
 
     return ESP_OK;
 }
 
-esp_err_t start_badge_comms() {
+esp_err_t badge_communication_start() {
     return esp_ieee802154_receive();
 }
 
-esp_err_t stop_badge_comms() {
+esp_err_t badge_communication_stop() {
     return esp_ieee802154_sleep();
+}
+
+esp_err_t badge_communication_send(badge_comms_message_type_t type, uint8_t* content, uint8_t content_length) {
+    uint16_t pan_id = BADGE_COMMUNICATION_PAN;
+
+    if (content_length > BADGE_COMMS_USER_DATA_MAX_LEN) {
+        ESP_LOGE(TAG, "Message too long");
+        return ESP_FAIL;
+    }
+
+    ieee802154_address_t src = {.mode = ADDR_MODE_LONG};
+    esp_ieee802154_get_extended_address(src.long_address);
+
+    ieee802154_address_t dst = {.mode = ADDR_MODE_SHORT, .short_address = 0xFFFF};  // Broadcast
+
+    uint8_t raw_packet[256] = {0};
+    uint8_t raw_packet_length =
+        ieee802154_header(&pan_id, &src, &pan_id, &dst, false, &raw_packet[1], sizeof(raw_packet) - 1);
+
+    badge_communication_packet_t* packet = (badge_communication_packet_t*)&raw_packet[1 + raw_packet_length];
+    packet->magic                        = BADGE_COMMUNICATION_MAGIC;
+    packet->version                      = BADGE_COMMUNICATION_VERSION;
+    packet->repeat                       = 0;
+    packet->flags                        = 0;
+    packet->type                         = (uint8_t)type;
+    memcpy(packet->content, content, content_length);
+
+    raw_packet_length += content_length;  // set userdata buffersize, and one for the message type
+    raw_packet_length += 2;               // save space for preceding protocol bytes
+
+    raw_packet[0] = raw_packet_length;  // packet length
+
+    /*printf("> ");
+    for (uint8_t i = 0; i < raw_packet[0]; i++) {
+        printf("%02x", raw_packet[i + 1]);
+    }
+    printf("\r\n");*/
+
+    return esp_ieee802154_transmit(raw_packet, false);
+}
+
+esp_err_t badge_communication_send_time(badge_message_time_t* data) {
+    return badge_communication_send(MESSAGE_TYPE_TIME, (uint8_t*)data, sizeof(badge_message_time_t));
+}
+
+esp_err_t badge_communication_send_chat(badge_message_chat_t* data) {
+    return badge_communication_send(MESSAGE_TYPE_CHAT, (uint8_t*)data, sizeof(badge_message_chat_t));
+}
+
+esp_err_t badge_communication_send_repertoire(badge_message_chat_t* data) {
+    return badge_communication_send(MESSAGE_TYPE_REPERTOIRE, (uint8_t*)data, sizeof(badge_message_repertoire_t));
+}
+
+esp_err_t badge_communication_send_battleship(badge_message_chat_t* data) {
+    return badge_communication_send(MESSAGE_TYPE_BATTLESHIP, (uint8_t*)data, sizeof(badge_message_battleship_t));
+}
+
+// ESP-IDF callback functions
+
+void esp_ieee802154_receive_done(uint8_t* frame, esp_ieee802154_frame_info_t* frame_info) {
+    ieee802154_message_t message;
+    memcpy(&message.frame_info, frame_info, sizeof(esp_ieee802154_frame_info_t));
+    memcpy(message.frame, frame, IEEE802154_FRAME_SIZE);
+    xQueueSendToBackFromISR(queue_raw_message_rx, &message, NULL);
 }
