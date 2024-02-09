@@ -1,5 +1,6 @@
 #include "screen_home.h"
 #include "application.h"
+#include "badge_messages.h"
 #include "bsp.h"
 #include "coprocessor.h"
 #include "esp_err.h"
@@ -13,60 +14,76 @@
 #include "nvs.h"
 #include "pax_codecs.h"
 #include "pax_gfx.h"
+#include "screen_settings.h"
 #include "screens.h"
 #include "textedit.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
-extern uint8_t const diamondl_png_start[] asm("_binary_diamondl_png_start");
-extern uint8_t const diamondl_png_end[] asm("_binary_diamondl_png_end");
-extern uint8_t const diamondr_png_start[] asm("_binary_diamondr_png_start");
-extern uint8_t const diamondr_png_end[] asm("_binary_diamondr_png_end");
-extern uint8_t const diamondt_png_start[] asm("_binary_diamondt_png_start");
-extern uint8_t const diamondt_png_end[] asm("_binary_diamondt_png_end");
-extern uint8_t const diamondb_png_start[] asm("_binary_diamondb_png_start");
-extern uint8_t const diamondb_png_end[] asm("_binary_diamondb_png_end");
+extern const uint8_t diamondl_png_start[] asm("_binary_diamondl_png_start");
+extern const uint8_t diamondl_png_end[] asm("_binary_diamondl_png_end");
+extern const uint8_t diamondr_png_start[] asm("_binary_diamondr_png_start");
+extern const uint8_t diamondr_png_end[] asm("_binary_diamondr_png_end");
+extern const uint8_t diamondt_png_start[] asm("_binary_diamondt_png_start");
+extern const uint8_t diamondt_png_end[] asm("_binary_diamondt_png_end");
+extern const uint8_t diamondb_png_start[] asm("_binary_diamondb_png_start");
+extern const uint8_t diamondb_png_end[] asm("_binary_diamondb_png_end");
+
+extern const uint8_t map_png_start[] asm("_binary_map_png_start");
+extern const uint8_t map_png_end[] asm("_binary_map_png_end");
 
 static const char* TAG = "homescreen";
 
 // THIS LIST NEED TO MATCH SCREEN.H
-char const screen_name[13][30] = {
-    "Lighthouse",
+const char screen_name[13][30] = {
+    "Carondelet",
     "Engine room",
-    "Billboard",
-    "Name tag",
+    "Repertoire",
+    "Deibler",
     "Library",
 
-    "Deibler",
-    "Repertoire",
+    "Name tag",
     "Point & Click",
-    "settings",
-    "Carondelet",
+    "Billboard",
+    "Memorium",
+    "Lighthouse",
+
 
     "placeholder",
     "placeholder",
     "placeholder",
 };
 
-uint8_t const screen_pos[13][2] = {
-    {48, 100},
-    {200, 36},
-    {50, 50},
-    {50, 50},
-    {50, 50},
+const int screen_pos[13][2] = {
+    {21, 56},
+    {67, 62},
+    {134, 76},
+    {164, 67},
+    {194, 44},
 
-    {50, 50},
-    {50, 50},
-    {50, 50},
-    {50, 50},
-    {50, 50},
+    {194, 101},
+    {202, 68},
+    {205, 94},
+    {229, 14},
+    {266, 57},
 
     {50, 50},
     {50, 50},
     {50, 50},
 };
 
+
+static screen_t edit_nickname(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+    char nickname[nicknamelength] = {0};
+    nvs_get_str_wrapped("owner", "nickname", nickname, sizeof(nickname));
+    bool res =
+        textedit("What is your name?", application_event_queue, keyboard_event_queue, nickname, sizeof(nickname));
+    if (res) {
+        nvs_set_str_wrapped("owner", "nickname", nickname);
+    }
+    return screen_nametag;
+}
 
 void DisplayHomeEntry(int cursor);
 
@@ -77,7 +94,7 @@ screen_t screen_home_entry(QueueHandle_t application_event_queue, QueueHandle_t 
     configure_keyboard_presses(keyboard_event_queue, false, false, false, false, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_1, true);
 
-    int cursor = 3;
+    int cursor = 5;
     DisplayHomeEntry(cursor);
     int timer_track = (esp_timer_get_time() / (Home_screen_timeout * 1000000)) + 1;
 
@@ -87,7 +104,6 @@ screen_t screen_home_entry(QueueHandle_t application_event_queue, QueueHandle_t 
         if ((esp_timer_get_time() / 1000000) > (timer_track * Home_screen_timeout)) {
             return screen_nametag;
         }
-        ESP_LOGE(TAG, "test screen_home_entry");
         if (xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE) {
             switch (event.type) {
                 case event_input_button: break;  // Ignore raw button input
@@ -101,17 +117,16 @@ screen_t screen_home_entry(QueueHandle_t application_event_queue, QueueHandle_t 
                         case SWITCH_4: break;
                         case SWITCH_5:
                             switch (cursor) {
-                                case 0: return screen_scrambled;
-                                case 1: return screen_batterystatus;
-                                case 2: return screen_billboard;
-                                case 3: return screen_nametag;
+                                case 0: return screen_battleship;
+                                case 1: return screen_settings;
+                                case 2: return screen_repertoire;
+                                case 3: return screen_hangman;
                                 case 4: return screen_library;
-
-                                case 5: return screen_hangman;
-                                case 6: return screen_repertoire;
-                                case 7: return screen_pointclick;
-                                case 8: return screen_settings;
-                                case 9: return screen_battleship;
+                                case 5: return screen_nametag;
+                                case 6: return screen_pointclick;
+                                case 7: return screen_billboard;
+                                case 8: return screen_credits;
+                                case 9: return screen_scrambled;
                             }
                             break;
                         default: break;
@@ -128,17 +143,20 @@ screen_t screen_home_entry(QueueHandle_t application_event_queue, QueueHandle_t 
 
 void DisplayHomeEntry(int cursor) {
     pax_buf_t* gfx = bsp_get_gfx_buffer();
-    AddSWtoBufferLR("", "Select");
+    pax_insert_png_buf(gfx, map_png_start, map_png_end - map_png_start, 0, 0, 0);
+    AddOneTextSWtoBuffer(SWITCH_5, "Select");
     DrawArrowHorizontal(SWITCH_1);
-    pax_center_text(gfx, BLACK, font1, fontsizeS * 2, gfx->height / 2, 100, screen_name[cursor]);
-    pax_insert_png_buf(
-        gfx,
-        diamondb_png_start,
-        diamondb_png_end - diamondb_png_start,
-        screen_pos[cursor][0],
-        screen_pos[cursor][1],
-        0
-    );
+    pax_draw_line(gfx, RED, screen_pos[cursor][0], 0, screen_pos[cursor][0], 100);
+    pax_draw_line(gfx, RED, 0, screen_pos[cursor][1], gfx->height, screen_pos[cursor][1]);
+    pax_center_text(gfx, BLACK, font1, fontsizeS * 2, gfx->height / 2, gfx->width - fontsizeS * 2, screen_name[cursor]);
+    // pax_insert_png_buf(
+    //     gfx,
+    //     diamondb_png_start,
+    //     diamondb_png_end - diamondb_png_start,
+    //     screen_pos[cursor][0],
+    //     screen_pos[cursor][1],
+    //     0
+    // );
     bsp_display_flush();
 }
 
@@ -148,7 +166,6 @@ screen_t screen_Nametag(QueueHandle_t application_event_queue, QueueHandle_t key
 
     pax_buf_t* gfx = bsp_get_gfx_buffer();
 
-    pax_background(gfx, WHITE);
 
     // memory
     nvs_handle_t handle;
@@ -180,21 +197,24 @@ screen_t screen_Nametag(QueueHandle_t application_event_queue, QueueHandle_t key
         scale -= 0.2;
     }
     ESP_LOGW(TAG, "Scale: %f", scale);
-    pax_draw_text(gfx, RED, font1, scale, (296 - dims.x) / 2, (100 - dims.y) / 2, nickname);
+    pax_background(gfx, WHITE);
+    AddSWtoBufferLR("Map", "Rename");
+    pax_draw_text(gfx, RED, font1, scale, (290 - dims.x) / 2, (100 - dims.y) / 2, nickname);
     bsp_display_flush();
 
     InitKeyboard(keyboard_event_queue);
-    configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
+    configure_keyboard_presses(keyboard_event_queue, true, false, false, false, true);
 
     while (1) {
         event_t event = {0};
-        ESP_LOGE(TAG, "test screen_home_entry");
         if (xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE) {
             switch (event.type) {
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
-                        default: return screen_home; break;
+                        case SWITCH_1: return screen_home; break;
+                        case SWITCH_5: return edit_nickname(application_event_queue, keyboard_event_queue); break;
+                        default: break;
                     }
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);

@@ -21,30 +21,30 @@
 #include <string.h>
 
 
-extern uint8_t const diamondl_png_start[] asm("_binary_diamondl_png_start");
-extern uint8_t const diamondl_png_end[] asm("_binary_diamondl_png_end");
-extern uint8_t const diamondr_png_start[] asm("_binary_diamondr_png_start");
-extern uint8_t const diamondr_png_end[] asm("_binary_diamondr_png_end");
-extern uint8_t const diamondt_png_start[] asm("_binary_diamondt_png_start");
-extern uint8_t const diamondt_png_end[] asm("_binary_diamondt_png_end");
-extern uint8_t const diamondb_png_start[] asm("_binary_diamondb_png_start");
-extern uint8_t const diamondb_png_end[] asm("_binary_diamondb_png_end");
+extern const uint8_t diamondl_png_start[] asm("_binary_diamondl_png_start");
+extern const uint8_t diamondl_png_end[] asm("_binary_diamondl_png_end");
+extern const uint8_t diamondr_png_start[] asm("_binary_diamondr_png_start");
+extern const uint8_t diamondr_png_end[] asm("_binary_diamondr_png_end");
+extern const uint8_t diamondt_png_start[] asm("_binary_diamondt_png_start");
+extern const uint8_t diamondt_png_end[] asm("_binary_diamondt_png_end");
+extern const uint8_t diamondb_png_start[] asm("_binary_diamondb_png_start");
+extern const uint8_t diamondb_png_end[] asm("_binary_diamondb_png_end");
 
-extern uint8_t const library_png_start[] asm("_binary_library_png_start");
-extern uint8_t const library_png_end[] asm("_binary_library_png_end");
+extern const uint8_t library_png_start[] asm("_binary_library_png_start");
+extern const uint8_t library_png_end[] asm("_binary_library_png_end");
 
-static char const * TAG = "library";
+static const char* TAG = "library";
 
 void DisplayLibraryEntry(int cursor);
 
-char const library_items_name[Nb_item_library][30] = {
-    "Entry 1",
-    "Entry 2",
-    "Entry 3",
-    "Entry 4",
-    "Entry 5",
+const char library_items_name[Nb_item_library][60] = {
+    "Samuel Morse",
+    "Queen Victoria's Message",
+    "Transatlantic Telegraph Cables",
+    "SS Carondelet",
+    "Anatole Deibler",
 
-    "Entry 6",
+    "The First Telegraph Post Office",
     "Entry 7",
     "Entry 8",
     "Entry 9",
@@ -55,7 +55,7 @@ char const library_items_name[Nb_item_library][30] = {
     "Entry 13",
 };
 
-uint8_t const library_pos[Nb_item_library][2] = {
+const uint8_t library_pos[Nb_item_library][2] = {
     {74, 38},
     {86, 34},
     {98, 37},
@@ -73,17 +73,77 @@ uint8_t const library_pos[Nb_item_library][2] = {
     {222, 37},
 };
 
-char const library_item_content[Nb_item_library][5][300] = {
-    {"Entry 1.1", "Entry 1.2", "Entry 1.3"},
+const char library_item_content[Nb_item_library][5][600] = {
+    // entry 1
+    {"Samuel F.B. Morse developed an electric telegraph (1832–35) and then invented, with his friend Alfred Vail, the "
+     "Morse Code (1838). The latter is a system for representing letters of the alphabet, numerals, and punctuation "
+     "marks by arranging dots, dashes, and spaces. The codes are transmitted through either a telegraph machine or "
+     "visual signals."},
+    // entry 2
+    {"To the President of the United States, Washington:—The Queen desires to congratulate the President upon the "
+     "successful completion of this great international work, in which the Queen has taken the deepest interest.",
 
-    {"Entry 2"},
+     "The "
+     "Queen is convinced that the President will join with her in fervently hoping that the electric cable which now "
+     "connects Great Britain with the United States will prove an additional link between the nations, whose "
+     "friendship is founded upon their common interest and reciprocal esteem. The Queen has much pleasure in thus "
+     "communicating with the President, and renewing to him her wishes for the prosperity of the United States."},
+    // entry 3
+    {"In an 1838 letter to Francis O.J. Smith in 1838, Morse wrote: ‘This mode of instantaneous communication must "
+     "inevitably become an instrument of immense power, to be wielded for good or for evil, as it shall be properly or "
+     "improperly directed.’ Transatlantic Telegraph Cables were undersea cables running under the Atlantic Ocean for "
+     "telegraph communications.",
 
-    {"Entry 3.1", "Entry 3.2"},
+     " The first communications occurred on August 16th 1858, but the line speed was poor, "
+     "and efforts to improve it caused the cable to fail after three weeks."
+     "In September 1858, after several days of progressive deterioration of the insulation, the cable failed "
+     "altogether. The reaction to the news was tremendous. Some writers even hinted that the line was a mere hoax; "
+     "others pronounced it a stock-exchange speculation. "},
+    // entry 4
+    {"SS Carondelet was an immigrant ship, active in 1877 and 1878, that transported immigrants from Havana to New "
+     "York City.The declaration has been preserved: “I, A. C. Burrows, Master of the S.S. Carondelet do solemnly, "
+     "sincerely, and truly swear that the following List or Manifest, subscribed by me, and now delivered by me to the "
+     "Collector of the Customs of the Collection District of New York,",
 
-    {"Entry 4"},
-    {"Entry 5"},
+     "is a full and perfect list of all the "
+     "passengers taken on board of the said S.S. Carondelet at Nassau NP from which port said S.S. Carondelet has now "
+     "arrived, and that on said list is truly designated the age, the sex, and the occupation of each of said "
+     "passengers, the part of the vessel occupied by each during the passage,",
 
-    {"Entry 6"},
+     "the country to which each belongs, and "
+     "also the country of which it is intended by each to become an inhabitant,",
+
+     "and that said List or Manifest truly "
+     "sets forth the number of said passengers who have died on said voyage, and the names and ages of those who "
+     "died.\n\n So help me God. \n\n A. C. Burrows. \n\n 3rd of February, 1878."},
+    // entry 5
+    {"In April 1844 Morse set up a small laboratory in a first floor committee room in the Senate wing of the Capitol "
+     "across from the Old Supreme Court chamber. On May 24, 1844, after weeks of testing, Morse gathered a small "
+     "group—reportedly in the Supreme Court chamber, but more likely in the committee room—to send the first message "
+     "all the way to Baltimore.",
+
+     "Morse tapped out the message suggested to him by Ellsworth’s daughter Annie: “What "
+     "Hath God Wrought.” Moments later an identical message was returned from Morse’s partner Alfred Vail in "
+     "Baltimore. The experiment was a success.",
+
+     "The Post Office assumed control of the Washington-Baltimore telegraph "
+     "line in October and opened it to the public on a fee-basis, but Congress declined to fund the line’s extension "
+     "or to purchase Morse’s patents as he had hoped. The tenacious Morse instead secured private investment and "
+     "licensing, and by 1850, more than 10,000 miles of telegraph wire stretched across the nation."},
+    // entry 6
+    {"In April 1844 Morse set up a small laboratory in a first floor committee room in the Senate wing of the Capitol "
+     "across from the Old Supreme Court chamber. On May 24, 1844, after weeks of testing, Morse gathered a small "
+     "group—reportedly in the Supreme Court chamber, but more likely in the committee room—to send the first message "
+     "all the way to Baltimore.",
+
+     "Morse tapped out the message suggested to him by Ellsworth’s daughter Annie: “What "
+     "Hath God Wrought.” Moments later an identical message was returned from Morse’s partner Alfred Vail in "
+     "Baltimore. The experiment was a success.",
+
+     "The Post Office assumed control of the Washington-Baltimore telegraph "
+     "line in October and opened it to the public on a fee-basis, but Congress declined to fund the line’s extension "
+     "or to purchase Morse’s patents as he had hoped. The tenacious Morse instead secured private investment and "
+     "licensing, and by 1850, more than 10,000 miles of telegraph wire stretched across the nation."},
     {"Entry 7"},
     {"Entry 8"},
     {"Entry 9"},
@@ -94,9 +154,9 @@ char const library_item_content[Nb_item_library][5][300] = {
     {"Entry 13"},
 };
 
-uint8_t const library_item_nbpage[Nb_item_library] = {2, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+const uint8_t library_item_nbpage[Nb_item_library] = {0, 1, 1, 3, 2, 2, 0, 0, 0, 0, 0, 0, 0};
 
-pax_vec1_t DrawLibraryContent(int _yoffset, char const * _message) {
+pax_vec1_t DrawLibraryContent(int _yoffset, const char* _message) {
     pax_buf_t* gfx  = bsp_get_gfx_buffer();
     pax_vec1_t dims = {
         .x = 999,
@@ -107,12 +167,12 @@ pax_vec1_t DrawLibraryContent(int _yoffset, char const * _message) {
         .y = 0,
     };
 
-    int _centered = 1;
-    int _cursor   = 1;
+    int _centered  = 1;
+    int _cursor    = 1;
+    int maxnblines = 12;
 
     ESP_LOGE(TAG, "Unhandled event type %s", _message);
     ESP_LOGE(TAG, "Unhandled event type %d", strlen(_message));
-    // char message[128]       = "The quick brown fox jumps over the lazy dog, The quick brie da";  // message to parse
     char linetodisplay[128] = "";
     char Words[64];  // Parsed Word
     int  _xoffset       = 6;
@@ -190,7 +250,7 @@ pax_vec1_t DrawLibraryContent(int _yoffset, char const * _message) {
                 strcpy(linetodisplay, Words);  // Add the latest word that was parsed to the next line
                 strcat(linetodisplay, " ");
                 nblines++;
-                if (nblines >= 8) {
+                if (nblines >= maxnblines) {
                     break;
                 }
             }
@@ -228,13 +288,13 @@ void Display_library_content(QueueHandle_t keyboard_event_queue, int cursor, int
 }
 
 screen_t screen_library_content(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int cursor) {
+    ESP_LOGE(TAG, "screen_library_content");
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, false, false, true);
     int page = 0;
     Display_library_content(keyboard_event_queue, cursor, page);
     while (1) {
         event_t event = {0};
-        ESP_LOGE(TAG, "screen_library_content");
         if (xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE) {
             switch (event.type) {
                 case event_input_button: break;  // Ignore raw button input
@@ -276,7 +336,6 @@ screen_t screen_library_entry(QueueHandle_t application_event_queue, QueueHandle
 
     while (1) {
         event_t event = {0};
-        ESP_LOGE(TAG, "screen_library_entry");
         if (xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE) {
             switch (event.type) {
                 case event_input_button: break;  // Ignore raw button input
@@ -309,7 +368,8 @@ void DisplayLibraryEntry(int cursor) {
     AddOneTextSWtoBuffer(SWITCH_1, "Exit");
     DrawArrowHorizontal(SWITCH_3);
     AddOneTextSWtoBuffer(SWITCH_5, "Select");
-    pax_center_text(gfx, BLACK, font1, fontsizeS * 2, gfx->height / 2, 87, library_items_name[cursor]);
+    // pax_center_text(gfx, BLACK, font1, fontsizeS, gfx->height / 2, 87, library_items_name[cursor]);
+    WallofTextnb_line(87, library_items_name[cursor], 1, 10, 140);
     // pax_insert_png_buf(
     //     gfx,
     //     diamondb_png_start,

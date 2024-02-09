@@ -4,9 +4,7 @@
 #include "freertos/queue.h"
 #include "screens.h"
 
-#define longestword     16
-#define nbvictorianword 137
-#define nbenglishword   25322
+#define longestword 16
 
 #define english   0
 #define victorian 1
