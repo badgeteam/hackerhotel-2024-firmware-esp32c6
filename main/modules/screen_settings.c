@@ -422,6 +422,63 @@ const float OCVLut[32][2] = {{0, 2.7296},      {0.0164, 3.0857}, {0.0328, 3.2497
                              {0.8526, 4.0694}, {0.9132, 4.108},  {0.9306, 4.1187}, {0.9479, 4.1297}, {0.9653, 4.1412},
                              {0.9826, 4.1537}, {1, 4.1676}};
 
+
+
+// screen_t screen_lut_dial(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+//     if (log)
+//         ESP_LOGE(TAG, "Enter screen_home_entry");
+//     // update the keyboard event handler settings
+//     InitKeyboard(keyboard_event_queue);
+//     configure_keyboard_presses(keyboard_event_queue, true, false, false, false, false);
+//     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_5, true);
+//     int          cursor    = 0;
+//     epaper_lut_t activeLut = lut_4s;
+
+//     while (1) {
+//         pax_buf_t* gfx = bsp_get_gfx_buffer();
+//         pax_insert_png_buf(gfx, lutdial_png_start, lutdial_png_end - lutdial_png_start, 0, 0, 0);
+//         AddOneTextSWtoBuffer(SWITCH_1, "Exit");
+//         DrawArrowHorizontal(SWITCH_5);
+
+//         switch (cursor) {
+//             case 0: activeLut = lut_1s; break;
+//             case 1: activeLut = lut_4s; break;
+//             case 2: activeLut = lut_8s; break;
+//             case 3: activeLut = lut_full; break;
+//             default: break;
+//         }
+
+//         bsp_apply_lut(activeLut);
+//         nvs_set_u8_wrapped("system", "lut", (uint8_t)activeLut);
+
+//         event_t event = {0};
+//         if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+//             switch (event.type) {
+//                 case event_input_button: break;  // Ignore raw button input
+//                 case event_input_keyboard:
+//                     switch (event.args_input_keyboard.action) {
+//                         case SWITCH_1: return screen_home; break;
+//                         case SWITCH_2: break;
+//                         case SWITCH_3: break;
+//                         case SWITCH_4: break;
+//                         case SWITCH_5: break;
+//                         case SWITCH_L5:
+//                             if (cursor)
+//                                 cursor--;
+//                             break;
+//                         case SWITCH_R5:
+//                             if (cursor)
+//                                 cursor++;
+//                             break;
+//                     }
+
+
+//                     break;
+//                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+//             }
+//         }
+//     }
+// }
 screen_t screen_lut_dial(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     if (log)
         ESP_LOGE(TAG, "Enter screen_home_entry");
@@ -429,7 +486,8 @@ screen_t screen_lut_dial(QueueHandle_t application_event_queue, QueueHandle_t ke
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, false, false, false, false);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_5, true);
-    int cursor = 1;
+    int          cursor    = 1;
+    epaper_lut_t activeLut = lut_4s;
 
     while (1) {
         pax_buf_t* gfx = bsp_get_gfx_buffer();
@@ -445,23 +503,25 @@ screen_t screen_lut_dial(QueueHandle_t application_event_queue, QueueHandle_t ke
         pax_draw_text(gfx, BLACK, font1, fontsizeS, offX, offY + gapY * 3, "24 sec refresh");
         switch (cursor) {
             case 0:
-                bsp_apply_lut(lut_1s);
+                activeLut = lut_1s;
                 pax_simple_tri(gfx, BLACK, 69, 71, 72, 69, 55, 57);
                 break;
             case 1:
-                bsp_apply_lut(lut_4s);
+                activeLut = lut_4s;
                 pax_simple_tri(gfx, BLACK, 71, 69, 74, 69, 65, 48);
                 break;
             case 2:
-                bsp_apply_lut(lut_8s);
+                activeLut = lut_8s;
                 pax_simple_tri(gfx, BLACK, 72, 68, 74, 69, 80, 48);
                 break;
             case 3:
-                bsp_apply_lut(lut_full);
+                activeLut = lut_full;
                 pax_simple_tri(gfx, BLACK, 73, 69, 76, 71, 90, 57);
                 break;
             default: break;
         }
+        bsp_apply_lut(activeLut);
+        nvs_set_u8_wrapped("system", "lut", (uint8_t)activeLut);
         bsp_display_flush();
 
         event_t event = {0};
@@ -553,62 +613,6 @@ screen_t screen_settings_entry(QueueHandle_t application_event_queue, QueueHandl
                         case SWITCH_4: ota_update_wrapped(keyboard_event_queue, false); break;
                         case SWITCH_5: ota_update_wrapped(keyboard_event_queue, true); break;
                     }
-                    break;
-                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
-            }
-        }
-    }
-}
-
-screen_t screen_lut_dial(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
-    if (log)
-        ESP_LOGE(TAG, "Enter screen_home_entry");
-    // update the keyboard event handler settings
-    InitKeyboard(keyboard_event_queue);
-    configure_keyboard_presses(keyboard_event_queue, true, false, false, false, false);
-    configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_5, true);
-    int          cursor    = 0;
-    epaper_lut_t activeLut = lut_4s;
-
-    while (1) {
-        pax_buf_t* gfx = bsp_get_gfx_buffer();
-        pax_insert_png_buf(gfx, lutdial_png_start, lutdial_png_end - lutdial_png_start, 0, 0, 0);
-        AddOneTextSWtoBuffer(SWITCH_1, "Exit");
-        DrawArrowHorizontal(SWITCH_5);
-
-        switch (cursor) {
-            case 0: activeLut = lut_1s; break;
-            case 1: activeLut = lut_4s; break;
-            case 2: activeLut = lut_8s; break;
-            case 3: activeLut = lut_full; break;
-            default: break;
-        }
-
-        bsp_apply_lut(activeLut);
-        nvs_set_u8_wrapped("system", "lut", (uint8_t) activeLut);
-
-        event_t event = {0};
-        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
-            switch (event.type) {
-                case event_input_button: break;  // Ignore raw button input
-                case event_input_keyboard:
-                    switch (event.args_input_keyboard.action) {
-                        case SWITCH_1: return screen_home; break;
-                        case SWITCH_2: break;
-                        case SWITCH_3: break;
-                        case SWITCH_4: break;
-                        case SWITCH_5: break;
-                        case SWITCH_L5:
-                            if (cursor)
-                                cursor--;
-                            break;
-                        case SWITCH_R5:
-                            if (cursor)
-                                cursor++;
-                            break;
-                    }
-
-
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
             }
