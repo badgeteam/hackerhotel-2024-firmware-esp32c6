@@ -819,6 +819,7 @@ int InputtoNum(char _inputletter) {
         case 'x': return 23; break;
         case 'y': return 24; break;
         case 'z': return 25; break;
+        case ' ': return 36; break;
         default: return 0; break;
     }
 }
@@ -833,7 +834,7 @@ void configure_keyboard_guru(QueueHandle_t keyboard_event_queue, bool SW1, bool 
             .enable_rotations = {false, false, false, false, false, false, false, false, false, false},
         .args_control_keyboard.enable_characters  = {true,  true,  true,  true,  true,  true,  true,  true,  true,
                                                      true,  true,  false, false, false, false, false, false, false,
-                                                     false, false, false, false, false, false, false, false},
+                                                     false, false, false, false, false, false, false, false, false},
         .args_control_keyboard.enable_actions     = {SW1, SW2, SW3, SW4, SW5},
         .args_control_keyboard.enable_leds        = true,
         .args_control_keyboard.enable_relay       = true,
