@@ -1,5 +1,5 @@
 #include "application.h"
-#include "badge_comms.h"
+#include "badge-communication.h"
 #include "bsp.h"
 #include "esp_err.h"
 #include "esp_log.h"

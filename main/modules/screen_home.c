@@ -1,6 +1,6 @@
 #include "screen_home.h"
 #include "application.h"
-#include "badge_messages.h"
+#include "badge-communication-protocol.h"
 #include "bsp.h"
 #include "coprocessor.h"
 #include "esp_err.h"

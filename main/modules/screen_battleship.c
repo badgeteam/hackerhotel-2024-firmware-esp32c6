@@ -1,7 +1,7 @@
 #include "screen_battleship.h"
 #include "application.h"
-#include "badge_comms.h"
-#include "badge_messages.h"
+#include "badge-communication-protocol.h"
+#include "badge-communication.h"
 #include "bsp.h"
 #include "esp_err.h"
 #include "esp_log.h"
@@ -182,7 +182,8 @@ void AddShiptoBuffer(int _shiplenght, int _shiporientation, int _x, int _y) {
         {11 + 16 * (_shiplenght - 1), 0},
         {5 + 16 * (_shiplenght - 1), 7},
         {11 + 16 * (_shiplenght - 1), 1},
-        {16, 0}};
+        {16, 0}
+    };
 
     // diagonal ship coordonates orientation southeasty
     int od[10][2] = {
@@ -195,7 +196,8 @@ void AddShiptoBuffer(int _shiplenght, int _shiporientation, int _x, int _y) {
         {6, -6},
         {9 + 8 * (_shiplenght - 1), 2 + 15 * (_shiplenght - 1)},
         {6 + 8 * (_shiplenght - 1), 11 + 15 * (_shiplenght - 1)},
-        {-3 + 8 * (_shiplenght - 1), 8 + 15 * (_shiplenght - 1)}};
+        {-3 + 8 * (_shiplenght - 1), 8 + 15 * (_shiplenght - 1)}
+    };
 
     switch (_shiporientation) {
         case west:

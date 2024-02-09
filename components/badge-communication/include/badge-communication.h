@@ -1,6 +1,9 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2024 Hugo Trippaers
+
 #pragma once
 
-#include "badge_messages.h"
+#include "badge-communication-protocol.h"
 #include "esp_err.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"

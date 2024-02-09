@@ -1,6 +1,8 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2024 Hugo Trippaers
+
 #pragma once
 
-#include "badge_messages.h"
 #include "freertos/FreeRTOS.h"
 
 #define nicknamelength 32

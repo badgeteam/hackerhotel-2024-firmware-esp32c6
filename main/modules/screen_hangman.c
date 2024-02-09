@@ -1,7 +1,7 @@
 #include "screen_hangman.h"
 #include "application.h"
-#include "badge_comms.h"
-#include "badge_messages.h"
+#include "badge-communication-protocol.h"
+#include "badge-communication.h"
 #include "bsp.h"
 #include "esp_err.h"
 #include "esp_log.h"
@@ -195,7 +195,8 @@ static const char* const victorian_words[] = {
     "Vapour",
     "Wireless",
     "Withal",
-    "Workhouse"};
+    "Workhouse"
+};
 static const char* const victorian_definitions[] = {
     "Home, a place where you live. ",
     "To take leave, to disappear.",
@@ -368,7 +369,8 @@ static const char* const victorian_definitions[] = {
     "An institution set up to look after the poor, disabled or old who cannot sustain themselves. Conditions were "
     "deliberately below what the lowest paid labourer could expect in order to 'encourage' poor people to work. People "
     "in the workhouse often lived in harsh conditions and many people would rather die than go there. More were built "
-    "after the 1834 Poor Law. "};
+    "after the 1834 Poor Law. "
+};
 // real data
 #if (release_type == production)
 static const char* const english_words[] = {
