@@ -5,14 +5,19 @@
 
 #include "badge-communication-protocol.h"
 #include "esp_err.h"
+#include "esp_ieee802154.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 
-#define BADGE_COMMS_MAX_MESSAGE_SIZE (128)
+#define IEEE802154_FRAME_SIZE      (128)  // 1 byte for the length + 127 bytes of data
+#define BADGE_COMMS_RX_QUEUE_DEPTH (5)
 
-esp_err_t init_badge_comms(void);
+esp_err_t badge_communication_init(QueueHandle_t* output_queues);
 
-extern uint16_t TargetAddress;
+typedef struct _ieee802154_message {
+    esp_ieee802154_frame_info_t frame_info;
+    uint8_t                     frame[IEEE802154_FRAME_SIZE];
+} ieee802154_message_t;
 
 typedef struct {
     badge_comms_message_type_t message_type;
@@ -25,27 +30,12 @@ typedef struct {
  * broadcast a message to other badges around
  * @param comms_message the message to be sent
  */
-void badge_comms_send_message(badge_comms_message_t* comms_message);
+esp_err_t badge_communication_send(badge_comms_message_type_t type, uint8_t* content, uint8_t content_length);
 
-/**
- * 'subscribe' to a message type
- * @param message_type the message type to subscribe to
- * @param expected_message_len the sizeof the datastruct the receiver is expecting
- * @return a queue handle, where received messages are sent to.
- * return NULL if something went wrong, check logs for more info
- */
-QueueHandle_t badge_comms_add_listener(badge_comms_message_type_t message_type, uint8_t expected_message_len);
+esp_err_t badge_communication_send_time(badge_message_time_t* data);
+esp_err_t badge_communication_send_chat(badge_message_chat_t* data);
+esp_err_t badge_communication_send_repertoire(badge_message_chat_t* data);
+esp_err_t badge_communication_send_battleship(badge_message_chat_t* data);
 
-/**
- * 'unsubscribe' from a message type
- * @param queue the queue handle received when calling badge_comms_add_listener
- * @return
- *      - ESP_OK on success
- *      - ESP_ERR_INVALID_ARG when no queue was provided
- *      - ESP_ERR_INVALID_STATE when the badge comms component has not been initialised
- *      - ESP_ERR_NOT_FOUND if the provided queue was not found in the list of listeners
- */
-esp_err_t badge_comms_remove_listener(QueueHandle_t queue);
-
-esp_err_t start_badge_comms();
-esp_err_t stop_badge_comms();
+esp_err_t badge_communication_start();
+esp_err_t badge_communication_stop();
