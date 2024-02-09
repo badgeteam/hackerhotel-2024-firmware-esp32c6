@@ -307,8 +307,9 @@ bool textedit(
                                 output_size
                             );
                             // configure_keyboard(keyboard_event_queue, capslock);
-                            configure_keyboard_caps(keyboard_event_queue, capslock);
-                            configure_keyboard_typing(keyboard_event_queue, true);
+                            // configure_keyboard_caps(keyboard_event_queue, capslock);
+                            // configure_keyboard_typing(keyboard_event_queue, true);
+                            InitKeyboard(keyboard_event_queue);
                             break;
                         default: break;
                     }
