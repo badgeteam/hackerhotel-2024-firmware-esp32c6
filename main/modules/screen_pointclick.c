@@ -252,6 +252,7 @@ screen_t screen_pointclick_lighthouse2(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 );
 
+// template 2: dialogue and linear set of screens
 screen_t screen_postoffice_closeup_d(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
@@ -833,7 +834,7 @@ screen_t screen_dock1_w_d(
                         case SWITCH_1: break;
                         case SWITCH_2: break;
                         case SWITCH_3: cursor++; break;
-                        case SWITCH_4: cursor--; break;
+                        case SWITCH_4: break;
                         case SWITCH_5: break;
                         default: break;
                     }
@@ -975,7 +976,456 @@ screen_t screen_dune3_n_gc_d(
         }
     }
 }
+screen_t screen_lighthouse1_n_gc_d_key(
+    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
+) {
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
+    int cursor      = main_cursor[0];
+    int displayflag = 1;
+    int nbdirection = 3;
+    ESP_LOGE(TAG, "lighthouse1_n_gc_d1_key");
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    while (1) {
+        if (displayflag) {
+            pax_background(gfx, WHITE);
+            switch (cursor) {
+                case 0:
+                    {
+                        pax_insert_png_buf(
+                            gfx,
+                            lighthouse1_n_gc_d1_key_S,
+                            lighthouse1_n_gc_d1_key_E - lighthouse1_n_gc_d1_key_S,
+                            0,
+                            0,
+                            0
+                        );
+                        break;
+                    }
+                case 1:
+                    {
+                        pax_insert_png_buf(
+                            gfx,
+                            lighthouse1_n_gc_d2_key_S,
+                            lighthouse1_n_gc_d2_key_E - lighthouse1_n_gc_d2_key_S,
+                            0,
+                            0,
+                            0
+                        );
+                        break;
+                    }
+                case 2:
+                    {
+                        main_cursor[state_locklighthouse] = locklighthouse_unlocked;
+                        main_cursor[state_cursor]         = screen_PC_n2;
+                        return screen_PC_lighthouse1;
+                        break;
+                    }
+                default: break;
+            }
+            bsp_display_flush();
+            displayflag = 0;
+        }
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: break;
+                        case SWITCH_2: break;
+                        case SWITCH_3: cursor++; break;
+                        case SWITCH_4: cursor--; break;
+                        case SWITCH_5: break;
+                        default: break;
+                    }
+                    if (cursor < 0)
+                        cursor = nbdirection - 1;
+                    if (cursor > (nbdirection - 1))
+                        cursor = 0;
+                    displayflag = 1;
+                    ESP_LOGE(TAG, "cursor %d", cursor);
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+// template 3: single screen
+screen_t screen_library_closeup(
+    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
+) {
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, false, true, true, false, false);
+    int displayflag = 1;
+    ESP_LOGE(TAG, "library_closeup");
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_background(gfx, WHITE);
+    pax_insert_png_buf(gfx, library_closeup_S, library_closeup_E - library_closeup_S, 0, 0, 0);
+    bsp_display_flush();
+    while (1) {
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: break;
+                        case SWITCH_2:
+                            main_cursor[0] = screen_PC_n;
+                            return screen_PC_town1;
+                            break;
+                        case SWITCH_3:
+                            main_cursor[0] = 0;
+                            return screen_PC_library_closeup_d1;
+                            break;
+                        case SWITCH_4: break;
+                        case SWITCH_5: break;
+                        default: break;
+                    }
+                    displayflag = 1;
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
 
+screen_t screen_library_closeup_d1(
+    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
+) {
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, false, true, true, false, false);
+    int displayflag = 1;
+    ESP_LOGE(TAG, "library_closeup_d1");
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_background(gfx, WHITE);
+    pax_insert_png_buf(gfx, library_closeup_d1_S, library_closeup_d1_E - library_closeup_d1_S, 0, 0, 0);
+    bsp_display_flush();
+    while (1) {
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: break;
+                        case SWITCH_2:
+                            main_cursor[0] = screen_PC_n;
+                            return screen_PC_town1;
+                            break;
+                        case SWITCH_3:
+                            main_cursor[0] = 0;
+                            return screen_PC_library_closeup;
+                            break;
+                        case SWITCH_4: break;
+                        case SWITCH_5: break;
+                        default: break;
+                    }
+                    displayflag = 1;
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+
+screen_t screen_lighthouse1_n_gc_d1(
+    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
+) {
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
+    int displayflag = 1;
+    ESP_LOGE(TAG, "lighthouse1_n_gc_d1");
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_background(gfx, WHITE);
+    pax_insert_png_buf(gfx, lighthouse1_n_gc_d1_S, lighthouse1_n_gc_d1_E - lighthouse1_n_gc_d1_S, 0, 0, 0);
+    bsp_display_flush();
+    while (1) {
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: break;
+                        case SWITCH_2: break;
+                        case SWITCH_3:
+                            main_cursor[0] = screen_PC_n2;
+                            return screen_PC_lighthouse1;
+                            break;
+                        case SWITCH_4: break;
+                        case SWITCH_5: break;
+                        default: break;
+                    }
+                    displayflag = 1;
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+
+// end screen
+screen_t screen_lighthouse2_n_go(
+    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
+) {
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
+    int displayflag = 1;
+    ESP_LOGE(TAG, "lighthouse2_n_go");
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_background(gfx, WHITE);
+    pax_insert_png_buf(gfx, lighthouse2_n_go_S, lighthouse2_n_go_E - lighthouse2_n_go_S, 0, 0, 0);
+    bsp_display_flush();
+    while (1) {
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: break;
+                        case SWITCH_2:
+                        case SWITCH_3:
+                            main_cursor[0] = 0;
+                            return screen_home;
+                            break;
+                        case SWITCH_4: break;
+                        case SWITCH_5: break;
+                        default: break;
+                    }
+                    displayflag = 1;
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+
+screen_t screen_messageboard_closeup(
+    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
+) {
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, false, true, true, false, false);
+    int displayflag = 1;
+    ESP_LOGE(TAG, "messageboard_closeup");
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_background(gfx, WHITE);
+    pax_insert_png_buf(gfx, messageboard_closeup_S, messageboard_closeup_E - messageboard_closeup_S, 0, 0, 0);
+    bsp_display_flush();
+    while (1) {
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: break;
+                        case SWITCH_2:
+                            main_cursor[0] = screen_PC_s;
+                            return screen_PC_town1;
+                            break;
+                        case SWITCH_3:
+                            main_cursor[0] = 0;
+                            return screen_PC_messageboard_closeup;
+                            break;
+                        case SWITCH_4: break;
+                        case SWITCH_5: break;
+                        default: break;
+                    }
+                    displayflag = 1;
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+
+screen_t screen_road1_e_jorge(
+    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
+) {
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, false, true, true, false, false);
+    int displayflag = 1;
+    ESP_LOGE(TAG, "road1_e_jorge");
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_background(gfx, WHITE);
+    pax_insert_png_buf(gfx, road1_e_jorge_S, road1_e_jorge_E - road1_e_jorge_S, 0, 0, 0);
+    bsp_display_flush();
+    while (1) {
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: break;
+                        case SWITCH_2: break;
+                        case SWITCH_3:
+                            main_cursor[0] = screen_PC_e;
+                            return screen_PC_town1;
+                            break;
+                        case SWITCH_4:
+                            main_cursor[0] = 0;
+                            return screen_PC_road1_e_jorge_d1;
+                            break;
+                        case SWITCH_5: break;
+                        default: break;
+                    }
+                    displayflag = 1;
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+
+screen_t screen_town1_n_d1(
+    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
+) {
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, false, true, true, false, false);
+    int displayflag = 1;
+    ESP_LOGE(TAG, "town1_n_d1");
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_background(gfx, WHITE);
+    pax_insert_png_buf(gfx, town1_n_d1_S, town1_n_d1_E - town1_n_d1_S, 0, 0, 0);
+    bsp_display_flush();
+    while (1) {
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: break;
+                        case SWITCH_2: break;
+                        case SWITCH_3:
+                            main_cursor[0] = screen_PC_n;
+                            return screen_PC_town2;
+                            break;
+                        case SWITCH_4: break;
+                        case SWITCH_5: break;
+                        default: break;
+                    }
+                    displayflag = 1;
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+
+screen_t screen_town1_e_d1(
+    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
+) {
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, false, true, true, false, false);
+    int displayflag = 1;
+    ESP_LOGE(TAG, "town1_e_d1");
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_background(gfx, WHITE);
+    pax_insert_png_buf(gfx, town1_e_d1_S, town1_e_d1_E - town1_e_d1_S, 0, 0, 0);
+    bsp_display_flush();
+    while (1) {
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: break;
+                        case SWITCH_2: break;
+                        case SWITCH_3:
+                            main_cursor[state_tutorial_town1] = tutorial_complete;
+                            main_cursor[0]                    = 0;
+                            return screen_PC_postoffice_closeup;
+                            break;
+                        case SWITCH_4: break;
+                        case SWITCH_5: break;
+                        default: break;
+                    }
+                    displayflag = 1;
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+
+screen_t screen_town1_s_d1_boat(
+    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
+) {
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, false, true, true, false, false);
+    int displayflag = 1;
+    ESP_LOGE(TAG, "town1_s_d1_boat");
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_background(gfx, WHITE);
+    pax_insert_png_buf(gfx, town1_s_d1_boat_S, town1_s_d1_boat_E - town1_s_d1_boat_S, 0, 0, 0);
+    bsp_display_flush();
+    while (1) {
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: break;
+                        case SWITCH_2: break;
+                        case SWITCH_3:
+                            main_cursor[0] = screen_PC_s;
+                            return screen_PC_dune2;
+                            break;
+                        case SWITCH_4: break;
+                        case SWITCH_5: break;
+                        default: break;
+                    }
+                    displayflag = 1;
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+
+screen_t screen_town1_s_d1_messageboard(
+    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
+) {
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, false, true, true, false, false);
+    int displayflag = 1;
+    ESP_LOGE(TAG, "town1_s_d1_messageboard");
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_background(gfx, WHITE);
+    pax_insert_png_buf(gfx, town1_s_d1_messageboard_S, town1_s_d1_messageboard_E - town1_s_d1_messageboard_S, 0, 0, 0);
+    bsp_display_flush();
+    while (1) {
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: break;
+                        case SWITCH_2:
+                            main_cursor[0] = 0;
+                            return screen_PC_messageboard_closeup;
+                            break;
+                        case SWITCH_4: break;
+                        case SWITCH_5: break;
+                        default: break;
+                    }
+                    displayflag = 1;
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+
+// entry
 screen_t screen_pointclick_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     screen_t current_screen_PC = screen_PC_dock1;
     int      main_cursor[nb_state];
@@ -983,7 +1433,10 @@ screen_t screen_pointclick_entry(QueueHandle_t application_event_queue, QueueHan
         main_cursor[i] = 0;
     }
     main_cursor[state_cursor]         = screen_PC_s;
-    main_cursor[state_locklighthouse] = 0;
+    main_cursor[state_locklighthouse] = locklighthouse_locked;
+    main_cursor[state_tutorial_dock]  = tutorial_uncomplete;
+    main_cursor[state_tutorial_dune]  = tutorial_uncomplete;
+    main_cursor[state_tutorial_town1] = tutorial_uncomplete;
 
     bsp_apply_lut(lut_4s);
     while (1) {
@@ -1091,6 +1544,70 @@ screen_t screen_pointclick_entry(QueueHandle_t application_event_queue, QueueHan
             case screen_PC_dune3_n_gc_d:
                 {
                     current_screen_PC = screen_dune3_n_gc_d(application_event_queue, keyboard_event_queue, main_cursor);
+                    break;
+                }
+            case screen_PC_library_closeup:
+                {
+                    current_screen_PC =
+                        screen_library_closeup(application_event_queue, keyboard_event_queue, main_cursor);
+                    break;
+                }
+            case screen_PC_library_closeup_d1:
+                {
+                    current_screen_PC =
+                        screen_library_closeup_d1(application_event_queue, keyboard_event_queue, main_cursor);
+                    break;
+                }
+            case screen_PC_lighthouse1_n_gc_d_key:
+                {
+                    current_screen_PC =
+                        screen_lighthouse1_n_gc_d_key(application_event_queue, keyboard_event_queue, main_cursor);
+                    break;
+                }
+            case screen_PC_lighthouse1_n_gc_d1:
+                {
+                    current_screen_PC =
+                        screen_lighthouse1_n_gc_d1(application_event_queue, keyboard_event_queue, main_cursor);
+                    break;
+                }
+            case screen_PC_lighthouse2_n_go:
+                {
+                    current_screen_PC =
+                        screen_lighthouse2_n_go(application_event_queue, keyboard_event_queue, main_cursor);
+                    break;
+                }
+            case screen_PC_messageboard_closeup:
+                {
+                    current_screen_PC =
+                        screen_messageboard_closeup(application_event_queue, keyboard_event_queue, main_cursor);
+                    break;
+                }
+            case screen_PC_road1_e_jorge:
+                {
+                    current_screen_PC =
+                        screen_road1_e_jorge(application_event_queue, keyboard_event_queue, main_cursor);
+                    break;
+                }
+            case screen_PC_town1_n_d1:
+                {
+                    current_screen_PC = screen_town1_n_d1(application_event_queue, keyboard_event_queue, main_cursor);
+                    break;
+                }
+            case screen_PC_town1_e_d1:
+                {
+                    current_screen_PC = screen_town1_e_d1(application_event_queue, keyboard_event_queue, main_cursor);
+                    break;
+                }
+            case screen_PC_town1_s_d1_boat:
+                {
+                    current_screen_PC =
+                        screen_town1_s_d1_boat(application_event_queue, keyboard_event_queue, main_cursor);
+                    break;
+                }
+            case screen_PC_town1_s_d1_messageboard:
+                {
+                    current_screen_PC =
+                        screen_town1_s_d1_messageboard(application_event_queue, keyboard_event_queue, main_cursor);
                     break;
                 }
             case screen_home:
@@ -1504,6 +2021,8 @@ screen_t screen_pointclick_town1(
     int nbdirection  = 4;
     int move_forward = 0;
     int move_back    = 0;
+    int button2      = 0;
+    int button4      = 0;
     ESP_LOGE(TAG, "town1");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     while (1) {
@@ -1512,14 +2031,22 @@ screen_t screen_pointclick_town1(
             switch (cursor) {
                 case screen_PC_n:
                     {
+                        if (button4) {
+                            main_cursor[0] = 0;
+                            return screen_PC_library_closeup;
+                        }
+                        if (button2) {
+                            main_cursor[0] = 0;
+                            return screen_PC_town1_n_d1;
+                        }
                         pax_insert_png_buf(gfx, town1_n_S, town1_n_E - town1_n_S, 0, 0, 0);
                         break;
                     }
                 case screen_PC_e:
                     {
-                        if (move_back) {
-                            main_cursor[0] = screen_PC_s2;
-                            return screen_PC_dune2;
+                        if (button4) {
+                            main_cursor[0] = 0;
+                            return screen_PC_town1_e_d1;
                         }
                         pax_insert_png_buf(gfx, town1_e_S, town1_e_E - town1_e_S, 0, 0, 0);
                         break;
@@ -1529,6 +2056,10 @@ screen_t screen_pointclick_town1(
                         if (move_forward) {
                             main_cursor[0] = screen_PC_s2;
                             return screen_PC_dune2;
+                        }
+                        if (button4) {
+                            main_cursor[0] = 0;
+                            return screen_PC_town1_s_d1_boat;
                         }
                         pax_insert_png_buf(gfx, town1_s_S, town1_s_E - town1_s_S, 0, 0, 0);
                         break;
@@ -1549,6 +2080,8 @@ screen_t screen_pointclick_town1(
         }
         move_forward  = 0;
         move_back     = 0;
+        button2       = 0;
+        button4       = 0;
         event_t event = {0};
         if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
             switch (event.type) {
@@ -1560,9 +2093,9 @@ screen_t screen_pointclick_town1(
                         case SWITCH_L5: cursor--; break;
                         case SWITCH_R5: cursor++; break;
                         case SWITCH_1: return screen_home; break;
-                        case SWITCH_2: move_back++; break;
+                        case SWITCH_2: button2++; break;
                         case SWITCH_3: move_forward++; break;
-                        case SWITCH_4: break;
+                        case SWITCH_4: button4++; break;
                         case SWITCH_5: break;
                         default: break;
                     }
@@ -1748,12 +2281,15 @@ screen_t screen_pointclick_dune3(
         if (displayflag) {
             pax_background(gfx, WHITE);
             switch (cursor) {
-                case screen_PC_dune3_gate:  // East - but not really to sort - gate
+                case screen_PC_dune3_gate:
                     {
                         if (move_forward) {
                             if (main_cursor[state_locklighthouse] == locklighthouse_locked) {
                                 main_cursor[0] = 0;
                                 return screen_PC_dune3_n_gc_d;
+                            } else if (main_cursor[state_locklighthouse] == locklighthouse_key_obtained) {
+                                main_cursor[0] = 0;
+                                return screen_PC_lighthouse1_n_gc_d_key;
                             }
                             main_cursor[0] = screen_PC_n2;
                             return screen_PC_lighthouse1;
@@ -1768,6 +2304,10 @@ screen_t screen_pointclick_dune3(
                 case screen_PC_dune3_s:  // South
                     {
                         if (move_forward) {
+                            if (main_cursor[state_locklighthouse] == locklighthouse_key_obtained) {
+                                main_cursor[0] = 0;
+                                return screen_PC_road1_e_jorge;
+                            }
                             main_cursor[0] = screen_PC_road1_e;
                             return screen_PC_road1;
                         }
@@ -1775,7 +2315,7 @@ screen_t screen_pointclick_dune3(
 
                         break;
                     }
-                case screen_PC_dune3_up:  // West- but not really to sort- up
+                case screen_PC_dune3_up:
                     {
                         if (main_cursor[state_locklighthouse] == locklighthouse_locked)
                             pax_insert_png_buf(gfx, dune3_n_gc_up_S, dune3_n_gc_up_E - dune3_n_gc_up_S, 0, 0, 0);

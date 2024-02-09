@@ -40,6 +40,7 @@ static hink_t epaper = {
     .screen_width          = EPAPER_WIDTH,
     .screen_height         = EPAPER_HEIGHT,
 };
+static epaper_lut_t cur_lut = lut_1s;
 
 static ledstrip_t ledstrip = {
     .pin = GPIO_LED_DATA,
@@ -578,6 +579,14 @@ hink_t* bsp_get_epaper() {
     return &epaper;
 }
 
+esp_err_t bsp_display_flush_with_lut(epaper_lut_t lut) {
+    epaper_lut_t previous = bsp_cur_lut();
+    bsp_apply_lut(lut);
+    esp_err_t err = bsp_display_flush();
+    bsp_apply_lut(previous);
+    return err;
+}
+
 esp_err_t bsp_display_flush() {
     if (!epaper_ready)
         return ESP_FAIL;
@@ -630,7 +639,15 @@ void bsp_restart() {
 }
 
 esp_err_t bsp_apply_lut(epaper_lut_t lut_type) {
-    return hink_apply_lut(&epaper, lut_type);
+    esp_err_t err = hink_apply_lut(&epaper, lut_type);
+    if (err == ESP_OK) {
+        cur_lut = lut_type;
+    }
+    return err;
+}
+
+epaper_lut_t bsp_cur_lut(void) {
+    return cur_lut;
 }
 
 bool bsp_wait_for_button() {

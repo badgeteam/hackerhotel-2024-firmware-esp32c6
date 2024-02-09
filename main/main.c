@@ -244,6 +244,15 @@ void app_main(void) {
     };
     bsp_sao_addressable_led_set(saoleddata, sizeof(saoleddata));
 
+    enum _epaper_lut lut = lut_1s;
+    esp_err_t err = nvs_get_u8_wrapped("system", "lut", (uint8_t*)&lut);
+    if (err == ESP_OK) {
+        ESP_LOGI(TAG, "Restoring active LUT to %d", lut);
+        bsp_apply_lut(lut);
+    } else {
+        ESP_LOGE(TAG, "Failed to restore LUT: %s", esp_err_to_name(err));
+    }
+
     // Main application
     screen_t current_screen = screen_pointclick;
     if (release_type == production)
