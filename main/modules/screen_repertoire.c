@@ -97,9 +97,9 @@ bool GetRepertoire(char _repertoryIDlist[nicknamelength], uint8_t mac[8], uint16
 }
 
 void receive_repertoire(void) {
-    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_time_t
+    // get a queue to listen on, for message type MESSAGE_TYPE_TIME, and size badge_message_time_t
     QueueHandle_t repertoire_queue =
-        badge_comms_add_listener(MESSAGE_TYPE_REPERTOIRE, sizeof(badge_message_repertoire_t));
+        NULL;  // badge_comms_add_listener(MESSAGE_TYPE_REPERTOIRE, sizeof(badge_message_repertoire_t));
     // check if an error occurred (check logs for the reason)
     if (repertoire_queue == NULL) {
         ESP_LOGE(TAG, "Failed to add listener");
@@ -126,10 +126,10 @@ void receive_repertoire(void) {
 
             // to clean up a listener, call the remove listener
             // this free's the queue from heap
-            esp_err_t err = badge_comms_remove_listener(repertoire_queue);
+            // esp_err_t err = badge_comms_remove_listener(repertoire_queue);
 
             // show the result of the listener removal
-            ESP_LOGI(TAG, "unsubscription result: %s", esp_err_to_name(err));
+            // ESP_LOGI(TAG, "unsubscription result: %s", esp_err_to_name(err));
             return;
         }
     }
@@ -150,13 +150,13 @@ void send_repertoire(void) {
     memcpy(message.data, &data, message.data_len_to_send);
 
     // send the message over the comms bus
-    badge_comms_send_message(&message);
+    // badge_communication_send(&message);
     vTaskDelay(pdMS_TO_TICKS(100));
     bsp_set_addressable_led(LED_GREEN);
     vTaskDelay(pdMS_TO_TICKS(100));
     bsp_set_addressable_led(LED_OFF);
     if (log)
-        ESP_LOGE(TAG, "message sent to: %04x", TargetAddress);
+        ESP_LOGE(TAG, "message sent to: %04x", 0xFFFF);
 }
 
 void Display_repertoire(
@@ -341,9 +341,9 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
     configure_keyboard_presses(keyboard_event_queue, true, false, false, true, true);
 
     // init broadcast receive
-    // get a queue to listen on, for message type MESSAGE_TYPE_TIMESTAMP, and size badge_message_time_t
+    // get a queue to listen on, for message type MESSAGE_TYPE_TIME, and size badge_message_time_t
     QueueHandle_t repertoire_queue =
-        badge_comms_add_listener(MESSAGE_TYPE_REPERTOIRE, sizeof(badge_message_repertoire_t));
+        NULL;  // badge_comms_add_listener(MESSAGE_TYPE_REPERTOIRE, sizeof(badge_message_repertoire_t));
     // check if an error occurred (check logs for the reason)
     if (repertoire_queue == NULL) {
         ESP_LOGE(TAG, "Failed to add listener");
@@ -565,9 +565,9 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
                     switch (event.args_input_keyboard.action) {
                         case SWITCH_1:
                             configure_keyboard_rotate_disable(keyboard_event_queue);
-                            esp_err_t err = badge_comms_remove_listener(repertoire_queue);
+                            // esp_err_t err = badge_comms_remove_listener(repertoire_queue);
                             if (log) {
-                                ESP_LOGI(TAG, "unsubscription result: %s", esp_err_to_name(err));
+                                // ESP_LOGI(TAG, "unsubscription result: %s", esp_err_to_name(err));
                                 ESP_LOGI(TAG, "Exit");
                             }
                             vTaskDelay(pdMS_TO_TICKS(100));
@@ -577,12 +577,12 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
                                     char    nameget[32] = "";
                                     uint8_t macget[8]   = {0, 0, 0, 0, 0, 0, 0, 0};
                                     GetRepertoire(nameget, macget, cursor.yabs);
-                                    TargetAddress = (macget[6] << 8) | macget[7];
+                                    // TargetAddress = (macget[6] << 8) | macget[7];
                                     if (log) {
                                         ESP_LOGE(TAG, "repertory ID of target: %d", cursor.yabs);
                                         ESP_LOGE(TAG, "MAC 6: %02x", macget[6]);
                                         ESP_LOGE(TAG, "MAC 7: %02x", macget[7]);
-                                        ESP_LOGE(TAG, "TargetAddress: %04x", TargetAddress);
+                                        // ESP_LOGE(TAG, "TargetAddress: %04x", TargetAddress);
                                     }
                                     return screen_home;
                                     break;

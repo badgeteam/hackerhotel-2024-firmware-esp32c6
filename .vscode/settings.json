@@ -93,7 +93,8 @@
         "valarray": "c",
         "esp_ieee802154.h": "c",
         "screen_home.h": "c",
-        "screen_library.h": "c"
+        "screen_library.h": "c",
+        "badge-communication-protocol.h": "c"
     },
     "editor.formatOnType": false,
     "editor.formatOnSave": true,

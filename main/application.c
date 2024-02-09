@@ -101,6 +101,8 @@ void DisplayError(QueueHandle_t application_event_queue, QueueHandle_t keyboard_
     pax_center_text(gfx, BLACK, font1, fontsizeS, text_x, text_y, errorstr);
     bsp_display_flush();
 
+    InitKeyboard(keyboard_event_queue);
+
     while (1) {
         event_t event = {0};
         if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {

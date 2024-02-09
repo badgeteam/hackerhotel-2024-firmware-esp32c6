@@ -54,11 +54,11 @@ static void ota_update_wrapped(QueueHandle_t keyboard_event_queue, bool nightly)
     // };
     // xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 
-    stop_badge_comms();
+    badge_communication_stop();
 
     ota_update(nightly);
 
-    start_badge_comms();
+    badge_communication_start();
 
     configure_keyboard(keyboard_event_queue);
 }
