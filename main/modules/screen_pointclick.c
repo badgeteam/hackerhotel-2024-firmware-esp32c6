@@ -1699,7 +1699,7 @@ screen_t screen_pointclick_dock1(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
     InitKeyboard(keyboard_event_queue);
-    configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
+    configure_keyboard_presses(keyboard_event_queue, true, false, true, false, false);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_1, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_5, true);
     int cursor       = main_cursor[0];
