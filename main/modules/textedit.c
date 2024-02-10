@@ -270,26 +270,46 @@ bool textedit(
             switch (event.type) {
                 case event_input_button: break;   // Ignore raw button input
                 case event_communication: break;  // Ignore communication
+                case event_term_input:
+                    if (event.args_term_input == '\n') {
+                        // Finish sent via le terminal.
+                        return true;
+                    } else if (event.args_term_input == 3) {
+                        // Cancel sent via le terminal.
+                        return false;
+                    } else if (event.args_term_input == '\b' || event.args_term_input == 0x7f) {
+                        // Backspacening.
+                        size_t length = strlen(output);
+                        if (length > 0) {
+                            output[length - 1] = 0;
+                        }
+                        textedit_draw(title, output, capslock);
+                    } else {
+                        // Terminal input added to the keyboard.
+                        size_t len = strlen(output);
+                        if (len >= output_size - 1)
+                            break;
+                        output[len]     = event.args_term_input;
+                        output[len + 1] = 0;
+                        textedit_draw(title, output, capslock);
+                    }
+                    break;
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
                         case SWITCH_5:
                             // disable_keyboard(keyboard_event_queue);
                             InitKeyboard(keyboard_event_queue);
                             return true;
-                            break;
                         case SWITCH_4:
                             // disable_keyboard(keyboard_event_queue);
                             InitKeyboard(keyboard_event_queue);
                             return false;
-                            break;
                         case SWITCH_3:
-                            {
-                                capslock = !capslock;
-                                // configure_keyboard(keyboard_event_queue, capslock);
-                                configure_keyboard_caps(keyboard_event_queue, capslock);
-                                configure_keyboard_typing(keyboard_event_queue, true);
-                                break;
-                            }
+                            capslock = !capslock;
+                            // configure_keyboard(keyboard_event_queue, capslock);
+                            configure_keyboard_caps(keyboard_event_queue, capslock);
+                            configure_keyboard_typing(keyboard_event_queue, true);
+                            break;
                         case SWITCH_2:
                             // Backspace
                             size_t length = strlen(output);
