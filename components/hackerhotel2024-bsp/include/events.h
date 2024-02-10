@@ -2,6 +2,7 @@
 
 #include "badge-communication-protocol.h"
 #include "bsp.h"
+#include "task_keyboard.h"
 
 typedef enum _event_type {
     event_input_button,

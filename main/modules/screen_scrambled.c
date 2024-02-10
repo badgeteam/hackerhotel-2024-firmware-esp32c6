@@ -131,11 +131,11 @@ screen_t screen_scrambled_entry(QueueHandle_t application_event_queue, QueueHand
                                 configure_keyboard_typing(keyboard_event_queue, true);
                             }
                             break;
-                        case SWITCH_L4:
+                        case ROTATION_L4:
                             if (cursor > 0)
                                 cursor--;
                             break;
-                        case SWITCH_R4:
+                        case ROTATION_R4:
                             if (usertext[cursor] != '\0')
                                 cursor++;
                             break;

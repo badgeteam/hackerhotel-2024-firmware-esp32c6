@@ -1,5 +1,5 @@
 idf_component_register(
-    SRCS "bsp.c"
+    SRCS "bsp.c" "task_button_input_handler.c" "task_keyboard.c"
     INCLUDE_DIRS "." "include"
     EMBED_FILES "resources/ch32_firmware.bin"
                 "resources/hackerhotel.png"

@@ -114,19 +114,19 @@ void keyboard_handle_input(keyboard_state_t* state, coprocessor_input_message_t*
             }
             if (state->enable_rot_action) {
                 switch (state->button_state_left) {
-                    case (1 << 0): rotation = SWITCH_L1; break;
-                    case (1 << 1): rotation = SWITCH_L2; break;
-                    case (1 << 2): rotation = SWITCH_L3; break;
-                    case (1 << 3): rotation = SWITCH_L4; break;
-                    case (1 << 4): rotation = SWITCH_L5; break;
+                    case (1 << 0): rotation = ROTATION_L1; break;
+                    case (1 << 1): rotation = ROTATION_L2; break;
+                    case (1 << 2): rotation = ROTATION_L3; break;
+                    case (1 << 3): rotation = ROTATION_L4; break;
+                    case (1 << 4): rotation = ROTATION_L5; break;
                 }
 
                 switch (state->button_state_right) {
-                    case (1 << 0): rotation = SWITCH_R1; break;
-                    case (1 << 1): rotation = SWITCH_R2; break;
-                    case (1 << 2): rotation = SWITCH_R3; break;
-                    case (1 << 3): rotation = SWITCH_R4; break;
-                    case (1 << 4): rotation = SWITCH_R5; break;
+                    case (1 << 0): rotation = ROTATION_R1; break;
+                    case (1 << 1): rotation = ROTATION_R2; break;
+                    case (1 << 2): rotation = ROTATION_R3; break;
+                    case (1 << 3): rotation = ROTATION_R4; break;
+                    case (1 << 4): rotation = ROTATION_R5; break;
                 }
             }
 
