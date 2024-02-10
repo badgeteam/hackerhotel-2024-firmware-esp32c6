@@ -481,13 +481,26 @@ const float OCVLut[32][2] = {{0, 2.7296},      {0.0164, 3.0857}, {0.0328, 3.2497
 // }
 screen_t screen_lut_dial(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     if (log)
-        ESP_LOGE(TAG, "Enter screen_home_entry");
+        ESP_LOGE(TAG, "Enter screen_lut_dial");
     // update the keyboard event handler settings
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, false, false, false, false);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_5, true);
     int          cursor    = 1;
     epaper_lut_t activeLut = lut_4s;
+    esp_err_t    err       = nvs_get_u8_wrapped("system", "lut", (uint8_t*)&activeLut);
+    switch (activeLut) {
+        case lut_1s: cursor = 0; break;
+        case lut_4s: cursor = 1; break;
+        case lut_8s: cursor = 2; break;
+        case lut_full: cursor = 3; break;
+        default: break;
+    }
+    if (err == ESP_OK) {
+        ESP_LOGI(TAG, "Restoring active LUT to %d", activeLut);
+    } else {
+        ESP_LOGE(TAG, "Failed to restore LUT: %s", esp_err_to_name(err));
+    }
 
     while (1) {
         pax_buf_t* gfx = bsp_get_gfx_buffer();
@@ -521,7 +534,6 @@ screen_t screen_lut_dial(QueueHandle_t application_event_queue, QueueHandle_t ke
             default: break;
         }
         bsp_apply_lut(activeLut);
-        nvs_set_u8_wrapped("system", "lut", (uint8_t)activeLut);
         bsp_display_flush();
 
         event_t event = {0};
@@ -530,7 +542,17 @@ screen_t screen_lut_dial(QueueHandle_t application_event_queue, QueueHandle_t ke
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
-                        case SWITCH_1: return screen_settings; break;
+                        case SWITCH_1:
+                            nvs_set_u8_wrapped("system", "lut", (uint8_t)activeLut);
+                            epaper_lut_t readbackLut = lut_4s;
+                            esp_err_t    err         = nvs_get_u8_wrapped("system", "lut", (uint8_t*)&readbackLut);
+                            if (err == ESP_OK) {
+                                ESP_LOGI(TAG, "Reading back stored LUT: %d", readbackLut);
+                            } else {
+                                ESP_LOGE(TAG, "Failed to restore LUT: %s", esp_err_to_name(err));
+                            }
+                            return screen_settings;
+                            break;
                         case SWITCH_2: break;
                         case SWITCH_3: break;
                         case SWITCH_4: break;
@@ -608,7 +630,7 @@ screen_t screen_settings_entry(QueueHandle_t application_event_queue, QueueHandl
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
                         case SWITCH_1: return screen_home; break;
-                        case SWITCH_2: screen_lut_dial(application_event_queue, keyboard_event_queue); break;
+                        case SWITCH_2: return screen_lut_dial(application_event_queue, keyboard_event_queue); break;
                         case SWITCH_3: edit_wifi(application_event_queue, keyboard_event_queue); break;
                         case SWITCH_4: ota_update_wrapped(keyboard_event_queue, false); break;
                         case SWITCH_5: ota_update_wrapped(keyboard_event_queue, true); break;
