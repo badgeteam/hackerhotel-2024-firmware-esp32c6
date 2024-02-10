@@ -1406,8 +1406,9 @@ void Display_battleship_battle(
 
     for (int i = 0; i < 20; i++) {
         AddTelegraphBlockStatustoBuffer(telegraphplayer_x, i, playerboard[i]);
-        // if (ennemyboard[i] != boat)
-        AddTelegraphBlockStatustoBuffer(telegraphennemy_x, i, ennemyboard[i]);
+        if (ennemyboard[i] != boat) {
+            AddTelegraphBlockStatustoBuffer(telegraphennemy_x, i, ennemyboard[i]);
+        }
     }
 
     bsp_display_flush();
