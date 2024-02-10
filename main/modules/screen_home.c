@@ -91,29 +91,24 @@ screen_t screen_home_entry(QueueHandle_t application_event_queue, QueueHandle_t 
     ESP_LOGE(TAG, "Enter screen_home_entry");
     // update the keyboard event handler settings
     InitKeyboard(keyboard_event_queue);
-    configure_keyboard_presses(keyboard_event_queue, false, false, false, false, true);
+    configure_keyboard_presses(keyboard_event_queue, false, false, true, false, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_1, true);
 
     int cursor = 5;
     DisplayHomeEntry(cursor);
-    int timer_track = (esp_timer_get_time() / (Home_screen_timeout * 1000000)) + 1;
 
     while (1) {
         event_t event = {0};
-        // when timeout
-        if ((esp_timer_get_time() / 1000000) > (timer_track * Home_screen_timeout)) {
-            return screen_nametag;
-        }
-        if (xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE) {
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
             switch (event.type) {
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
-                        case SWITCH_L1: cursor = Decrement(cursor, Nb_screen); break;
-                        case SWITCH_R1: cursor = Increment(cursor, Nb_screen); break;
+                        case ROTATION_L1: cursor = Decrement(cursor, Nb_screen); break;
+                        case ROTATION_R1: cursor = Increment(cursor, Nb_screen); break;
                         case SWITCH_1: break;
                         case SWITCH_2: break;
-                        case SWITCH_3: break;
+                        case SWITCH_3: return screen_nametag; break;
                         case SWITCH_4: break;
                         case SWITCH_5:
                             switch (cursor) {
@@ -132,7 +127,6 @@ screen_t screen_home_entry(QueueHandle_t application_event_queue, QueueHandle_t 
                         default: break;
                     }
                     ESP_LOGE(TAG, "Cursor %d", cursor);
-                    timer_track = (esp_timer_get_time() / (Home_screen_timeout * 1000000)) + 1;
                     DisplayHomeEntry(cursor);
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);

@@ -100,6 +100,8 @@ void badge_communication_rx_task(void* param) {
 
             event_t event                 = {.type = event_communication};
             event.args_communication.type = packet->type;
+            memcpy(&event.args_communication.src, &src, sizeof(ieee802154_address_t));
+            memcpy(&event.args_communication.dst, &dst, sizeof(ieee802154_address_t));
             memcpy(event.args_communication.data, packet->content, data_length);
 
             uint32_t index = 0;
@@ -174,7 +176,9 @@ esp_err_t badge_communication_stop() {
     return esp_ieee802154_sleep();
 }
 
-esp_err_t badge_communication_send(badge_comms_message_type_t type, uint8_t* content, uint8_t content_length) {
+esp_err_t badge_communication_send(
+    badge_comms_message_type_t type, uint8_t* content, uint8_t content_length, ieee802154_address_t* arg_dst
+) {
     uint16_t pan_id = BADGE_COMMUNICATION_PAN;
 
     if (content_length > BADGE_COMMS_USER_DATA_MAX_LEN) {
@@ -186,6 +190,10 @@ esp_err_t badge_communication_send(badge_comms_message_type_t type, uint8_t* con
     esp_ieee802154_get_extended_address(src.long_address);
 
     ieee802154_address_t dst = {.mode = ADDR_MODE_SHORT, .short_address = 0xFFFF};  // Broadcast
+
+    if (arg_dst != NULL) {
+        memcpy(&dst, arg_dst, sizeof(ieee802154_address_t));
+    }
 
     uint8_t raw_packet[256] = {0};
     uint8_t raw_packet_length =
@@ -214,19 +222,19 @@ esp_err_t badge_communication_send(badge_comms_message_type_t type, uint8_t* con
 }
 
 esp_err_t badge_communication_send_time(badge_message_time_t* data) {
-    return badge_communication_send(MESSAGE_TYPE_TIME, (uint8_t*)data, sizeof(badge_message_time_t));
+    return badge_communication_send(MESSAGE_TYPE_TIME, (uint8_t*)data, sizeof(badge_message_time_t), NULL);
 }
 
 esp_err_t badge_communication_send_chat(badge_message_chat_t* data) {
-    return badge_communication_send(MESSAGE_TYPE_CHAT, (uint8_t*)data, sizeof(badge_message_chat_t));
+    return badge_communication_send(MESSAGE_TYPE_CHAT, (uint8_t*)data, sizeof(badge_message_chat_t), NULL);
 }
 
-esp_err_t badge_communication_send_repertoire(badge_message_chat_t* data) {
-    return badge_communication_send(MESSAGE_TYPE_REPERTOIRE, (uint8_t*)data, sizeof(badge_message_repertoire_t));
+esp_err_t badge_communication_send_repertoire(badge_message_repertoire_t* data) {
+    return badge_communication_send(MESSAGE_TYPE_REPERTOIRE, (uint8_t*)data, sizeof(badge_message_repertoire_t), NULL);
 }
 
-esp_err_t badge_communication_send_battleship(badge_message_chat_t* data) {
-    return badge_communication_send(MESSAGE_TYPE_BATTLESHIP, (uint8_t*)data, sizeof(badge_message_battleship_t));
+esp_err_t badge_communication_send_battleship(badge_message_battleship_t* data, ieee802154_address_t* dst) {
+    return badge_communication_send(MESSAGE_TYPE_BATTLESHIP, (uint8_t*)data, sizeof(badge_message_battleship_t), dst);
 }
 
 // ESP-IDF callback functions

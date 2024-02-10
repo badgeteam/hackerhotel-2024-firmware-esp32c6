@@ -55,8 +55,10 @@ extern const uint8_t carond_png_end[] asm("_binary_carond_png_end");
 
 #define invalid -1
 
-static const char* TAG                = "testscreen";
+static const char* TAG                = "battleship";
 static const char  forfeitprompt[128] = "Do you want to exit and declare forfeit";
+
+extern ieee802154_address_t battleship_dst;
 
 screen_t screen_battleship_splash(
     QueueHandle_t application_event_queue,
@@ -136,14 +138,7 @@ void send_battleship(uint8_t player_data[BSpayload]) {
     // uint8_t                  _dataBS[BSpayload];
     for (int i = 0; i < BSpayload; i++) data.dataBS[i] = player_data[i];
 
-    // then we wrap the data in something to send over the comms bus
-    badge_comms_message_t message = {0};
-    message.message_type          = MESSAGE_TYPE_BATTLESHIP;
-    message.data_len_to_send      = sizeof(data);
-    memcpy(message.data, &data, message.data_len_to_send);
-
-    // send the message over the comms bus
-    // badge_communication_send(&message);
+    badge_communication_send_battleship(&data, &battleship_dst);
     vTaskDelay(pdMS_TO_TICKS(100));  // SUPER DUPER IMPORTANT, OTHERWISE THE LEDS MESS WITH THE MESSAGE
     bsp_set_addressable_led(LED_GREEN);
     vTaskDelay(pdMS_TO_TICKS(100));
@@ -792,18 +787,8 @@ screen_t screen_battleship_splash(
 
     int  timer_track         = esp_timer_get_time() / 5000000;
     bool sendflag            = false;
-    bool listenflag          = true;
     bool displayflag         = true;
     bool invitationrepliedto = false;
-
-    // init radio
-    QueueHandle_t BS_queue =
-        NULL;  // badge_comms_add_listener(MESSAGE_TYPE_BATTLESHIP, sizeof(badge_message_battleship_t));
-    if (BS_queue == NULL) {
-        ESP_LOGE(TAG, "Failed to add listener");
-    } else
-        ESP_LOGI(TAG, "listening");
-    badge_comms_message_t message;
 
     while (1) {
         event_t event = {0};
@@ -857,33 +842,7 @@ screen_t screen_battleship_splash(
             displayflag = false;
         }
 
-        if (listenflag)  // otherwise if this runs while the listener is remove, badge crash
-            if (xQueueReceive(BS_queue, &message, pdMS_TO_TICKS(10)) == pdTRUE) {
-                ESP_LOGI(TAG, "listening");
-                badge_comms_message_t message;
-                xQueueReceive(BS_queue, &message, portMAX_DELAY);
-                badge_message_battleship_t* ts = (badge_message_battleship_t*)message.data;
-
-                for (int i = 0; i < BSpayload; i++) {
-                    ennemy_data[i] = ts->dataBS[i];
-                    if (log)
-                        ESP_LOGI(TAG, "dataBS: %d is %d", i, ts->dataBS[i]);
-                }
-                bsp_set_addressable_led(LED_PURPLE);
-                vTaskDelay(pdMS_TO_TICKS(100));
-                bsp_set_addressable_led(LED_OFF);
-                vTaskDelay(pdMS_TO_TICKS(100));
-
-                if (ennemy_data[BS_ACK] == 1)  // the ennemy got the message, stop sending it.
-                    sendflag = false;
-                else {  // the ennemy sent an actual message, not a ACK, so send ACK back
-                    player_data[BS_ACK] = 1;
-                    send_battleship(player_data);
-                }
-                vTaskDelay(pdMS_TO_TICKS(100));
-                player_data[BS_ACK] = 0;
-            }
-        if (xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE) {
+        if (xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(100)) == pdTRUE) {
             switch (event.type) {
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
@@ -910,11 +869,35 @@ screen_t screen_battleship_splash(
                             // badge_comms_remove_listener(BS_queue);  // to not clash with the listener of the
                             // repertoire
                             screen_repertoire_entry(application_event_queue, keyboard_event_queue, 1);
-                            BS_queue               = NULL;  // badge_comms_add_listener(MESSAGE_TYPE_BATTLESHIP,
-                                                            // sizeof(badge_message_battleship_t));
                             sendflag               = true;
-                            listenflag             = true;
                             player_data[BS_invite] = invitation_sent;
+                            break;
+                        default: break;
+                    }
+                    break;
+                case event_communication:
+                    switch (event.args_communication.type) {
+                        case MESSAGE_TYPE_BATTLESHIP:
+                            badge_message_battleship_t* ts = &event.args_communication.data_battleship;
+
+                            for (int i = 0; i < BSpayload; i++) {
+                                ennemy_data[i] = ts->dataBS[i];
+                                if (log)
+                                    ESP_LOGI(TAG, "dataBS: %d is %d", i, ts->dataBS[i]);
+                            }
+                            bsp_set_addressable_led(LED_PURPLE);
+                            vTaskDelay(pdMS_TO_TICKS(100));
+                            bsp_set_addressable_led(LED_OFF);
+                            vTaskDelay(pdMS_TO_TICKS(100));
+
+                            if (ennemy_data[BS_ACK] == 1)  // the ennemy got the message, stop sending it.
+                                sendflag = false;
+                            else {  // the ennemy sent an actual message, not a ACK, so send ACK back
+                                player_data[BS_ACK] = 1;
+                                send_battleship(player_data);
+                            }
+                            vTaskDelay(pdMS_TO_TICKS(100));
+                            player_data[BS_ACK] = 0;
                             break;
                         default: break;
                     }
@@ -1165,7 +1148,6 @@ screen_t screen_battleship_battle(
     char ennemyname[nicknamelength] = "AI";
     bool displayflag                = false;
     bool sendflag                   = true;
-    bool listenflag                 = true;
     int  ennemy_phase               = 0;
     int  timer_track                = esp_timer_get_time() / (BroadcastInterval * 1000000);
     bool populate_ennemy_board      = true;
@@ -1290,46 +1272,7 @@ screen_t screen_battleship_battle(
             timer_track++;
         }
 
-        // if (listenflag)  // otherwise if this runs while the listener is remove, badge crash
-        //     if (xQueueReceive(BS_queue, &message, pdMS_TO_TICKS(10)) == pdTRUE) {
-        //         ESP_LOGI(TAG, "listening");
-        //         badge_comms_message_t message;
-        //         xQueueReceive(BS_queue, &message, portMAX_DELAY);
-        //         badge_message_battleship_t* ts = (badge_message_battleship_t*)message.data;
-
-        //         for (int i = 0; i < BSpayload; i++) {
-        //             ennemy_data[i] = ts->dataBS[i];
-        //             if (log)
-        //                 ESP_LOGI(TAG, "dataBS: %d is %d", i, ts->dataBS[i]);
-        //         }
-        //         bsp_set_addressable_led(LED_PURPLE);
-        //         vTaskDelay(pdMS_TO_TICKS(100));
-        //         bsp_set_addressable_led(LED_OFF);
-        //         vTaskDelay(pdMS_TO_TICKS(100));
-
-        //         if (ennemy_data[BS_ACK] == 1)  // the ennemy got the message, stop sending it.
-        //             sendflag = false;
-        //         else {  // the ennemy sent an actual message, not a ACK, so send ACK back
-        //             player_data[BS_ACK] = 1;
-        //             send_battleship(player_data);
-        //         }
-
-        //         if (populate_ennemy_board == true) {
-        //             ESP_LOGI(TAG, "POPULATE ENNEMY BOARD");
-        //             for (int i = 0; i < 6; i++) {
-        //                 ennemyship[i]              = ennemy_data[BS_shipboard_start + i];
-        //                 ennemyboard[ennemyship[i]] = boat;
-        //             }
-        //             populate_ennemy_board = false;
-        //             displayflag           = true;
-        //         }
-
-        //         vTaskDelay(pdMS_TO_TICKS(100));
-        //         player_data[BS_ACK] = 0;
-        //     }
-
         if (xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE) {
-            ESP_LOGI(TAG, "EVENT");
             switch (event.type) {
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
@@ -1371,6 +1314,12 @@ screen_t screen_battleship_battle(
                                 sendflag = true;
                             }
                         }
+                    }
+                    break;
+                case event_communication:
+                    switch (event.args_communication.type) {
+                        case MESSAGE_TYPE_BATTLESHIP: ESP_LOGW(TAG, "Unhandled battleship message!!!!"); break;
+                        default: break;
                     }
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);

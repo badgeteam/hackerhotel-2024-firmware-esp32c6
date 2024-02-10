@@ -29,66 +29,6 @@ char messagearray[nbmessages][messagelength];
 int  messagecursor = 0;
 int  initflag      = 0;
 
-// void receive_repertoire(void) {
-//     // get a queue to listen on, for message type MESSAGE_TYPE_TIME, and size badge_message_time_t
-//     QueueHandle_t str_queue = badge_comms_add_listener(MESSAGE_TYPE_CHAT, sizeof(badge_message_chat_t));
-//     // check if an error occurred (check logs for the reason)
-//     if (str_queue == NULL) {
-//         ESP_LOGE(TAG, "Failed to add listener");
-//         return;
-//     }
-
-//     uint32_t i = 0;
-
-//     while (true) {
-//         // variable for the queue to store the message in
-//         ESP_LOGI(TAG, "listening");
-//         badge_comms_message_t message;
-//         xQueueReceive(str_queue, &message, portMAX_DELAY);
-
-//         // typecast the message data to the expected message type
-//         badge_message_chat_t* ts = (badge_message_chat_t*)message.data;
-
-//         // show we got a message, and its contents
-//         ESP_LOGI(TAG, "Got a string: %s \n", ts->nickname);
-//         ESP_LOGI(TAG, "Got a string: %s \n", ts->payload);
-
-//         // receive 3 timestamps
-//         i++;
-//         if (i >= 3) {
-
-//             // to clean up a listener, call the remove listener
-//             // this free's the queue from heap
-//             esp_err_t err = badge_comms_remove_listener(str_queue);
-
-//             // show the result of the listener removal
-//             ESP_LOGI(TAG, "unsubscription result: %s", esp_err_to_name(err));
-//             return;
-//         }
-//     }
-// }
-
-// void send_repertoire(void) {
-//     // first we create a struct with the data, as we would like to receive on the other side
-//     badge_message_chat_t data;
-//     char              nickname[nicknamelength]     = "dwawdawda";
-//     char              playermessage[messagelength] = "babnannan";
-//     strcpy(data.nickname, nickname);
-//     strcpy(data.payload, playermessage);
-
-//     // then we wrap the data in something to send over the comms bus
-//     badge_comms_message_t message = {0};
-//     message.message_type          = MESSAGE_TYPE_CHAT;
-//     message.data_len_to_send      = sizeof(data);
-//     memcpy(message.data, &data, message.data_len_to_send);
-
-//     // send the message over the comms bus
-//     badge_communication_send(&message);
-//     bsp_set_addressable_led(LED_GREEN);
-//     vTaskDelay(pdMS_TO_TICKS(100));
-//     bsp_set_addressable_led(LED_OFF);
-// }
-
 void receive_str(void) {
     // get a queue to listen on, for message type MESSAGE_TYPE_TIME, and size badge_message_time_t
     QueueHandle_t str_queue = NULL;  // badge_comms_add_listener(MESSAGE_TYPE_CHAT, sizeof(badge_message_chat_t));

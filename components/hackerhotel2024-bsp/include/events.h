@@ -2,12 +2,14 @@
 
 #include "badge-communication-protocol.h"
 #include "bsp.h"
+#include "task_keyboard.h"
 
 typedef enum _event_type {
     event_input_button,
     event_input_keyboard,
     event_control_keyboard,
     event_communication,
+    event_term_input,
 } event_type_t;
 
 typedef struct _event_input_keyboard_args {
@@ -27,6 +29,8 @@ typedef struct _event_control_keyboard_args {
 
 typedef struct _event_communication_args {
     badge_comms_message_type_t type;
+    ieee802154_address_t       src;
+    ieee802154_address_t       dst;
     union {
         uint8_t                    data[BADGE_COMMS_USER_DATA_MAX_LEN];
         badge_message_time_t       data_time;
@@ -43,5 +47,6 @@ typedef struct _event {
         event_input_keyboard_args_t   args_input_keyboard;
         event_control_keyboard_args_t args_control_keyboard;
         event_communication_args_t    args_communication;
+        char                          args_term_input;
     };
 } event_t;
