@@ -924,15 +924,6 @@ screen_t screen_battleship_placeships(
     int flagstart   = 0;
     int displayflag = 1;
 
-    // debug
-    shipplaced    = long_whole;
-    playership[0] = 0;
-    playership[1] = 1;
-    playership[2] = 2;
-    playership[3] = 19;
-    playership[4] = 18;
-    playership[5] = 16;
-
     while (1) {
         if (displayflag) {
             if (shipplaced >= long_whole) {
