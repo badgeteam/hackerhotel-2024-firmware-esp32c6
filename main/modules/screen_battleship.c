@@ -830,14 +830,14 @@ screen_t screen_battleship_splash(
         }
         if (displayflag) {
             InitKeyboard(keyboard_event_queue);
-            configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
+            configure_keyboard_presses(keyboard_event_queue, true, true, false, false, false);
             bsp_apply_lut(lut_4s);
             pax_background(gfx, WHITE);
             pax_insert_png_buf(gfx, caronl_png_start, caronl_png_end - caronl_png_start, 0, 0, 0);
             AddOneTextSWtoBuffer(SWITCH_1, "Exit");
             AddOneTextSWtoBuffer(SWITCH_2, "Offline");
-            AddOneTextSWtoBuffer(SWITCH_4, "Replay");
-            AddOneTextSWtoBuffer(SWITCH_5, "Online");
+            // AddOneTextSWtoBuffer(SWITCH_4, "Replay");
+            // AddOneTextSWtoBuffer(SWITCH_5, "Online");
             bsp_display_flush();
             displayflag = false;
         }

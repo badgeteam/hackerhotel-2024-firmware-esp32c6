@@ -112,16 +112,16 @@ screen_t screen_home_entry(QueueHandle_t application_event_queue, QueueHandle_t 
                         case SWITCH_4: break;
                         case SWITCH_5:
                             switch (cursor) {
-                                case 0: return screen_battleship;
-                                case 1: return screen_settings;
-                                case 2: return screen_repertoire;
-                                case 3: return screen_hangman;
-                                case 4: return screen_library;
-                                case 5: return screen_nametag;
-                                case 6: return screen_pointclick;
-                                case 7: return screen_billboard;
-                                case 8: return screen_credits;
-                                case 9: return screen_scrambled;
+                                case 0: return screen_battleship; break;
+                                case 1: return screen_settings; break;
+                                case 2: return screen_repertoire; break;
+                                case 3: return screen_hangman; break;
+                                case 4: return screen_library; break;
+                                case 5: return screen_nametag; break;
+                                case 6: return screen_pointclick; break;
+                                case 7: return screen_billboard; break;
+                                case 8: return screen_credits; break;
+                                case 9: return screen_scrambled; break;
                             }
                             break;
                         default: break;
