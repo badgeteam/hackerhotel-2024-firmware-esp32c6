@@ -85,7 +85,7 @@ int Finish(char usertext[500], int _textID) {
 }
 
 screen_t screen_scrambled_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
     configure_keyboard_typing(keyboard_event_queue, true);
 
@@ -166,7 +166,7 @@ screen_t screen_scrambled_victory(QueueHandle_t application_event_queue, QueueHa
     pax_insert_png_buf(gfx, caronv_png_start, caronv_png_end - caronv_png_start, 0, 0, 0);
     bsp_display_flush();
 
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
 
     while (1) {

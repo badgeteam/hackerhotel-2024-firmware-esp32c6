@@ -25,7 +25,8 @@ static const char* TAG = "test";
 
 
 const char team[11][32] = {
-    "Nikolett", "Guru-san", "Renze", "Tom Clement", "CH23", "Norbert", "Zac", "SqyD", "Martijn", "Julian", "Dimitri"};
+    "Nikolett", "Guru-san", "Renze", "Tom Clement", "CH23", "Norbert", "Zac", "SqyD", "Martijn", "Julian", "Dimitri"
+};
 
 void Display_credits_entry(int cursor) {
     pax_buf_t* gfx = bsp_get_gfx_buffer();
@@ -70,7 +71,7 @@ void Display_credits_entry(int cursor) {
 }
 
 screen_t screen_credits_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
     int cursor = 0;
     Display_credits_entry(cursor);

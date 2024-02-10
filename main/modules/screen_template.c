@@ -104,7 +104,7 @@ void DisplayTemplate(void) {
 }
 
 screen_t screen_template_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
 
     int displayflag = 1;

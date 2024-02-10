@@ -4800,7 +4800,7 @@ screen_t screen_hangman_entry(QueueHandle_t application_event_queue, QueueHandle
 
     int wordtype = screen_hangman_wordtype(application_event_queue, keyboard_event_queue);
 
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, false, false, false, false);
     configure_keyboard_typing(keyboard_event_queue, true);
 
@@ -4856,7 +4856,7 @@ screen_t screen_hangman_entry(QueueHandle_t application_event_queue, QueueHandle
                     switch (event.args_input_keyboard.action) {
                         case SWITCH_1:
                             if (Screen_Confirmation(forfeitprompt, application_event_queue, keyboard_event_queue))
-                                InitKeyboard(keyboard_event_queue);
+                                reset_keyboard_settings(keyboard_event_queue);
                             return screen_home;
                             break;
                         case SWITCH_3: break;
@@ -4901,7 +4901,7 @@ screen_t screen_hangman_splash(QueueHandle_t application_event_queue, QueueHandl
     pax_insert_png_buf(gfx, deiblers_png_start, deiblers_png_end - deiblers_png_start, (gfx->height - 212) / 2, 0, 0);
     bsp_display_flush();
 
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, false, true, true);
 
     while (1) {
@@ -4934,7 +4934,7 @@ int screen_hangman_wordtype(QueueHandle_t application_event_queue, QueueHandle_t
     pax_center_text(gfx, BLACK, font1, fontsizeS, text_x, text_y, "Which dictionary do you wish to pick a word from?");
     bsp_display_flush();
 
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, true, false, true, false);
 
     while (1) {
@@ -4968,7 +4968,7 @@ screen_t screen_hangman_definition(
     DisplayWallofText(fontsizeS, 270, 6, 10, 55, victorian_definitions[_chosenwordID], 1);
     bsp_display_flush();
 
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
 
     while (1) {
@@ -5014,7 +5014,7 @@ screen_t screen_hangman_victory(QueueHandle_t application_event_queue, QueueHand
 
     bsp_display_flush();
 
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
 
     while (1) {

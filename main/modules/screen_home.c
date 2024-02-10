@@ -90,7 +90,7 @@ void DisplayHomeEntry(int cursor);
 screen_t screen_home_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     ESP_LOGE(TAG, "Enter screen_home_entry");
     // update the keyboard event handler settings
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, false, false, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_1, true);
 
@@ -202,7 +202,7 @@ screen_t screen_Nametag(QueueHandle_t application_event_queue, QueueHandle_t key
     pax_draw_text(gfx, RED, font1, scale, (290 - dims.x) / 2, (100 - dims.y) / 2, nickname);
     bsp_display_flush_with_lut(lut_8s);
 
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, false, false, false, true);
 
     while (1) {

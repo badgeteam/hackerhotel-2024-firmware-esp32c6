@@ -844,7 +844,7 @@ screen_t screen_battleship_splash(
             timer_track++;
         }
         if (displayflag) {
-            InitKeyboard(keyboard_event_queue);
+            reset_keyboard_settings(keyboard_event_queue);
             configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
             bsp_apply_lut(lut_4s);
             pax_background(gfx, WHITE);
@@ -932,7 +932,7 @@ screen_t screen_battleship_placeships(
     uint8_t       _position[20],
     uint8_t       playership[6]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, false, false, false, false);
     configure_keyboard_typing(keyboard_event_queue, true);
     for (int i = 0; i < NUM_CHARACTERS; i++) configure_keyboard_character(keyboard_event_queue, i, false);
@@ -1152,7 +1152,7 @@ screen_t screen_battleship_battle(
     uint8_t       player_data[BSpayload],
     uint8_t       ennemy_data[BSpayload]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, false, false, false, false);
     configure_keyboard_typing(keyboard_event_queue, true);
 
@@ -1476,7 +1476,7 @@ void Display_battleship_battle(
 screen_t screen_battleship_victory(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int* victoryflag
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
 
     pax_buf_t* gfx = bsp_get_gfx_buffer();

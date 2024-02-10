@@ -24,7 +24,7 @@ static const char* TAG = "mascots";
 screen_t screen_mascots_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     if (log)
         ESP_LOGE(TAG, "Enter screen_mascots_entry");
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
 
     //    pax_font_t const * font = pax_font_saira_regular;
     pax_buf_t* gfx = bsp_get_gfx_buffer();

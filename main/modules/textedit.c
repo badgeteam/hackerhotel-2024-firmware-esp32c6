@@ -298,11 +298,11 @@ bool textedit(
                     switch (event.args_input_keyboard.action) {
                         case SWITCH_5:
                             // disable_keyboard(keyboard_event_queue);
-                            InitKeyboard(keyboard_event_queue);
+                            reset_keyboard_settings(keyboard_event_queue);
                             return true;
                         case SWITCH_4:
                             // disable_keyboard(keyboard_event_queue);
-                            InitKeyboard(keyboard_event_queue);
+                            reset_keyboard_settings(keyboard_event_queue);
                             return false;
                         case SWITCH_3:
                             capslock = !capslock;
@@ -329,7 +329,7 @@ bool textedit(
                             // configure_keyboard(keyboard_event_queue, capslock);
                             // configure_keyboard_caps(keyboard_event_queue, capslock);
                             // configure_keyboard_typing(keyboard_event_queue, true);
-                            InitKeyboard(keyboard_event_queue);
+                            reset_keyboard_settings(keyboard_event_queue);
                             break;
                         default: break;
                     }

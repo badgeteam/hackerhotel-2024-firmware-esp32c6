@@ -36,12 +36,12 @@ extern const uint8_t lutdial_png_end[] asm("_binary_lutdial_png_end");
 static const char* TAG = "settings";
 
 static void configure_keyboard(QueueHandle_t keyboard_event_queue) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
 }
 
 static void ota_update_wrapped(QueueHandle_t keyboard_event_queue, bool nightly) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_relay(keyboard_event_queue, false);
     bsp_set_relay(false);
     // event_t kbsettings = {
@@ -428,7 +428,7 @@ const float OCVLut[32][2] = {{0, 2.7296},      {0.0164, 3.0857}, {0.0328, 3.2497
 //     if (log)
 //         ESP_LOGE(TAG, "Enter screen_home_entry");
 //     // update the keyboard event handler settings
-//     InitKeyboard(keyboard_event_queue);
+//     reset_keyboard_settings(keyboard_event_queue);
 //     configure_keyboard_presses(keyboard_event_queue, true, false, false, false, false);
 //     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_5, true);
 //     int          cursor    = 0;
@@ -483,7 +483,7 @@ screen_t screen_lut_dial(QueueHandle_t application_event_queue, QueueHandle_t ke
     if (log)
         ESP_LOGE(TAG, "Enter screen_home_entry");
     // update the keyboard event handler settings
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, false, false, false, false);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_5, true);
     int          cursor    = 1;
@@ -555,7 +555,7 @@ screen_t screen_settings_entry(QueueHandle_t application_event_queue, QueueHandl
     if (log)
         ESP_LOGE(TAG, "Enter screen_home_entry");
     // update the keyboard event handler settings
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
     char voltage[15]      = "";
     char SoC[15]          = "";

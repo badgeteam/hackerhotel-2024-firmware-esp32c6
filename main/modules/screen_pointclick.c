@@ -256,7 +256,7 @@ screen_t screen_pointclick_lighthouse2(
 screen_t screen_postoffice_closeup_d(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
     int cursor      = main_cursor[0];
     int displayflag = 1;
@@ -463,7 +463,7 @@ screen_t screen_postoffice_closeup_d(
 screen_t screen_shop_closeup_d(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
     int cursor      = main_cursor[0];
     int displayflag = 1;
@@ -534,7 +534,7 @@ screen_t screen_shop_closeup_d(
 screen_t screen_shop_closeup_da(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
     int cursor      = main_cursor[0];
     int displayflag = 1;
@@ -705,7 +705,7 @@ screen_t screen_shop_closeup_da(
 screen_t screen_road1_e_jorge_d(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
     int cursor      = main_cursor[0];
     int displayflag = 1;
@@ -792,7 +792,7 @@ screen_t screen_road1_e_jorge_d(
 screen_t screen_dock1_w_d(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
     int cursor      = main_cursor[0];
     int displayflag = 1;
@@ -856,7 +856,7 @@ screen_t screen_dock1_w_d(
 screen_t screen_dune3_n_gc_d(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
     int cursor      = main_cursor[0];
     int displayflag = 1;
@@ -928,7 +928,7 @@ screen_t screen_dune3_n_gc_d(
 screen_t screen_lighthouse1_n_gc_d_key(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
     int cursor      = main_cursor[0];
     int displayflag = 1;
@@ -1004,7 +1004,7 @@ screen_t screen_lighthouse1_n_gc_d_key(
 screen_t screen_library_closeup(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, true, true, false, false);
     int displayflag = 1;
     ESP_LOGE(TAG, "library_closeup");
@@ -1043,7 +1043,7 @@ screen_t screen_library_closeup(
 screen_t screen_library_closeup_d1(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, true, true, false, false);
     int displayflag = 1;
     ESP_LOGE(TAG, "library_closeup_d1");
@@ -1082,7 +1082,7 @@ screen_t screen_library_closeup_d1(
 screen_t screen_lighthouse1_n_gc_d1(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
     int displayflag = 1;
     ESP_LOGE(TAG, "lighthouse1_n_gc_d1");
@@ -1119,7 +1119,7 @@ screen_t screen_lighthouse1_n_gc_d1(
 screen_t screen_lighthouse2_n_go(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
     int displayflag = 1;
     ESP_LOGE(TAG, "lighthouse2_n_go");
@@ -1155,7 +1155,7 @@ screen_t screen_lighthouse2_n_go(
 screen_t screen_messageboard_closeup(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, true, true, false, false);
     int displayflag = 1;
     ESP_LOGE(TAG, "messageboard_closeup");
@@ -1194,7 +1194,7 @@ screen_t screen_messageboard_closeup(
 screen_t screen_road1_e_jorge(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, true, false);
     int displayflag = 1;
     ESP_LOGE(TAG, "road1_e_jorge");
@@ -1235,7 +1235,7 @@ screen_t screen_road1_e_jorge(
 screen_t screen_town1_n_d1(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
     int displayflag = 1;
     ESP_LOGE(TAG, "town1_n_d1");
@@ -1272,7 +1272,7 @@ screen_t screen_town1_n_d1(
 screen_t screen_town1_e_d1(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
     int displayflag = 1;
     ESP_LOGE(TAG, "town1_e_d1");
@@ -1309,7 +1309,7 @@ screen_t screen_town1_e_d1(
 screen_t screen_town1_s_d1_boat(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
     int displayflag = 1;
     ESP_LOGE(TAG, "town1_s_d1_boat");
@@ -1346,7 +1346,7 @@ screen_t screen_town1_s_d1_boat(
 screen_t screen_town1_s_d1_messageboard(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
     int displayflag = 1;
     ESP_LOGE(TAG, "town1_s_d1_messageboard");
@@ -1381,7 +1381,7 @@ screen_t screen_town1_s_d1_messageboard(
 screen_t screen_dune2_n_d(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
     int displayflag = 1;
     ESP_LOGE(TAG, "dune2_n_d");
@@ -1417,7 +1417,7 @@ screen_t screen_dune2_n_d(
 screen_t screen_shop_closeup(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, false, true, false);
     int displayflag = 1;
     ESP_LOGE(TAG, "shop_closeup");
@@ -1457,7 +1457,7 @@ screen_t screen_shop_closeup(
 screen_t screen_end(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
     int displayflag = 1;
     ESP_LOGE(TAG, "end");
@@ -1698,7 +1698,7 @@ screen_t screen_pointclick_entry(QueueHandle_t application_event_queue, QueueHan
 screen_t screen_pointclick_dock1(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, false, true, false, false);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_1, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_5, true);
@@ -1779,7 +1779,7 @@ screen_t screen_pointclick_dock1(
 screen_t screen_pointclick_dock2(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_1, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_5, true);
@@ -1860,7 +1860,7 @@ screen_t screen_pointclick_dock2(
 screen_t screen_pointclick_land1(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_1, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_5, true);
@@ -1941,7 +1941,7 @@ screen_t screen_pointclick_land1(
 screen_t screen_pointclick_dune1(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_1, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_5, true);
@@ -2014,7 +2014,7 @@ screen_t screen_pointclick_dune1(
 screen_t screen_pointclick_dune2(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_1, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_5, true);
@@ -2091,7 +2091,7 @@ screen_t screen_pointclick_dune2(
 screen_t screen_pointclick_town1(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_1, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_5, true);
@@ -2206,7 +2206,7 @@ screen_t screen_pointclick_town1(
 screen_t screen_pointclick_town2(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_1, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_5, true);
@@ -2279,7 +2279,7 @@ screen_t screen_pointclick_town2(
 screen_t screen_pointclick_road1(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_1, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_5, true);
@@ -2360,7 +2360,7 @@ screen_t screen_pointclick_road1(
 screen_t screen_pointclick_dune3(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_1, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_5, true);
@@ -2458,7 +2458,7 @@ screen_t screen_pointclick_dune3(
 screen_t screen_pointclick_lighthouse1(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_1, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_5, true);
@@ -2561,7 +2561,7 @@ screen_t screen_pointclick_lighthouse1(
 screen_t screen_pointclick_lighthouse2(
     QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
 ) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_1, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_5, true);

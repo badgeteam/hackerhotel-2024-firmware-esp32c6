@@ -289,7 +289,7 @@ void Display_library_content(QueueHandle_t keyboard_event_queue, int cursor, int
 
 screen_t screen_library_content(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int cursor) {
     ESP_LOGE(TAG, "screen_library_content");
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, false, false, true);
     int page = 0;
     Display_library_content(keyboard_event_queue, cursor, page);
@@ -329,7 +329,7 @@ screen_t screen_library_entry(QueueHandle_t application_event_queue, QueueHandle
     bsp_apply_lut(lut_4s);
     int cursor = 0;
     // update the keyboard event handler settings
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, false, false, false, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, true);
     DisplayLibraryEntry(cursor);

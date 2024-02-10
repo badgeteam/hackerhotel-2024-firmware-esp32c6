@@ -209,7 +209,7 @@ void DisplayBillboard(int _addmessageflag, char* _nickname, char* _message) {
 }
 
 screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, false, false, false, true);
     if (!initflag)
         for (int i = 0; i < nbmessages; i++) {
@@ -260,7 +260,7 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
                             } else
                                 DisplayBillboard(0, nickname, playermessage);  // no new messages
                             // refactor : due to unknown state of keyboard coming back from textedit
-                            InitKeyboard(keyboard_event_queue);
+                            reset_keyboard_settings(keyboard_event_queue);
                             configure_keyboard_presses(keyboard_event_queue, true, false, false, false, true);
                             break;
                         default: break;

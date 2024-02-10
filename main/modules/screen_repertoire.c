@@ -279,8 +279,6 @@ void Display_repertoire(
 }
 
 screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int _app) {
-    event_t tempkbsettings = kbsettings;
-
     char    repertoryIDlist[maxperpage][nicknamelength];
     char    surroundingIDlist[maxIDsurrounding][nicknamelength];
     uint8_t repertory_mac[maxperpage][8];
@@ -335,7 +333,7 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
     int             timer_track      = esp_timer_get_time() / 5000000;
     struct cursor_t cursor           = {.x = 0, .y = 0, .yabs = 0};
 
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_2, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, true);
     configure_keyboard_presses(keyboard_event_queue, true, false, false, true, true);
@@ -573,7 +571,6 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
                             vTaskDelay(pdMS_TO_TICKS(100));
                             switch (_app) {
                                 case 1:
-                                    configure_keyboard_kb(keyboard_event_queue, tempkbsettings);
                                     char    nameget[32] = "";
                                     uint8_t macget[8]   = {0, 0, 0, 0, 0, 0, 0, 0};
                                     GetRepertoire(nameget, macget, cursor.yabs);

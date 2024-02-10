@@ -33,7 +33,6 @@ extern const int telegraph_X[20];
 extern const int telegraph_Y[20];
 extern event_t   kbsettings;
 
-void DisplayError(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, const char* errorstr);
 void draw_squi1(int y);
 void draw_squi2(int y);
 void DrawArrowVertical(int _sw);
@@ -84,9 +83,7 @@ void AddOneTextSWtoBuffer(int _SW, const char* SWstr);
 void DisplayTelegraph(int _colour, int _position);
 int  InputtoNum(char _inputletter);
 
-void configure_keyboard_guru(QueueHandle_t keyboard_event_queue, bool SW1, bool SW2, bool SW3, bool SW4, bool SW5);
-void InitKeyboard(QueueHandle_t keyboard_event_queue);
-void configure_keyboard_kb(QueueHandle_t keyboard_event_queue, event_t _kbsettings);
+void reset_keyboard_settings(QueueHandle_t keyboard_event_queue);
 void configure_keyboard_typing(QueueHandle_t keyboard_event_queue, bool _typing);
 void configure_keyboard_character(QueueHandle_t keyboard_event_queue, int _pos, bool _character);
 void configure_keyboard_press(QueueHandle_t keyboard_event_queue, int _pos, bool _state);

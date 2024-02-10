@@ -79,48 +79,10 @@ extern const uint8_t squi1_png_end[] asm("_binary_squi1_png_end");
 extern const uint8_t squi2_png_start[] asm("_binary_squi2_png_start");
 extern const uint8_t squi2_png_end[] asm("_binary_squi2_png_end");
 
-event_t kbsettings;
-
 const int telegraph_X[20] = {0, -8, 8, -16, 0, 16, -24, -8, 8, 24, -24, -8, 8, 24, -16, 0, 16, -8, 8, 0};
 const int telegraph_Y[20] = {12, 27, 27, 42, 42, 42, 57, 57, 57, 57, 71, 71, 71, 71, 86, 86, 86, 101, 101, 116};
 
 static const char* TAG = "application utilities";
-
-void DisplayError(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, const char* errorstr) {
-    event_t    tempkbsettings = kbsettings;
-    pax_buf_t* gfx            = bsp_get_gfx_buffer();
-
-    InitKeyboard(keyboard_event_queue);
-    configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
-
-    int text_x = gfx->height / 2;
-    int text_y = 40;
-
-    pax_background(gfx, WHITE);
-    AddSWtoBuffer("", "", "", "", "");
-    pax_center_text(gfx, BLACK, font1, fontsizeS, text_x, text_y, errorstr);
-    bsp_display_flush();
-
-    InitKeyboard(keyboard_event_queue);
-
-    while (1) {
-        event_t event = {0};
-        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
-            switch (event.type) {
-                case event_input_button: break;  // Ignore raw button input
-                case event_input_keyboard:
-                    switch (event.args_input_keyboard.action) {
-                        default:
-                            configure_keyboard_kb(keyboard_event_queue, tempkbsettings);
-                            return;
-                            break;
-                    }
-                    break;
-                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type); break;
-            }
-        }
-    }
-}
 
 void draw_squi1(int y) {
     pax_buf_t* gfx = bsp_get_gfx_buffer();
@@ -255,10 +217,9 @@ void Justify_right_text(
 
 // screen that stop the game loop from running and display information until the player press any inputs
 int Screen_Information(const char* _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
-    event_t    tempkbsettings = kbsettings;
-    pax_buf_t* gfx            = bsp_get_gfx_buffer();
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
 
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
 
     int text_x = gfx->height / 2;
@@ -281,10 +242,7 @@ int Screen_Information(const char* _prompt, QueueHandle_t application_event_queu
                         // case SWITCH_3:
                         // case SWITCH_4:
                         // case SWITCH_5:
-                        default:
-                            configure_keyboard_kb(keyboard_event_queue, tempkbsettings);
-                            return 0;
-                            break;
+                        default: return 0; break;
                     }
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type); break;
@@ -297,10 +255,9 @@ int Screen_Information(const char* _prompt, QueueHandle_t application_event_queu
 int Screen_Confirmation(
     const char* _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue
 ) {
-    event_t    tempkbsettings = kbsettings;
-    pax_buf_t* gfx            = bsp_get_gfx_buffer();
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
 
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, false, false, false, true);
 
     int text_x = gfx->height / 2;
@@ -319,14 +276,12 @@ int Screen_Confirmation(
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
                         case SWITCH_1:
-                            configure_keyboard_kb(keyboard_event_queue, tempkbsettings);
                             return 1;
                             // [[fallthrough]];
                         case SWITCH_2: break;
                         case SWITCH_3: break;
                         case SWITCH_4: break;
                         case SWITCH_5:
-                            configure_keyboard_kb(keyboard_event_queue, tempkbsettings);
                             return 0;
                             // [[fallthrough]];
                         default: break;
@@ -341,7 +296,7 @@ int Screen_Confirmation(
 int WaitingforOpponent(const char* _prompt, QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     pax_buf_t* gfx = bsp_get_gfx_buffer();
 
-    InitKeyboard(keyboard_event_queue);
+    reset_keyboard_settings(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, false, false, false, false);
 
     int text_x = gfx->height / 2;
@@ -824,26 +779,8 @@ int InputtoNum(char _inputletter) {
     }
 }
 
-// debug to refactor
-void configure_keyboard_guru(QueueHandle_t keyboard_event_queue, bool SW1, bool SW2, bool SW3, bool SW4, bool SW5) {
-    // update the keyboard event handler settings
-    event_t kbsettings = {
-        .type                                = event_control_keyboard,
-        .args_control_keyboard.enable_typing = true,
-        .args_control_keyboard
-            .enable_rotations = {false, false, false, false, false, false, false, false, false, false},
-        .args_control_keyboard.enable_characters  = {true,  true,  true,  true,  true,  true,  true,  true,  true,
-                                                     true,  true,  false, false, false, false, false, false, false,
-                                                     false, false, false, false, false, false, false, false, false},
-        .args_control_keyboard.enable_actions     = {SW1, SW2, SW3, SW4, SW5},
-        .args_control_keyboard.enable_leds        = true,
-        .args_control_keyboard.enable_relay       = true,
-        kbsettings.args_control_keyboard.capslock = false,
-    };
-    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
-}
-
-void InitKeyboard(QueueHandle_t keyboard_event_queue) {
+void reset_keyboard_settings(QueueHandle_t keyboard_event_queue) {
+    event_t kbsettings;
     kbsettings.type                                = event_control_keyboard;
     kbsettings.args_control_keyboard.enable_typing = false;
     for (int i = 0; i < NUM_ROTATION; i++) kbsettings.args_control_keyboard.enable_rotations[i] = false;
@@ -852,11 +789,6 @@ void InitKeyboard(QueueHandle_t keyboard_event_queue) {
     kbsettings.args_control_keyboard.enable_leds  = true;
     kbsettings.args_control_keyboard.enable_relay = true;
     kbsettings.args_control_keyboard.capslock     = false;
-    xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
-}
-
-void configure_keyboard_kb(QueueHandle_t keyboard_event_queue, event_t _kbsettings) {
-    kbsettings = _kbsettings;
     xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 }
 
