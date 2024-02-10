@@ -46,6 +46,7 @@
 #include "soc/gpio_struct.h"
 #include "task_button_input_handler.h"
 #include "task_keyboard.h"
+#include "task_term_input_handler.h"
 #include "textedit.h"
 #include "wifi_cert.h"
 #include "wifi_connection.h"
@@ -122,6 +123,12 @@ void app_main(void) {
     // Set up the keyboard
     if ((res = start_task_keyboard(keyboard_event_queue, application_event_queue)) != ESP_OK) {
         bsp_display_error("Failed to start keyboard task");
+        return;
+    }
+
+    // Set up the terminal input handler.
+    if ((res = start_task_term_input_handler(application_event_queue)) != ESP_OK) {
+        bsp_display_error("Failed to start terminal input handler task");
         return;
     }
 
@@ -245,7 +252,7 @@ void app_main(void) {
     bsp_sao_addressable_led_set(saoleddata, sizeof(saoleddata));
 
     enum _epaper_lut lut = lut_1s;
-    esp_err_t err = nvs_get_u8_wrapped("system", "lut", (uint8_t*)&lut);
+    esp_err_t        err = nvs_get_u8_wrapped("system", "lut", (uint8_t*)&lut);
     if (err == ESP_OK) {
         ESP_LOGI(TAG, "Restoring active LUT to %d", lut);
         bsp_apply_lut(lut);
