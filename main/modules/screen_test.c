@@ -23,7 +23,7 @@ extern const uint8_t mascots_png_end[] asm("_binary_mascots_png_end");
 
 static const char* TAG = "test";
 
-const char team[12][32] = {
+const char team[][32] = {
     "CH23",
     "Dimitri",
     "Guru-san",
@@ -49,7 +49,7 @@ void Display_credits_entry(int cursor) {
         case hh2024_team:
             Addborder2toBuffer();
             pax_center_text(gfx, BLACK, font1, fontsizeS * 1.5, gfx->height / 2, 10, "Brought to you by");
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < sizeof(team) / sizeof(team[0]); i++)
                 pax_center_text(
                     gfx,
                     BLACK,
