@@ -30,12 +30,14 @@ typedef struct {
  * broadcast a message to other badges around
  * @param comms_message the message to be sent
  */
-esp_err_t badge_communication_send(badge_comms_message_type_t type, uint8_t* content, uint8_t content_length);
+esp_err_t badge_communication_send(
+    badge_comms_message_type_t type, uint8_t* content, uint8_t content_length, ieee802154_address_t* arg_dst
+);
 
 esp_err_t badge_communication_send_time(badge_message_time_t* data);
 esp_err_t badge_communication_send_chat(badge_message_chat_t* data);
-esp_err_t badge_communication_send_repertoire(badge_message_chat_t* data);
-esp_err_t badge_communication_send_battleship(badge_message_chat_t* data);
+esp_err_t badge_communication_send_repertoire(badge_message_repertoire_t* data);
+esp_err_t badge_communication_send_battleship(badge_message_battleship_t* data, ieee802154_address_t* dst);
 
 esp_err_t badge_communication_start();
 esp_err_t badge_communication_stop();
