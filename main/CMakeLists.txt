@@ -8,7 +8,6 @@ idf_component_register(
          ${task_srcs}
          ${module_srcs}
     INCLUDE_DIRS "."
-                 "tasks"
                  "modules"
     EMBED_FILES ${project_dir}/resources/bodgeteam.png
                 ${project_dir}/resources/textedit.png

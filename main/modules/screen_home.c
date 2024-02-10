@@ -109,8 +109,8 @@ screen_t screen_home_entry(QueueHandle_t application_event_queue, QueueHandle_t 
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
-                        case SWITCH_L1: cursor = Decrement(cursor, Nb_screen); break;
-                        case SWITCH_R1: cursor = Increment(cursor, Nb_screen); break;
+                        case ROTATION_L1: cursor = Decrement(cursor, Nb_screen); break;
+                        case ROTATION_R1: cursor = Increment(cursor, Nb_screen); break;
                         case SWITCH_1: break;
                         case SWITCH_2: break;
                         case SWITCH_3: break;

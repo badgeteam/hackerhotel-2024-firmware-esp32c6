@@ -601,10 +601,10 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
                             //     StoreRepertoire(name, maca, i);
                             // }
                             break;
-                        case SWITCH_L2: cursor.x--; break;
-                        case SWITCH_R2: cursor.x++; break;
-                        case SWITCH_L3: cursor.y++; break;
-                        case SWITCH_R3: cursor.y--; break;
+                        case ROTATION_L2: cursor.x--; break;
+                        case ROTATION_R2: cursor.x++; break;
+                        case ROTATION_L3: cursor.y++; break;
+                        case ROTATION_R3: cursor.y--; break;
                         case SWITCH_3: break;
                         case SWITCH_4:
                             if (!show_name_or_mac)

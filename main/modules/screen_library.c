@@ -344,8 +344,8 @@ screen_t screen_library_entry(QueueHandle_t application_event_queue, QueueHandle
                         case SWITCH_1: return screen_home; break;
                         case SWITCH_2: break;
                         case SWITCH_3: break;
-                        case SWITCH_L3: cursor = Decrement(cursor, Nb_item_library); break;
-                        case SWITCH_R3: cursor = Increment(cursor, Nb_item_library); break;
+                        case ROTATION_L3: cursor = Decrement(cursor, Nb_item_library); break;
+                        case ROTATION_R3: cursor = Increment(cursor, Nb_item_library); break;
                         case SWITCH_4: break;
                         case SWITCH_5:
                             screen_library_content(application_event_queue, keyboard_event_queue, cursor);

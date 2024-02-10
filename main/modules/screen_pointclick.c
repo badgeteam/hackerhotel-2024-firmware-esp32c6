@@ -1752,10 +1752,10 @@ screen_t screen_pointclick_dock1(
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
-                        case SWITCH_L1: cursor--; break;
-                        case SWITCH_R1: cursor++; break;
-                        case SWITCH_L5: cursor--; break;
-                        case SWITCH_R5: cursor++; break;
+                        case ROTATION_L1: cursor--; break;
+                        case ROTATION_R1: cursor++; break;
+                        case ROTATION_L5: cursor--; break;
+                        case ROTATION_R5: cursor++; break;
                         case SWITCH_1: return screen_home; break;
                         case SWITCH_2: break;
                         case SWITCH_3: move_forward++; break;
@@ -1833,10 +1833,10 @@ screen_t screen_pointclick_dock2(
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
-                        case SWITCH_L1: cursor--; break;
-                        case SWITCH_R1: cursor++; break;
-                        case SWITCH_L5: cursor--; break;
-                        case SWITCH_R5: cursor++; break;
+                        case ROTATION_L1: cursor--; break;
+                        case ROTATION_R1: cursor++; break;
+                        case ROTATION_L5: cursor--; break;
+                        case ROTATION_R5: cursor++; break;
                         case SWITCH_1: return screen_home; break;
                         case SWITCH_2: break;
                         case SWITCH_3: move_forward++; break;
@@ -1914,10 +1914,10 @@ screen_t screen_pointclick_land1(
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
-                        case SWITCH_L1: cursor--; break;
-                        case SWITCH_R1: cursor++; break;
-                        case SWITCH_L5: cursor--; break;
-                        case SWITCH_R5: cursor++; break;
+                        case ROTATION_L1: cursor--; break;
+                        case ROTATION_R1: cursor++; break;
+                        case ROTATION_L5: cursor--; break;
+                        case ROTATION_R5: cursor++; break;
                         case SWITCH_1: return screen_home; break;
                         case SWITCH_2: break;
                         case SWITCH_3: move_forward++; break;
@@ -1987,10 +1987,10 @@ screen_t screen_pointclick_dune1(
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
-                        case SWITCH_L1: cursor--; break;
-                        case SWITCH_R1: cursor++; break;
-                        case SWITCH_L5: cursor--; break;
-                        case SWITCH_R5: cursor++; break;
+                        case ROTATION_L1: cursor--; break;
+                        case ROTATION_R1: cursor++; break;
+                        case ROTATION_L5: cursor--; break;
+                        case ROTATION_R5: cursor++; break;
                         case SWITCH_1: return screen_home; break;
                         case SWITCH_2: move_back++; break;
                         case SWITCH_3: move_forward++; break;
@@ -2064,10 +2064,10 @@ screen_t screen_pointclick_dune2(
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
-                        case SWITCH_L1: cursor--; break;
-                        case SWITCH_R1: cursor++; break;
-                        case SWITCH_L5: cursor--; break;
-                        case SWITCH_R5: cursor++; break;
+                        case ROTATION_L1: cursor--; break;
+                        case ROTATION_R1: cursor++; break;
+                        case ROTATION_L5: cursor--; break;
+                        case ROTATION_R5: cursor++; break;
                         case SWITCH_1: return screen_home; break;
                         case SWITCH_2: move_back++; break;
                         case SWITCH_3: move_forward++; break;
@@ -2179,10 +2179,10 @@ screen_t screen_pointclick_town1(
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
-                        case SWITCH_L1: cursor--; break;
-                        case SWITCH_R1: cursor++; break;
-                        case SWITCH_L5: cursor--; break;
-                        case SWITCH_R5: cursor++; break;
+                        case ROTATION_L1: cursor--; break;
+                        case ROTATION_R1: cursor++; break;
+                        case ROTATION_L5: cursor--; break;
+                        case ROTATION_R5: cursor++; break;
                         case SWITCH_1: return screen_home; break;
                         case SWITCH_2: button2++; break;
                         case SWITCH_3: move_forward++; break;
@@ -2252,10 +2252,10 @@ screen_t screen_pointclick_town2(
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
-                        case SWITCH_L1: cursor--; break;
-                        case SWITCH_R1: cursor++; break;
-                        case SWITCH_L5: cursor--; break;
-                        case SWITCH_R5: cursor++; break;
+                        case ROTATION_L1: cursor--; break;
+                        case ROTATION_R1: cursor++; break;
+                        case ROTATION_L5: cursor--; break;
+                        case ROTATION_R5: cursor++; break;
                         case SWITCH_1: return screen_home; break;
                         case SWITCH_2: move_back++; break;
                         case SWITCH_3: move_forward++; break;
@@ -2333,10 +2333,10 @@ screen_t screen_pointclick_road1(
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
-                        case SWITCH_L1: cursor--; break;
-                        case SWITCH_R1: cursor++; break;
-                        case SWITCH_L5: cursor--; break;
-                        case SWITCH_R5: cursor++; break;
+                        case ROTATION_L1: cursor--; break;
+                        case ROTATION_R1: cursor++; break;
+                        case ROTATION_L5: cursor--; break;
+                        case ROTATION_R5: cursor++; break;
                         case SWITCH_1: return screen_home; break;
                         case SWITCH_2: move_back++; break;
                         case SWITCH_3: move_forward++; break;
@@ -2431,10 +2431,10 @@ screen_t screen_pointclick_dune3(
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
-                        case SWITCH_L1: cursor--; break;
-                        case SWITCH_R1: cursor++; break;
-                        case SWITCH_L5: cursor--; break;
-                        case SWITCH_R5: cursor++; break;
+                        case ROTATION_L1: cursor--; break;
+                        case ROTATION_R1: cursor++; break;
+                        case ROTATION_L5: cursor--; break;
+                        case ROTATION_R5: cursor++; break;
                         case SWITCH_1: return screen_home; break;
                         case SWITCH_2: move_back++; break;
                         case SWITCH_3: move_forward++; break;
@@ -2534,10 +2534,10 @@ screen_t screen_pointclick_lighthouse1(
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
-                        case SWITCH_L1: cursor--; break;
-                        case SWITCH_R1: cursor++; break;
-                        case SWITCH_L5: cursor--; break;
-                        case SWITCH_R5: cursor++; break;
+                        case ROTATION_L1: cursor--; break;
+                        case ROTATION_R1: cursor++; break;
+                        case ROTATION_L5: cursor--; break;
+                        case ROTATION_R5: cursor++; break;
                         case SWITCH_1: return screen_home; break;
                         case SWITCH_2: button2++; break;
                         case SWITCH_3: move_forward++; break;
@@ -2617,10 +2617,10 @@ screen_t screen_pointclick_lighthouse2(
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
-                        case SWITCH_L1: cursor--; break;
-                        case SWITCH_R1: cursor++; break;
-                        case SWITCH_L5: cursor--; break;
-                        case SWITCH_R5: cursor++; break;
+                        case ROTATION_L1: cursor--; break;
+                        case ROTATION_R1: cursor++; break;
+                        case ROTATION_L5: cursor--; break;
+                        case ROTATION_R5: cursor++; break;
                         case SWITCH_1: return screen_home; break;
                         case SWITCH_2: move_back++; break;
                         case SWITCH_3: move_forward++; break;
