@@ -4,6 +4,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "pax_gfx.h"
+#include "screens.h"
 
 #define LED_OFF       0x000000
 #define LED_RED       0xFF0000
@@ -111,6 +112,8 @@ esp_err_t nvs_get_u16_wrapped(const char* namespace, const char* key, uint16_t* 
 esp_err_t nvs_set_u16_wrapped(const char* namespace, const char* key, uint16_t value);
 esp_err_t nvs_get_u8_blob_wrapped(const char* namespace, const char* key, uint8_t* value, size_t length);
 esp_err_t nvs_set_u8_blob_wrapped(const char* namespace, const char* key, uint8_t* value, size_t length);
+
+screen_t screen_welcome_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue);
 
 /*  USEFUL bit of code
 Delay:

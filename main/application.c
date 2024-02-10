@@ -1107,3 +1107,125 @@ esp_err_t nvs_set_u8_blob_wrapped(const char* namespace, const char* key, uint8_
     nvs_close(handle);
     return res;
 }
+
+screen_t screen_welcome_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+    ESP_LOGE(TAG, "enter welcome");
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
+    configure_keyboard_typing(keyboard_event_queue, true);
+    int        characterEntered = 0;
+    char       word[10]         = "hack3r";
+    int        displayflag      = 1;
+    pax_buf_t* gfx              = bsp_get_gfx_buffer();
+    while (1) {
+        if (displayflag) {
+            pax_background(gfx, WHITE);
+            AddSWborder2toBuffer();
+            switch (characterEntered) {
+                case 0:
+                    {
+                        pax_center_text(
+                            gfx,
+                            BLACK,
+                            font1,
+                            fontsizeS,
+                            gfx->height / 2,
+                            gfx->width / 2 - 5,
+                            "Welcome to Hacker Hotel!"
+                        );
+                        pax_center_text(
+                            gfx,
+                            BLACK,
+                            font1,
+                            fontsizeS,
+                            gfx->height / 2,
+                            gfx->width / 2 + 5,
+                            "You have been granted access to the portable Telegraph device,"
+                        );
+                        pax_center_text(
+                            gfx,
+                            BLACK,
+                            font1,
+                            fontsizeS,
+                            gfx->height / 2,
+                            gfx->width / 2 + 15,
+                            "courtesy of badge.team~"
+                        );
+
+                        pax_center_text(
+                            gfx,
+                            BLACK,
+                            font1,
+                            fontsizeS,
+                            gfx->height / 2,
+                            gfx->width / 2 + 25,
+                            "Let us show you how to use the peculiar input system:"
+                        );
+
+                        break;
+                    }
+                case 1:
+                    {
+                        pax_center_text(gfx, BLACK, font1, fontsizeS * 3, gfx->height / 2, gfx->width / 2, "h");
+                        break;
+                    }
+                case 2:
+                    {
+                        pax_center_text(gfx, BLACK, font1, fontsizeS * 3, gfx->height / 2, gfx->width / 2, "ha");
+                        break;
+                    }
+                case 3:
+                    {
+                        pax_center_text(gfx, BLACK, font1, fontsizeS * 3, gfx->height / 2, gfx->width / 2, "hac");
+                        break;
+                    }
+                case 4:
+                    {
+                        pax_center_text(gfx, BLACK, font1, fontsizeS * 3, gfx->height / 2, gfx->width / 2, "hack");
+                        break;
+                    }
+                case 5:
+                    {
+                        pax_center_text(gfx, BLACK, font1, fontsizeS * 3, gfx->height / 2, gfx->width / 2, "hack3");
+                        break;
+                    }
+                case 6:
+                    {
+                        pax_center_text(gfx, BLACK, font1, fontsizeS * 3, gfx->height / 2, gfx->width / 2, "hack3r");
+                        break;
+                    }
+                case 7:
+                    {
+                        return screen_nametag;
+                        break;
+                    }
+
+                default: break;
+            }
+            bsp_display_flush();
+            displayflag = 0;
+        }
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: break;
+                        case SWITCH_2: break;
+                        case SWITCH_3: break;
+                        case SWITCH_4: break;
+                        case SWITCH_5: break;
+                        default: break;
+                    }
+                    if (event.args_input_keyboard.character != '\0' &&
+                        event.args_input_keyboard.character == word[characterEntered]) {
+                        characterEntered++;
+                    }
+                    displayflag = 1;
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}

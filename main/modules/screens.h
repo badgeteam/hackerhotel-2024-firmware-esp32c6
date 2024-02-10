@@ -18,6 +18,7 @@ typedef enum _screen {
     screen_morse,
     screen_shades,
 
+    screen_welcome,
     screen_template,
     screen_mascots,
     screen_home,
