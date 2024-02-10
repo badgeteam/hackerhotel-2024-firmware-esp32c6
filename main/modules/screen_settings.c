@@ -462,11 +462,11 @@ const float OCVLut[32][2] = {{0, 2.7296},      {0.0164, 3.0857}, {0.0328, 3.2497
 //                         case SWITCH_3: break;
 //                         case SWITCH_4: break;
 //                         case SWITCH_5: break;
-//                         case SWITCH_L5:
+//                         case ROTATION_L5:
 //                             if (cursor)
 //                                 cursor--;
 //                             break;
-//                         case SWITCH_R5:
+//                         case ROTATION_R5:
 //                             if (cursor)
 //                                 cursor++;
 //                             break;
@@ -535,11 +535,11 @@ screen_t screen_lut_dial(QueueHandle_t application_event_queue, QueueHandle_t ke
                         case SWITCH_3: break;
                         case SWITCH_4: break;
                         case SWITCH_5: break;
-                        case SWITCH_L5:
+                        case ROTATION_L5:
                             if (cursor)
                                 cursor--;
                             break;
-                        case SWITCH_R5:
+                        case ROTATION_R5:
                             if (cursor < 4)
                                 cursor++;
                             break;

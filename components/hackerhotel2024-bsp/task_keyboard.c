@@ -114,19 +114,19 @@ void keyboard_handle_input(keyboard_state_t* state, coprocessor_input_message_t*
             }
             if (state->enable_rot_action) {
                 switch (state->button_state_left) {
-                    case (1 << 0): rotation = SWITCH_L1; break;
-                    case (1 << 1): rotation = SWITCH_L2; break;
-                    case (1 << 2): rotation = SWITCH_L3; break;
-                    case (1 << 3): rotation = SWITCH_L4; break;
-                    case (1 << 4): rotation = SWITCH_L5; break;
+                    case (1 << 0): rotation = ROTATION_L1; break;
+                    case (1 << 1): rotation = ROTATION_L2; break;
+                    case (1 << 2): rotation = ROTATION_L3; break;
+                    case (1 << 3): rotation = ROTATION_L4; break;
+                    case (1 << 4): rotation = ROTATION_L5; break;
                 }
 
                 switch (state->button_state_right) {
-                    case (1 << 0): rotation = SWITCH_R1; break;
-                    case (1 << 1): rotation = SWITCH_R2; break;
-                    case (1 << 2): rotation = SWITCH_R3; break;
-                    case (1 << 3): rotation = SWITCH_R4; break;
-                    case (1 << 4): rotation = SWITCH_R5; break;
+                    case (1 << 0): rotation = ROTATION_R1; break;
+                    case (1 << 1): rotation = ROTATION_R2; break;
+                    case (1 << 2): rotation = ROTATION_R3; break;
+                    case (1 << 3): rotation = ROTATION_R4; break;
+                    case (1 << 4): rotation = ROTATION_R5; break;
                 }
             }
 
@@ -148,7 +148,7 @@ void keyboard_handle_input(keyboard_state_t* state, coprocessor_input_message_t*
             }
         }
     }
-else if ((state->button_state_left && state->button_state_right && state->enable_typing)||((state->button_state_left == 0x09) && state->enable_typing)||((state->button_state_left == 0x06) && state->enable_typing)||((state->button_state_right == 0x18) && state->enable_typing)||((state->button_state_right == 0x14) && state->enable_typing)||((state->button_state_right == 0x12) && state->enable_typing)||((state->button_state_right == 0x11) && state->enable_typing)) {
+else if ((state->button_state_left && state->button_state_right && state->enable_typing)||((state->button_state_left == 0x09) && state->enable_typing)||((state->button_state_left == 0x06) && state->enable_typing)||((state->button_state_right == 0x18) && state->enable_typing)||((state->button_state_right == 0x14) && state->enable_typing)||((state->button_state_right == 0x12) && state->enable_typing)||((state->button_state_right == 0x11) && state->enable_typing)||((state->button_state_left == 0x11) && state->enable_typing)) {
         // Select character
         if (state->button_state_left == SW1_CP && state->button_state_right == SW5_CP && state->enable_characters[0]) {
             character  = 'A';
@@ -261,8 +261,12 @@ else if ((state->button_state_left && state->button_state_right && state->enable
             character  = 'Z';
             leds      |= LED_E + LED_F + LED_G + LED_K + LED_N + LED_R + LED_S + LED_T;
         }
+        if (state->button_state_left == 0x11 && state->enable_characters[36]) {
+            character  = ' ';
+            leds      |= LED_M + LED_N + LED_O + LED_P + LED_H + LED_L;
+        }
 
-        if (character != '\0' && !state->capslock) {
+        if (character >= 'A' && character <= 'Z' && !state->capslock) {
             character += 32;  // replace uppercase character with lowercase character
         }
     }

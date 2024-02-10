@@ -27,8 +27,23 @@ jobs:
       with:
         submodules: recursive
 
+    - name: cache sdk
+      id: cache-sdk
+      uses: actions/cache@v4
+      with:
+        path: esp-idf
+        key: ${{ runner.os }}-${{ hashFiles('Makefile') }}-esp-idf
+
+    - name: cache toolchain
+      id: cache-toolchain
+      uses: actions/cache@v4
+      with:
+        path: esp-idf-tools
+        key: ${{ runner.os }}-${{ hashFiles('Makefile') }}-esp-idf-tools
+
     - name: initialise sdk
-      run: make prepare
+      if: (steps.cache-sdk.outputs.cache-hit != 'true') || (steps.cache-toolchain.outputs.cache-hit != 'true')
+      run: rm -rf ./esp-idf ./esp-idf-tools && make prepare
 
     - name: build firmware
       run: make build

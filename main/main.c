@@ -46,6 +46,7 @@
 #include "soc/gpio_struct.h"
 #include "task_button_input_handler.h"
 #include "task_keyboard.h"
+#include "task_term_input_handler.h"
 #include "textedit.h"
 #include "wifi_cert.h"
 #include "wifi_connection.h"
@@ -122,6 +123,12 @@ void app_main(void) {
     // Set up the keyboard
     if ((res = start_task_keyboard(keyboard_event_queue, application_event_queue)) != ESP_OK) {
         bsp_display_error("Failed to start keyboard task");
+        return;
+    }
+
+    // Set up the terminal input handler.
+    if ((res = start_task_term_input_handler(application_event_queue)) != ESP_OK) {
+        bsp_display_error("Failed to start terminal input handler task");
         return;
     }
 
@@ -226,19 +233,22 @@ void app_main(void) {
     // SAO leds test
     bsp_sao_addressable_led_enable();
     uint8_t saoleddata[] = {
-        0xFF,
+        0x10,
         0x00,
         0x00,
-        0xFF,
+        0x10,
         0x00,
         0x00,
-        0xFF,
+        0x10,
         0x00,
         0x00,
-        0xFF,
+        0x10,
         0x00,
         0x00,
-        0xFF,
+        0x10,
+        0x00,
+        0x00,
+        0x10,
         0x00,
         0x00,
     };
