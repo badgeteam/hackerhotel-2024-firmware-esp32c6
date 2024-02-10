@@ -60,6 +60,13 @@
 
 static const char* TAG = "main";
 
+static void send_str(char _nickname[nicknamelength], char _payload[messagelength]) {
+    badge_message_chat_t data;
+    strcpy(data.nickname, _nickname);
+    strcpy(data.payload, _payload);
+    badge_communication_send_chat(&data);
+}
+
 static QueueHandle_t keyboard_event_queue                 = NULL;
 static QueueHandle_t application_event_queue              = NULL;
 static QueueHandle_t background_communication_event_queue = NULL;
@@ -146,6 +153,12 @@ void app_main(void) {
         bsp_display_error("Failed to initialize\nBodge comms failed to start");
         return;
     }
+
+    char name[32] = "name";
+    char message[67] = "message";
+
+    send_str(name, message);
+    vTaskDelay(portMAX_DELAY);
 
     // Printer
     if (printer_initialize()) {
