@@ -354,6 +354,7 @@ screen_t screen_library_entry(QueueHandle_t application_event_queue, QueueHandle
                     }
                     ESP_LOGE(TAG, "Cursor %d", cursor);
                     DisplayLibraryEntry(cursor);
+                    configure_keyboard_presses(keyboard_event_queue, true, false, false, false, true);
                     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, true);
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
