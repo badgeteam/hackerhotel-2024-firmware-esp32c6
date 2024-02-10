@@ -264,7 +264,7 @@ void app_main(void) {
     }
 
     // Main application
-    screen_t current_screen = screen_pointclick;
+    screen_t current_screen = screen_welcome;
     if (release_type == production)
         current_screen = screen_mascots;
     while (1) {
@@ -339,6 +339,11 @@ void app_main(void) {
             case screen_mascots:
                 {
                     current_screen = screen_mascots_entry(application_event_queue, keyboard_event_queue);
+                    break;
+                }
+            case screen_welcome:
+                {
+                    current_screen = screen_welcome_entry(application_event_queue, keyboard_event_queue);
                     break;
                 }
             default: current_screen = screen_home;

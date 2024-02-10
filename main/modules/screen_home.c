@@ -112,16 +112,16 @@ screen_t screen_home_entry(QueueHandle_t application_event_queue, QueueHandle_t 
                         case SWITCH_4: break;
                         case SWITCH_5:
                             switch (cursor) {
-                                case 0: return screen_battleship;
-                                case 1: return screen_settings;
-                                case 2: return screen_repertoire;
-                                case 3: return screen_hangman;
-                                case 4: return screen_library;
-                                case 5: return screen_nametag;
-                                case 6: return screen_pointclick;
-                                case 7: return screen_billboard;
-                                case 8: return screen_credits;
-                                case 9: return screen_scrambled;
+                                case 0: return screen_battleship; break;
+                                case 1: return screen_settings; break;
+                                case 2: return screen_repertoire; break;
+                                case 3: return screen_hangman; break;
+                                case 4: return screen_library; break;
+                                case 5: return screen_nametag; break;
+                                case 6: return screen_pointclick; break;
+                                case 7: return screen_billboard; break;
+                                case 8: return screen_credits; break;
+                                case 9: return screen_scrambled; break;
                             }
                             break;
                         default: break;
@@ -140,17 +140,13 @@ void DisplayHomeEntry(int cursor) {
     pax_insert_png_buf(gfx, map_png_start, map_png_end - map_png_start, 0, 0, 0);
     AddOneTextSWtoBuffer(SWITCH_5, "Select");
     DrawArrowHorizontal(SWITCH_1);
+    pax_draw_line(gfx, WHITE, screen_pos[cursor][0] + 1, 0, screen_pos[cursor][0] + 1, 100);
+    pax_draw_line(gfx, WHITE, screen_pos[cursor][0] - 1, 0, screen_pos[cursor][0] - 1, 100);
+    pax_draw_line(gfx, WHITE, 0, screen_pos[cursor][1] - 1, gfx->height, screen_pos[cursor][1] - 1);
+    pax_draw_line(gfx, WHITE, 0, screen_pos[cursor][1] + 1, gfx->height, screen_pos[cursor][1] + 1);
     pax_draw_line(gfx, RED, screen_pos[cursor][0], 0, screen_pos[cursor][0], 100);
     pax_draw_line(gfx, RED, 0, screen_pos[cursor][1], gfx->height, screen_pos[cursor][1]);
     pax_center_text(gfx, BLACK, font1, fontsizeS * 2, gfx->height / 2, gfx->width - fontsizeS * 2, screen_name[cursor]);
-    // pax_insert_png_buf(
-    //     gfx,
-    //     diamondb_png_start,
-    //     diamondb_png_end - diamondb_png_start,
-    //     screen_pos[cursor][0],
-    //     screen_pos[cursor][1],
-    //     0
-    // );
     bsp_display_flush_with_lut(lut_4s);
 }
 
@@ -186,14 +182,14 @@ screen_t screen_Nametag(QueueHandle_t application_event_queue, QueueHandle_t key
     float scale = 100;
     while (scale > 1) {
         dims = pax_text_size(font1, scale, nickname);
-        if (dims.x <= 296 && dims.y <= 100)
+        if (dims.x <= 286 && dims.y <= 100)
             break;
         scale -= 0.2;
     }
     ESP_LOGW(TAG, "Scale: %f", scale);
     pax_background(gfx, WHITE);
     AddSWtoBufferLR("Map", "Rename");
-    pax_draw_text(gfx, RED, font1, scale, (290 - dims.x) / 2, (100 - dims.y) / 2, nickname);
+    pax_center_text(gfx, RED, font1, scale, (dims.x) / 2, (100 - dims.y) / 2, nickname);
     bsp_display_flush_with_lut(lut_8s);
 
     InitKeyboard(keyboard_event_queue);

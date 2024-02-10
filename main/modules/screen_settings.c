@@ -3,6 +3,7 @@
 #include "badge-communication-protocol.h"
 #include "badge-communication.h"
 #include "bsp.h"
+#include "esp_app_desc.h"
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_timer.h"
@@ -481,13 +482,26 @@ const float OCVLut[32][2] = {{0, 2.7296},      {0.0164, 3.0857}, {0.0328, 3.2497
 // }
 screen_t screen_lut_dial(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     if (log)
-        ESP_LOGE(TAG, "Enter screen_home_entry");
+        ESP_LOGE(TAG, "Enter screen_lut_dial");
     // update the keyboard event handler settings
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, false, false, false, false);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_5, true);
     int          cursor    = 1;
     epaper_lut_t activeLut = lut_4s;
+    esp_err_t    err       = nvs_get_u8_wrapped("system", "lut", (uint8_t*)&activeLut);
+    switch (activeLut) {
+        case lut_1s: cursor = 0; break;
+        case lut_4s: cursor = 1; break;
+        case lut_8s: cursor = 2; break;
+        case lut_full: cursor = 3; break;
+        default: break;
+    }
+    if (err == ESP_OK) {
+        ESP_LOGI(TAG, "Restoring active LUT to %d", activeLut);
+    } else {
+        ESP_LOGE(TAG, "Failed to restore LUT: %s", esp_err_to_name(err));
+    }
 
     while (1) {
         pax_buf_t* gfx = bsp_get_gfx_buffer();
@@ -521,7 +535,6 @@ screen_t screen_lut_dial(QueueHandle_t application_event_queue, QueueHandle_t ke
             default: break;
         }
         bsp_apply_lut(activeLut);
-        nvs_set_u8_wrapped("system", "lut", (uint8_t)activeLut);
         bsp_display_flush();
 
         event_t event = {0};
@@ -530,7 +543,17 @@ screen_t screen_lut_dial(QueueHandle_t application_event_queue, QueueHandle_t ke
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
-                        case SWITCH_1: return screen_settings; break;
+                        case SWITCH_1:
+                            nvs_set_u8_wrapped("system", "lut", (uint8_t)activeLut);
+                            epaper_lut_t readbackLut = lut_4s;
+                            esp_err_t    err         = nvs_get_u8_wrapped("system", "lut", (uint8_t*)&readbackLut);
+                            if (err == ESP_OK) {
+                                ESP_LOGI(TAG, "Reading back stored LUT: %d", readbackLut);
+                            } else {
+                                ESP_LOGE(TAG, "Failed to restore LUT: %s", esp_err_to_name(err));
+                            }
+                            return screen_settings;
+                            break;
                         case SWITCH_2: break;
                         case SWITCH_3: break;
                         case SWITCH_4: break;
@@ -553,7 +576,7 @@ screen_t screen_lut_dial(QueueHandle_t application_event_queue, QueueHandle_t ke
 
 screen_t screen_settings_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     if (log)
-        ESP_LOGE(TAG, "Enter screen_home_entry");
+        ESP_LOGE(TAG, "Enter screen_setting_entry");
     // update the keyboard event handler settings
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
@@ -592,6 +615,10 @@ screen_t screen_settings_entry(QueueHandle_t application_event_queue, QueueHandl
             pax_center_text(gfx, BLACK, font1, fontsizeS, 32, 14, voltage);
             pax_center_text(gfx, BLACK, font1, fontsizeS, 31, 44, SoC);
             ESP_LOGE(TAG, "bsp_battery_charging %d", bsp_battery_charging());
+            const esp_app_desc_t* app_description = esp_app_get_description();
+            pax_center_text(gfx, BLACK, font1, fontsizeS, 248, 9, app_description->version);
+
+
 
             if (strcmp(voltage, oldvoltage) || strcmp(SoC, oldSoC) || (oldchargingstate != bsp_battery_charging())) {
                 bsp_display_flush();
@@ -608,7 +635,7 @@ screen_t screen_settings_entry(QueueHandle_t application_event_queue, QueueHandl
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
                         case SWITCH_1: return screen_home; break;
-                        case SWITCH_2: screen_lut_dial(application_event_queue, keyboard_event_queue); break;
+                        case SWITCH_2: return screen_lut_dial(application_event_queue, keyboard_event_queue); break;
                         case SWITCH_3: edit_wifi(application_event_queue, keyboard_event_queue); break;
                         case SWITCH_4: ota_update_wrapped(keyboard_event_queue, false); break;
                         case SWITCH_5: ota_update_wrapped(keyboard_event_queue, true); break;

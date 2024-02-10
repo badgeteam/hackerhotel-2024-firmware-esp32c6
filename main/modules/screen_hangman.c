@@ -4777,7 +4777,7 @@ void DisplayHangman(
         fuckme[0] = letters_found[i];
         ESP_LOGE(TAG, "i: %d", i);
         if (mistake_count < mistakesallowed)
-            if (letters_found[i] == NULL)
+            if (letters_found[i] == 0)
                 pax_center_text(gfx, BLACK, font1, fontsizeS * 2, text_o_x + text_g_x * i, text_o_y, "-");
             else
                 pax_center_text(gfx, BLACK, font1, fontsizeS * 2, text_o_x + text_g_x * i, text_o_y, fuckme);
@@ -4806,25 +4806,26 @@ screen_t screen_hangman_entry(QueueHandle_t application_event_queue, QueueHandle
 
     char choosen_word[longestword] = "";
     char letters_found[longestword];
-    for (int i = 0; i < longestword; i++) letters_found[i] = NULL;
+    for (int i = 0; i < longestword; i++) letters_found[i] = 0;
     char disabled_letters[nbletters];
-    for (int i = 0; i < nbletters; i++) disabled_letters[i] = NULL;
+    for (int i = 0; i < nbletters; i++) disabled_letters[i] = 0;
 
     int chosenwordID = 0;
     if (wordtype == victorian) {
-        chosenwordID = esp_random() % sizeof(victorian_words);
-        chosenwordID = 136;
-        strcpy(choosen_word, victorian_words[chosenwordID]);
+        chosenwordID = esp_random() % (sizeof(victorian_words) / sizeof(const char*));
+        ESP_LOGI(TAG, "chosenwordID victorian: %d", chosenwordID);
+        strlcpy(choosen_word, victorian_words[chosenwordID], longestword);
     } else if (wordtype == english) {
-        chosenwordID = esp_random() % sizeof(english_words);
-        strcpy(choosen_word, english_words[chosenwordID]);
+        chosenwordID = esp_random() % (sizeof(english_words) / sizeof(const char*));
+        ESP_LOGI(TAG, "chosenwordID english: %d", chosenwordID);
+        strlcpy(choosen_word, english_words[chosenwordID], longestword);
     }
     int word_length = strlen(choosen_word);
-    ESP_LOGE(TAG, "word_length: %d", word_length);
+    ESP_LOGI(TAG, "word_length: %d", word_length);
     int displayflag   = 1;
     int mistake_count = 0;
 
-    for (int i = 0; i < nbletters; i++) disabled_letters[i] = NULL;
+    for (int i = 0; i < nbletters; i++) disabled_letters[i] = 0;
 
     while (1) {
         if (displayflag) {
@@ -4839,7 +4840,7 @@ screen_t screen_hangman_entry(QueueHandle_t application_event_queue, QueueHandle
             }
             int flagvictory = 1;
             for (int i = 0; i < word_length; i++)
-                if (letters_found[i] == NULL)
+                if (letters_found[i] == 0)
                     flagvictory = 0;
             if (flagvictory) {
                 vTaskDelay(pdMS_TO_TICKS(2000));
@@ -4869,7 +4870,7 @@ screen_t screen_hangman_entry(QueueHandle_t application_event_queue, QueueHandle
                         ESP_LOGE(TAG, "Input: %c", input);
                         int flagcorrectguess = 0;
                         for (int i = 0; i < word_length; i++)
-                            if (input == choosen_word[i]) {
+                            if (input == choosen_word[i] || input == (choosen_word[i] | 32)) {
                                 letters_found[i] = input;
                                 ESP_LOGE(TAG, "match location: %c", letters_found[i]);
                                 ESP_LOGE(TAG, "match location: %d", i);
@@ -4896,13 +4897,13 @@ screen_t screen_hangman_entry(QueueHandle_t application_event_queue, QueueHandle
 screen_t screen_hangman_splash(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
-    AddSWtoBuffer("Exit", "offline", "", "replay", "online");
+    AddSWtoBuffer("Exit", "offline", "", "", "");
     // splash imeage is x = 212 y = 116
     pax_insert_png_buf(gfx, deiblers_png_start, deiblers_png_end - deiblers_png_start, (gfx->height - 212) / 2, 0, 0);
     bsp_display_flush();
 
     InitKeyboard(keyboard_event_queue);
-    configure_keyboard_presses(keyboard_event_queue, true, true, false, true, true);
+    configure_keyboard_presses(keyboard_event_queue, true, true, false, false, false);
 
     while (1) {
         event_t event = {0};
