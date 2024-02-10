@@ -576,7 +576,7 @@ screen_t screen_lut_dial(QueueHandle_t application_event_queue, QueueHandle_t ke
 
 screen_t screen_settings_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     if (log)
-        ESP_LOGE(TAG, "Enter screen_home_entry");
+        ESP_LOGE(TAG, "Enter screen_setting_entry");
     // update the keyboard event handler settings
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);

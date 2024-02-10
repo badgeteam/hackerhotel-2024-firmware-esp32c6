@@ -1211,14 +1211,6 @@ screen_t screen_welcome_entry(QueueHandle_t application_event_queue, QueueHandle
             switch (event.type) {
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
-                    switch (event.args_input_keyboard.action) {
-                        case SWITCH_1: break;
-                        case SWITCH_2: break;
-                        case SWITCH_3: break;
-                        case SWITCH_4: break;
-                        case SWITCH_5: break;
-                        default: break;
-                    }
                     if (event.args_input_keyboard.character != '\0' &&
                         event.args_input_keyboard.character == word[characterEntered]) {
                         characterEntered++;
