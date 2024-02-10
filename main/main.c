@@ -154,11 +154,35 @@ void app_main(void) {
         return;
     }
 
-    char name[32] = "name";
-    char message[67] = "message";
+    event_t event;
 
-    send_str(name, message);
-    vTaskDelay(portMAX_DELAY);
+    char message_buf[67] = "";
+
+    while (true) {
+        xQueueReceive(application_event_queue, &event, portMAX_DELAY);
+        if (event.type != event_term_input) {
+            continue;
+        }
+        char c = event.args_term_input;
+
+        if (c == '\n') {
+            ESP_LOGI(TAG, "Sending: %s", message_buf);
+            message_buf[strlen(message_buf)] = '\r';
+            message_buf[strlen(message_buf)] = '\n';
+            char name_buf[32] = "username";
+            send_str(name_buf, message_buf);
+            memset(message_buf, 0, 67);
+            vTaskDelay(100);
+            continue;
+        }
+
+        if (strlen(message_buf) >= 67) {
+            ESP_LOGE(TAG, "Message out of buffer space!");
+            continue;
+        }
+
+        message_buf[strlen(message_buf)] = c;
+    }
 
     // Printer
     if (printer_initialize()) {
