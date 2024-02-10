@@ -233,19 +233,22 @@ void app_main(void) {
     // SAO leds test
     bsp_sao_addressable_led_enable();
     uint8_t saoleddata[] = {
-        0xFF,
+        0x10,
         0x00,
         0x00,
-        0xFF,
+        0x10,
         0x00,
         0x00,
-        0xFF,
+        0x10,
         0x00,
         0x00,
-        0xFF,
+        0x10,
         0x00,
         0x00,
-        0xFF,
+        0x10,
+        0x00,
+        0x00,
+        0x10,
         0x00,
         0x00,
     };

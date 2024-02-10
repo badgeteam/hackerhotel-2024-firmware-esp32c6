@@ -157,7 +157,7 @@ void DisplayHomeEntry(int cursor) {
     //     screen_pos[cursor][1],
     //     0
     // );
-    bsp_display_flush_with_lut(lut_1s);
+    bsp_display_flush_with_lut(lut_4s);
 }
 
 screen_t screen_Nametag(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {

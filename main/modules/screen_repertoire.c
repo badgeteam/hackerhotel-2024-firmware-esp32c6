@@ -34,6 +34,8 @@ extern const uint8_t b_arrow1_png_end[] asm("_binary_b_arrow1_png_end");
 extern const uint8_t b_arrow2_png_start[] asm("_binary_b_arrow2_png_start");
 extern const uint8_t b_arrow2_png_end[] asm("_binary_b_arrow2_png_end");
 
+ieee802154_address_t battleship_dst = {.mode = ADDR_MODE_SHORT, .short_address = 0xFFFF};
+
 bool SettNBrepertoryID(uint16_t _ID) {
     bool res = nvs_set_u16_wrapped("Repertoire", "IDcount", _ID);
     if (log)
@@ -96,45 +98,6 @@ bool GetRepertoire(char _repertoryIDlist[nicknamelength], uint8_t mac[8], uint16
     return res;
 }
 
-void receive_repertoire(void) {
-    // get a queue to listen on, for message type MESSAGE_TYPE_TIME, and size badge_message_time_t
-    QueueHandle_t repertoire_queue =
-        NULL;  // badge_comms_add_listener(MESSAGE_TYPE_REPERTOIRE, sizeof(badge_message_repertoire_t));
-    // check if an error occurred (check logs for the reason)
-    if (repertoire_queue == NULL) {
-        ESP_LOGE(TAG, "Failed to add listener");
-        return;
-    }
-
-    uint32_t i = 0;
-
-    while (true) {
-        // variable for the queue to store the message in
-        ESP_LOGI(TAG, "listening");
-        badge_comms_message_t message;
-        xQueueReceive(repertoire_queue, &message, portMAX_DELAY);
-
-        // typecast the message data to the expected message type
-        badge_message_repertoire_t* ts = (badge_message_repertoire_t*)message.data;
-
-        // show we got a message, and its contents
-        ESP_LOGI(TAG, "Got a string: %s \n", ts->nickname);
-
-        // receive 3 timestamps
-        i++;
-        if (i >= 3) {
-
-            // to clean up a listener, call the remove listener
-            // this free's the queue from heap
-            // esp_err_t err = badge_comms_remove_listener(repertoire_queue);
-
-            // show the result of the listener removal
-            // ESP_LOGI(TAG, "unsubscription result: %s", esp_err_to_name(err));
-            return;
-        }
-    }
-}
-
 void send_repertoire(void) {
     // first we create a struct with the data, as we would like to receive on the other side
     badge_message_repertoire_t data;
@@ -143,20 +106,12 @@ void send_repertoire(void) {
 
     strcpy(data.nickname, _nickname);
 
-    // then we wrap the data in something to send over the comms bus
-    badge_comms_message_t message = {0};
-    message.message_type          = MESSAGE_TYPE_REPERTOIRE;
-    message.data_len_to_send      = sizeof(data);
-    memcpy(message.data, &data, message.data_len_to_send);
+    badge_communication_send_repertoire(&data);
 
-    // send the message over the comms bus
-    // badge_communication_send(&message);
     vTaskDelay(pdMS_TO_TICKS(100));
     bsp_set_addressable_led(LED_GREEN);
     vTaskDelay(pdMS_TO_TICKS(100));
     bsp_set_addressable_led(LED_OFF);
-    if (log)
-        ESP_LOGE(TAG, "message sent to: %04x", 0xFFFF);
 }
 
 void Display_repertoire(
@@ -300,25 +255,6 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
         }
     }
 
-    // debug
-    // strcpy(surroundingIDlist[0], "Florian");
-    // strcpy(surroundingIDlist[1], "Dog");
-    // strcpy(surroundingIDlist[2], "Ryan");
-    // strcpy(surroundingIDlist[3], "dwadw");
-    // strcpy(surroundingIDlist[4], "gap");
-    // strcpy(surroundingIDlist[5], "stupid");
-    // strcpy(surroundingIDlist[6], "telegraph");
-    // strcpy(surroundingIDlist[7], "banana");
-
-    // strcpy(surroundingIDlist[8], "bread");
-    // strcpy(surroundingIDlist[9], "template");
-    // strcpy(surroundingIDlist[10], "steve");
-    // strcpy(surroundingIDlist[11], "nya");
-
-    // surrounding_mac[0][0] = 0x69;
-    // surrounding_mac[1][0] = 0x42;
-    // surrounding_mac[2][0] = 0x18;
-
     // total numbers of IDs
     uint16_t nbrepertoryID   = GetNBrepertoryID();
     int      nbsurroundingID = 0;
@@ -339,17 +275,6 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_2, true);
     configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, true);
     configure_keyboard_presses(keyboard_event_queue, true, false, false, true, true);
-
-    // init broadcast receive
-    // get a queue to listen on, for message type MESSAGE_TYPE_TIME, and size badge_message_time_t
-    QueueHandle_t repertoire_queue =
-        NULL;  // badge_comms_add_listener(MESSAGE_TYPE_REPERTOIRE, sizeof(badge_message_repertoire_t));
-    // check if an error occurred (check logs for the reason)
-    if (repertoire_queue == NULL) {
-        ESP_LOGE(TAG, "Failed to add listener");
-    } else
-        ESP_LOGI(TAG, "listening");
-    badge_comms_message_t message;
 
     while (1) {
         if ((esp_timer_get_time() / 1000000) > (timer_track * BroadcastInterval)) {
@@ -493,71 +418,7 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
             displayflag = 0;
         }
 
-        // upon receiving a message
-        if (xQueueReceive(repertoire_queue, &message, pdMS_TO_TICKS(1)) == pdTRUE) {
-            badge_message_repertoire_t* ts                          = (badge_message_repertoire_t*)message.data;
-            char                        inboundnick[nicknamelength] = "";
-            uint8_t                     _inbound_mac[8];
-            strcpy(inboundnick, ts->nickname);
-            for (int i = 0; i < 8; i++) {
-                _inbound_mac[i] = message.from_mac[i];
-                ESP_LOGI(TAG, "MAC: %d \n", _inbound_mac[i]);
-            }
-            ESP_LOGI(TAG, "Got a string: %s \n", ts->nickname);
-            // DisplayBillboard(1, ts->nickname, ts->payload);
-            vTaskDelay(pdMS_TO_TICKS(100));
-            bsp_set_addressable_led(LED_PURPLE);
-            vTaskDelay(pdMS_TO_TICKS(100));
-            bsp_set_addressable_led(LED_OFF);
-
-            // check if already know the inbound message
-
-            int     flag_already_exist    = 0;
-            int     flag_line_repertory   = 0;
-            int     flag_line_surrounding = 0;
-            char    stored_nick[nicknamelength];
-            uint8_t stored_mac[8];
-
-            for (int i = 0; i < nbrepertoryID; i++) {
-                GetRepertoire(stored_nick, stored_mac, i);
-                for (int y = 0; y < 8; y++) {
-                    if (repertory_mac[i][y] == _inbound_mac[y])
-                        flag_line_repertory++;
-                }
-                // if known, update nickname in case it changed
-                if (flag_line_repertory == 8) {
-                    flag_already_exist = 1;
-                    if (strcmp(stored_nick, inboundnick) != 0) {
-                        StoreRepertoire(inboundnick, _inbound_mac, i);
-                        if (log)
-                            ESP_LOGE(TAG, "replaced nickanme %s with %s", stored_nick, inboundnick);
-                    }
-                }
-                flag_line_repertory = 0;
-            }
-
-            for (int i = 0; i < nbsurroundingID; i++) {
-                for (int y = 0; y < 8; y++) {
-                    if (surrounding_mac[i][y] == _inbound_mac[y])
-                        flag_line_surrounding++;
-                }
-                if (flag_line_surrounding == 8) {
-                    flag_already_exist = 1;
-                    strcpy(surroundingIDlist[i], inboundnick);
-                }
-                flag_line_surrounding = 0;
-            }
-
-            // add incoming message to surrounding
-            if ((!flag_already_exist) && (nbsurroundingID < maxIDsurrounding)) {
-                strcpy(surroundingIDlist[nbsurroundingID], inboundnick);
-                for (int i = 0; i < 8; i++) surrounding_mac[nbsurroundingID][i] = _inbound_mac[i];
-                nbsurroundingID++;
-            }
-            displayflag = 1;
-        }
-
-        if ((xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(9)) == pdTRUE)) {
+        if ((xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(100)) == pdTRUE)) {
             ESP_LOGE(TAG, "loop");
             switch (event.type) {
                 case event_input_button: break;  // Ignore raw button input
@@ -565,25 +426,23 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
                     switch (event.args_input_keyboard.action) {
                         case SWITCH_1:
                             configure_keyboard_rotate_disable(keyboard_event_queue);
-                            // esp_err_t err = badge_comms_remove_listener(repertoire_queue);
-                            if (log) {
-                                // ESP_LOGI(TAG, "unsubscription result: %s", esp_err_to_name(err));
-                                ESP_LOGI(TAG, "Exit");
-                            }
-                            vTaskDelay(pdMS_TO_TICKS(100));
                             switch (_app) {
                                 case 1:
                                     configure_keyboard_kb(keyboard_event_queue, tempkbsettings);
                                     char    nameget[32] = "";
                                     uint8_t macget[8]   = {0, 0, 0, 0, 0, 0, 0, 0};
                                     GetRepertoire(nameget, macget, cursor.yabs);
+
+                                    battleship_dst.mode = ADDR_MODE_LONG,
+                                    memcpy(battleship_dst.long_address, macget, 8);
+
                                     // TargetAddress = (macget[6] << 8) | macget[7];
-                                    if (log) {
+                                    /*if (log) {
                                         ESP_LOGE(TAG, "repertory ID of target: %d", cursor.yabs);
                                         ESP_LOGE(TAG, "MAC 6: %02x", macget[6]);
                                         ESP_LOGE(TAG, "MAC 7: %02x", macget[7]);
                                         // ESP_LOGE(TAG, "TargetAddress: %04x", TargetAddress);
-                                    }
+                                    }*/
                                     return screen_home;
                                     break;
                                 default: return screen_home; break;
@@ -658,6 +517,73 @@ screen_t screen_repertoire_entry(QueueHandle_t application_event_queue, QueueHan
                         default: break;
                     }
                     displayflag = 1;
+                    break;
+                case event_communication:
+                    switch (event.args_communication.type) {
+                        case MESSAGE_TYPE_REPERTOIRE:
+                            badge_message_repertoire_t* ts = &event.args_communication.data_repertoire;
+                            char                        inboundnick[nicknamelength] = "";
+                            uint8_t                     _inbound_mac[8];
+                            strcpy(inboundnick, ts->nickname);
+                            for (int i = 0; i < 8; i++) {
+                                _inbound_mac[i] = event.args_communication.src.long_address[i];
+                                ESP_LOGI(TAG, "MAC: %d \n", _inbound_mac[i]);
+                            }
+                            ESP_LOGI(TAG, "Got a string: %s \n", ts->nickname);
+                            // DisplayBillboard(1, ts->nickname, ts->payload);
+                            vTaskDelay(pdMS_TO_TICKS(100));
+                            bsp_set_addressable_led(LED_PURPLE);
+                            vTaskDelay(pdMS_TO_TICKS(100));
+                            bsp_set_addressable_led(LED_OFF);
+
+                            // check if already know the inbound message
+
+                            int     flag_already_exist    = 0;
+                            int     flag_line_repertory   = 0;
+                            int     flag_line_surrounding = 0;
+                            char    stored_nick[nicknamelength];
+                            uint8_t stored_mac[8];
+
+                            for (int i = 0; i < nbrepertoryID; i++) {
+                                GetRepertoire(stored_nick, stored_mac, i);
+                                for (int y = 0; y < 8; y++) {
+                                    if (repertory_mac[i][y] == _inbound_mac[y])
+                                        flag_line_repertory++;
+                                }
+                                // if known, update nickname in case it changed
+                                if (flag_line_repertory == 8) {
+                                    flag_already_exist = 1;
+                                    if (strcmp(stored_nick, inboundnick) != 0) {
+                                        StoreRepertoire(inboundnick, _inbound_mac, i);
+                                        if (log)
+                                            ESP_LOGE(TAG, "replaced nickanme %s with %s", stored_nick, inboundnick);
+                                    }
+                                }
+                                flag_line_repertory = 0;
+                            }
+
+                            for (int i = 0; i < nbsurroundingID; i++) {
+                                for (int y = 0; y < 8; y++) {
+                                    if (surrounding_mac[i][y] == _inbound_mac[y])
+                                        flag_line_surrounding++;
+                                }
+                                if (flag_line_surrounding == 8) {
+                                    flag_already_exist = 1;
+                                    strcpy(surroundingIDlist[i], inboundnick);
+                                }
+                                flag_line_surrounding = 0;
+                            }
+
+                            // add incoming message to surrounding
+                            if ((!flag_already_exist) && (nbsurroundingID < maxIDsurrounding)) {
+                                strcpy(surroundingIDlist[nbsurroundingID], inboundnick);
+                                for (int i = 0; i < 8; i++) surrounding_mac[nbsurroundingID][i] = _inbound_mac[i];
+                                nbsurroundingID++;
+                            }
+                            displayflag = 1;
+                            break;
+                        default: break;
+                    }
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type); break;
             }
