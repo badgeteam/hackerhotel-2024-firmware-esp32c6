@@ -149,6 +149,9 @@ void app_main(void) {
 
     // Printer
     if (printer_initialize()) {
+        pax_buf_t* gfx = bsp_get_gfx_buffer();
+        pax_center_text(gfx, BLACK, pax_font_marker, 12, gfx->height / 2, gfx->width - 12, "Printer connected");
+        bsp_display_flush_with_lut(lut_4s);
         char outstring[256] = {0};
         while (1) {
             event_t event;
@@ -182,11 +185,6 @@ void app_main(void) {
                 }
             }
         }
-        /*char teststring[] = "Hello from ESP32C6\r\n";
-        res               = printer_print(teststring);
-        if (res != ESP_OK) {
-            ESP_LOGE(TAG, "Failed to print");
-        }*/
     }
 
     // Comms test
