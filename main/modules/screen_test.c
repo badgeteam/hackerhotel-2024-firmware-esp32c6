@@ -45,12 +45,11 @@ void Display_credits_entry(int cursor) {
     switch (cursor) {
         case badgeteam_mascot:
             pax_insert_png_buf(gfx, mascots_png_start, mascots_png_end - mascots_png_start, 0, 0, 0);
-
             break;
         case hh2024_team:
             Addborder2toBuffer();
             pax_center_text(gfx, BLACK, font1, fontsizeS * 1.5, gfx->height / 2, 10, "Brought to you by");
-            for (int i = 0; i < sizeof(team); i++)
+            for (int i = 0; i < 12; i++)
                 pax_center_text(
                     gfx,
                     BLACK,
@@ -63,7 +62,13 @@ void Display_credits_entry(int cursor) {
             break;
         case production_sponsor:
             Addborder2toBuffer();
-            WallofText(20, "espressif LOGO & allnet", 1, 10);
+            WallofText(
+                20,
+                "Thanks to espressif for providing us with the glorious ESP32C6, powering this device, and to Allnet "
+                "for helping us with production!",
+                1,
+                10
+            );
             break;
         case thankyou:
             Addborder2toBuffer();
@@ -83,6 +88,7 @@ void Display_credits_entry(int cursor) {
 }
 
 screen_t screen_credits_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+    ESP_LOGE(TAG, "enter credits");
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
     int cursor = 0;
