@@ -188,14 +188,14 @@ screen_t screen_Nametag(QueueHandle_t application_event_queue, QueueHandle_t key
     float scale = 100;
     while (scale > 1) {
         dims = pax_text_size(font1, scale, nickname);
-        if (dims.x <= 296 && dims.y <= 100)
+        if (dims.x <= 286 && dims.y <= 100)
             break;
         scale -= 0.2;
     }
     ESP_LOGW(TAG, "Scale: %f", scale);
     pax_background(gfx, WHITE);
     AddSWtoBufferLR("Map", "Rename");
-    pax_draw_text(gfx, RED, font1, scale, (290 - dims.x) / 2, (100 - dims.y) / 2, nickname);
+    pax_center_text(gfx, RED, font1, scale, (dims.x) / 2, (100 - dims.y) / 2, nickname);
     bsp_display_flush_with_lut(lut_8s);
 
     InitKeyboard(keyboard_event_queue);
