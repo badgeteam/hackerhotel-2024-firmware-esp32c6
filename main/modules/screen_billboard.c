@@ -110,10 +110,11 @@ void DisplayBillboard(int _addmessageflag, char* _nickname, char* _message) {
         strcpy(messagearray[messagecursor], _message);
 
         // increment or reset cursor
-        if (messagecursor >= nbmessages) {
+        if (messagecursor >= nbmessages - 1) {
             messagecursor = 0;
+        } else {
+            messagecursor++;
         }
-        messagecursor++;
     }
 
     for (int i = 0; i < nbmessages; i++) {
