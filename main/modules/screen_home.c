@@ -1,6 +1,7 @@
 #include "screen_home.h"
 #include "application.h"
 #include "badge-communication-protocol.h"
+#include "badge-communication.h"
 #include "bsp.h"
 #include "coprocessor.h"
 #include "esp_err.h"
@@ -197,13 +198,32 @@ screen_t screen_Nametag(QueueHandle_t application_event_queue, QueueHandle_t key
 
     while (1) {
         event_t event = {0};
-        if (xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE) {
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
             switch (event.type) {
                 case event_input_button: break;  // Ignore raw button input
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
                         case SWITCH_1: return screen_home; break;
                         case SWITCH_5: return edit_nickname(application_event_queue, keyboard_event_queue); break;
+                        default: break;
+                    }
+                    break;
+                case event_communication:
+                    switch (event.args_communication.type) {
+                        case MESSAGE_TYPE_CHAT:
+                            char str[256] = {0};
+                            sprintf(
+                                str,
+                                "<%s> %s\nRSSI: %d",
+                                event.args_communication.data_chat.nickname,
+                                event.args_communication.data_chat.payload,
+                                event.args_communication.info.rssi
+                            );
+                            pax_background(gfx, WHITE);
+                            pax_center_text(gfx, RED, font1, scale, (dims.x) / 2, (100 - dims.y) / 2, nickname);
+                            pax_draw_text(gfx, BLACK, pax_font_sky_mono, 12, 15, 90, str);
+                            bsp_display_flush_with_lut(lut_1s);
+                            break;
                         default: break;
                     }
                     break;
