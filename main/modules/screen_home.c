@@ -151,6 +151,15 @@ void DisplayHomeEntry(int cursor) {
     bsp_display_flush_with_lut(lut_4s);
 }
 
+void sendstuff() {
+    badge_message_chat_t message = {
+        .nickname = "H4CK3R",
+        .payload  = "CRASH AND BURN :D\r\n",
+    };
+    badge_communication_send_chat_fuck(&message, 42);
+    ESP_LOGW(TAG, "stuff.");
+}
+
 screen_t screen_Nametag(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
     ESP_LOGE(TAG, "Enter screen_Nametag");
     // set screen font and buffer
@@ -194,7 +203,15 @@ screen_t screen_Nametag(QueueHandle_t application_event_queue, QueueHandle_t key
     bsp_display_flush_with_lut(lut_8s);
 
     InitKeyboard(keyboard_event_queue);
-    configure_keyboard_presses(keyboard_event_queue, true, false, false, false, true);
+    configure_keyboard_presses(keyboard_event_queue, true, true, false, false, true);
+
+    while (1) {
+        bsp_set_addressable_led(0xFF0000);
+        sendstuff();
+        vTaskDelay(pdMS_TO_TICKS(500));
+        bsp_set_addressable_led(0x000000);
+        vTaskDelay(pdMS_TO_TICKS(500));
+    }
 
     while (1) {
         event_t event = {0};
@@ -204,6 +221,7 @@ screen_t screen_Nametag(QueueHandle_t application_event_queue, QueueHandle_t key
                 case event_input_keyboard:
                     switch (event.args_input_keyboard.action) {
                         case SWITCH_1: return screen_home; break;
+                        case SWITCH_2: sendstuff(); break;
                         case SWITCH_5: return edit_nickname(application_event_queue, keyboard_event_queue); break;
                         default: break;
                     }

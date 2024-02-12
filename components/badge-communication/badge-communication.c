@@ -102,6 +102,7 @@ void badge_communication_rx_task(void* param) {
             event.args_communication.type = packet->type;
             memcpy(&event.args_communication.src, &src, sizeof(ieee802154_address_t));
             memcpy(&event.args_communication.dst, &dst, sizeof(ieee802154_address_t));
+            memcpy(&event.args_communication.info, &raw_message.frame_info, sizeof(esp_ieee802154_frame_info_t));
             memcpy(event.args_communication.data, packet->content, data_length);
 
             uint32_t index = 0;
@@ -157,7 +158,7 @@ esp_err_t badge_communication_init(QueueHandle_t* output_queues) {
 
     ESP_LOGI(TAG, "Short address: %04x", short_address);
 
-    if (xTaskCreate(badge_communication_rx_task, "badge-communication", 2048, (void*)output_queues, 8, NULL) !=
+    if (xTaskCreate(badge_communication_rx_task, "badge-communication", 4096, (void*)output_queues, 8, NULL) !=
         pdPASS) {
         ESP_LOGE(TAG, "Failed to create task");
         return ESP_FAIL;
@@ -177,7 +178,11 @@ esp_err_t badge_communication_stop() {
 }
 
 esp_err_t badge_communication_send(
-    badge_comms_message_type_t type, uint8_t* content, uint8_t content_length, ieee802154_address_t* arg_dst
+    badge_comms_message_type_t type,
+    uint8_t*                   content,
+    uint8_t                    content_length,
+    ieee802154_address_t*      arg_dst,
+    uint8_t                    repeat
 ) {
     uint16_t pan_id = BADGE_COMMUNICATION_PAN;
 
@@ -202,7 +207,7 @@ esp_err_t badge_communication_send(
     badge_communication_packet_t* packet = (badge_communication_packet_t*)&raw_packet[1 + raw_packet_length];
     packet->magic                        = BADGE_COMMUNICATION_MAGIC;
     packet->version                      = BADGE_COMMUNICATION_VERSION;
-    packet->repeat                       = 0;
+    packet->repeat                       = repeat;
     packet->flags                        = 0;
     packet->type                         = (uint8_t)type;
     memcpy(packet->content, content, content_length);
@@ -222,19 +227,35 @@ esp_err_t badge_communication_send(
 }
 
 esp_err_t badge_communication_send_time(badge_message_time_t* data) {
-    return badge_communication_send(MESSAGE_TYPE_TIME, (uint8_t*)data, sizeof(badge_message_time_t), NULL);
+    return badge_communication_send(MESSAGE_TYPE_TIME, (uint8_t*)data, sizeof(badge_message_time_t), NULL, 0);
 }
 
 esp_err_t badge_communication_send_chat(badge_message_chat_t* data) {
-    return badge_communication_send(MESSAGE_TYPE_CHAT, (uint8_t*)data, sizeof(badge_message_chat_t), NULL);
+    return badge_communication_send(MESSAGE_TYPE_CHAT, (uint8_t*)data, sizeof(badge_message_chat_t), NULL, 0);
+}
+
+esp_err_t badge_communication_send_chat_fuck(badge_message_chat_t* data, uint8_t repeat) {
+    return badge_communication_send(MESSAGE_TYPE_CHAT, (uint8_t*)data, sizeof(badge_message_chat_t), NULL, repeat);
 }
 
 esp_err_t badge_communication_send_repertoire(badge_message_repertoire_t* data) {
-    return badge_communication_send(MESSAGE_TYPE_REPERTOIRE, (uint8_t*)data, sizeof(badge_message_repertoire_t), NULL);
+    return badge_communication_send(
+        MESSAGE_TYPE_REPERTOIRE,
+        (uint8_t*)data,
+        sizeof(badge_message_repertoire_t),
+        NULL,
+        0
+    );
 }
 
 esp_err_t badge_communication_send_battleship(badge_message_battleship_t* data, ieee802154_address_t* dst) {
-    return badge_communication_send(MESSAGE_TYPE_BATTLESHIP, (uint8_t*)data, sizeof(badge_message_battleship_t), dst);
+    return badge_communication_send(
+        MESSAGE_TYPE_BATTLESHIP,
+        (uint8_t*)data,
+        sizeof(badge_message_battleship_t),
+        dst,
+        0
+    );
 }
 
 // ESP-IDF callback functions
