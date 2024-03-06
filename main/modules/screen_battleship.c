@@ -33,11 +33,14 @@ extern const uint8_t caronv_png_end[] asm("_binary_caronv_png_end");
 extern const uint8_t carond_png_start[] asm("_binary_carond_png_start");
 extern const uint8_t carond_png_end[] asm("_binary_carond_png_end");
 
+// for boards (array of 20)
 #define water         0
 #define boat          1
 #define missedshot    2
 #define boathit       3
 #define boatdestroyed 4
+
+#define boatnotplaced 255  // used on playership and ennemyship 6 array
 
 #define playing 0
 #define victory 1
@@ -52,6 +55,7 @@ extern const uint8_t carond_png_end[] asm("_binary_carond_png_end");
 #define east      3
 #define southeast 4
 #define southwest 5
+
 
 #define invalid -1
 
@@ -717,8 +721,8 @@ screen_t screen_battleship_entry(QueueHandle_t application_event_queue, QueueHan
                     }
 
                     for (int i = 0; i < 6; i++) {
-                        playership[i] = -1;
-                        ennemyship[i] = -1;
+                        playership[i] = boatnotplaced;
+                        ennemyship[i] = boatnotplaced;
                     }
 
                     // set the starter, can be overridden if a player oppenent is the inviter
@@ -940,7 +944,7 @@ screen_t screen_battleship_placeships(
             // set all block to water aside from the placed boats
             for (int i = 0; i < 20; i++) playerboard[i] = water;
             for (int i = 0; i < 6; i++) {
-                if (playership[i] != -1)
+                if (playership[i] != boatnotplaced)
                     playerboard[playership[i]] = boat;
             }
 
@@ -964,10 +968,10 @@ screen_t screen_battleship_placeships(
                             if (shipplaced > 0) {
                                 // remove the middle of the long ship
                                 if (shipplaced == long_whole) {
-                                    playership[shipplaced] = -1;
+                                    playership[shipplaced] = boatnotplaced;
                                 }
                                 shipplaced--;
-                                playership[shipplaced] = -1;
+                                playership[shipplaced] = boatnotplaced;
                                 displayflag            = 1;
                             } else {  // exit
                                 if (Screen_Confirmation(forfeitprompt, application_event_queue, keyboard_event_queue))
@@ -1181,7 +1185,7 @@ screen_t screen_battleship_battle(
         ESP_LOGE(TAG, "Failed to add listener");
     } else
         ESP_LOGI(TAG, "listening");
-    badge_comms_message_t message;
+    // badge_comms_message_t message;
 
     while (1) {
         event_t event = {0};
