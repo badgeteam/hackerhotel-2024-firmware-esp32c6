@@ -177,7 +177,6 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
                             // ESP_LOGI(TAG, "unsubscription result: %s", esp_err_to_name(err));
                             return screen_home;
                             break;
-
                         case SWITCH_2: break;
                         case SWITCH_3: break;
                         case SWITCH_4: break;
@@ -206,6 +205,7 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
                             break;
                         default: break;
                     }
+                    break;
                 case event_communication:
                     switch (event.args_communication.type) {
                         case MESSAGE_TYPE_CHAT:
@@ -220,8 +220,7 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
                         default: break;
                     }
                     break;
-                    break;
-                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type); break;
             }
         }
     }

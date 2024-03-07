@@ -50,28 +50,11 @@ void AddSWtoBufferLR(const char* SW1str, const char* SW5str);
 
 void AddBlocktoBuffer(int _x, int _y);
 
-// Parse _message[] into an array of _nbwords
-// and makes them into up to _maxnblines which are _maxlinelength pixel long
-// can be centered if the _centered flag is high
-void DisplayWallofTextWords(
-    int  _fontsize,
-    int  _maxlinelength,
-    int  _maxnblines,
-    int  _nbwords,
-    int  _xoffset,
-    int  _yoffset,
-    char _message[200],
-    int  _centered
-);
-pax_vec1_t WallofText(int _yoffset, const char* _message, int _centered, int _cursor);
-pax_vec1_t WallofTextnb_line(int _yoffset, const char* _message, int _centered, int _cursor, int _maxlinelength);
-// Parse _message[] into lines
-// and makes them into up to _maxnblines which are _maxlinelength pixel long
-// can be centered if the _centered flag is high
+int  countwords(const char* text);
+void getword(const char* text, char* word, int word_nb);
+void drawParagraph(int x_offset, int y_offset, const char* text, bool centered);
 
-void DisplayWallofText(
-    int _fontsize, int _maxlinelenght, int _maxnblines, int _xoffset, int _yoffset, char _message[500], int _centered
-);
+pax_vec1_t WallofText(int _yoffset, const char* _message, int _centered, int _cursor);
 
 void Justify_right_text(
     pax_buf_t* buf, pax_col_t color, const pax_font_t* font, float font_size, float x, float y, const char* text
