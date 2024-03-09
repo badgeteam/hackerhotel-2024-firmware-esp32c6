@@ -476,7 +476,7 @@ int countwords(const char* text) {
 
 void getword(const char* text, char* word, int word_nb) {
     int wordcount = 0;
-    strncpy(word, "\0", 1);
+    strcpy(word, "");
     for (int i = 0; i <= (strlen(text)); i++) {
         if (text[i] == ' ' || text[i] == '\0') {
             wordcount++;
@@ -539,7 +539,7 @@ void drawParagraph(int x_offset, int y_offset, const char* text, bool centered) 
             // displays the line
             pax_draw_text(gfx, BLACK, font1, fontsizeS, x_offset, y_offset + nblines * fontsizeS, linetodisplay);
 
-            strncpy(linetodisplay, "\0", 1);
+            strcpy(linetodisplay, "");
             nblines++;
             if (nblines >= maxnblines || i >= (word_nb - 1)) {
                 return;
