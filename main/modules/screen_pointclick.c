@@ -225,6 +225,8 @@ extern const uint8_t end_d3_S[] asm("_binary_end_d3_png_start");
 extern const uint8_t end_d3_E[] asm("_binary_end_d3_png_end");
 extern const uint8_t end_d4_S[] asm("_binary_end_d4_png_start");
 extern const uint8_t end_d4_E[] asm("_binary_end_d4_png_end");
+extern const uint8_t news_S[] asm("_binary_news_png_start");
+extern const uint8_t news_E[] asm("_binary_news_png_end");
 
 
 screen_t screen_pointclick_dock1(
@@ -1535,14 +1537,59 @@ screen_t screen_end(
     }
 }
 
+screen_t screen_start(
+    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int main_cursor[nb_state]
+) {
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, true, true, true, true, true);
+    int cursor = main_cursor[0];
+    ESP_LOGE(TAG, "start");
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
+    pax_background(gfx, WHITE);
+    pax_insert_png_buf(gfx, news_S, news_E - news_S, 0, 0, 0);
+    nvs_handle_t handle;
+    esp_err_t    res                      = nvs_open("owner", NVS_READWRITE, &handle);
+    // read nickname from memory
+    char         nickname[nicknamelength] = {0};
+    size_t       size                     = 0;
+    res                                   = nvs_get_str(handle, "nickname", NULL, &size);
+    if ((res == ESP_OK) && (size <= sizeof(nickname) - 1)) {
+        res = nvs_get_str(handle, "nickname", nickname, &size);
+        if (res != ESP_OK || strlen(nickname) < 1) {
+            sprintf(nickname, "No nickname configured");
+        }
+    }
+    pax_center_text(gfx, RED, font1, fontsizeS * 1.5, 100, 39, nickname);
+    pax_center_text(gfx, RED, font1, fontsizeS, 100, 67, "11th February 2024");
+    bsp_display_flush();
+    while (1) {
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, portMAX_DELAY) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        default:
+                            main_cursor[state_cursor] = screen_PC_s;
+                            return screen_PC_dock1;
+                            break;
+                    }
+                    ESP_LOGE(TAG, "cursor %d", cursor);
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+
 // entry
 screen_t screen_pointclick_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
-    screen_t current_screen_PC = screen_PC_dock1;
+    screen_t current_screen_PC = screen_PC_start;
     int      main_cursor[nb_state];
     for (int i = 0; i < nb_state; i++) {
         main_cursor[i] = 0;
     }
-    main_cursor[state_cursor]               = screen_PC_s;
+    main_cursor[state_cursor]               = 0;
     main_cursor[state_locklighthouse]       = locklighthouse_locked;
     main_cursor[state_tutorial_dock]        = tutorial_uncomplete;
     main_cursor[state_tutorial_dune2]       = tutorial_uncomplete;
@@ -1733,6 +1780,11 @@ screen_t screen_pointclick_entry(QueueHandle_t application_event_queue, QueueHan
             case screen_PC_end:
                 {
                     current_screen_PC = screen_end(application_event_queue, keyboard_event_queue, main_cursor);
+                    break;
+                }
+            case screen_PC_start:
+                {
+                    current_screen_PC = screen_start(application_event_queue, keyboard_event_queue, main_cursor);
                     break;
                 }
             default: return current_screen_PC; break;
