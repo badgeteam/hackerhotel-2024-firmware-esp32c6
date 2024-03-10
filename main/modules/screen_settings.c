@@ -623,8 +623,8 @@ screen_t screen_settings_entry(QueueHandle_t application_event_queue, QueueHandl
 
             if (strcmp(voltage, oldvoltage) || strcmp(SoC, oldSoC) || (oldchargingstate != bsp_battery_charging())) {
                 bsp_display_flush();
-                strcpy(oldvoltage, voltage);
-                strcpy(oldSoC, SoC);
+                strncpy(oldvoltage, voltage, strlen(voltage));
+                strncpy(oldSoC, SoC, strlen(SoC));
                 oldchargingstate = bsp_battery_charging();
             }
         }

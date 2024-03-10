@@ -49,7 +49,6 @@ const char screen_name[13][30] = {
     "Memorium",
     "Lighthouse",
 
-
     "placeholder",
     "placeholder",
     "placeholder",

@@ -49,6 +49,7 @@ void DisplayScrambled(char usertext[500], int cursor, int cursortoggle) {
 
     WallofText(30, scrambled[0], 0, cursor);
 
+
     // draw user taxt + cursor
     cursorloc = WallofText(75, usertext, 0, cursor);
     pax_draw_line(gfx, BLACK, cursorloc.x + 1, cursorloc.y, cursorloc.x - 1, cursorloc.y);

@@ -9,32 +9,33 @@ idf_component_register(
          ${module_srcs}
     INCLUDE_DIRS "."
                  "modules"
-    EMBED_FILES ${project_dir}/resources/bodgeteam.png
-                ${project_dir}/resources/textedit.png
-                ${project_dir}/resources/capslock.png
-                ${project_dir}/resources/special.png
-                ${project_dir}/resources/page1.png
-                ${project_dir}/resources/page2.png
-                ${project_dir}/resources/page3.png
-                ${project_dir}/resources/mascots.png
-                ${project_dir}/resources/shades.png
-                ${project_dir}/resources/homescreen.png
-                ${project_dir}/resources/settings.png
-                ${project_dir}/resources/border1.png
-                ${project_dir}/resources/border2.png
-                ${project_dir}/resources/caronl.png
-                ${project_dir}/resources/caronv.png
-                ${project_dir}/resources/carond.png
-                ${project_dir}/resources/switchframe1.png
-                ${project_dir}/resources/switchframe2.png
-                ${project_dir}/resources/border2lsw.png
-                ${project_dir}/resources/border2lrsw.png
-                ${project_dir}/resources/library.png
-                ${project_dir}/resources/battery1.png
-                ${project_dir}/resources/battery2.png
-                ${project_dir}/resources/map.png
-                ${project_dir}/resources/lutdial.png
-                ${project_dir}/resources/pointclick/dock1_e.png
+    EMBED_FILES 
+               ${project_dir}/resources/battery1.png
+               ${project_dir}/resources/battery2.png
+               ${project_dir}/resources/bodgeteam.png
+               ${project_dir}/resources/border1.png
+               ${project_dir}/resources/border2.png
+               ${project_dir}/resources/border2lsw.png
+               ${project_dir}/resources/border2lrsw.png
+               ${project_dir}/resources/capslock.png
+               ${project_dir}/resources/carond.png
+               ${project_dir}/resources/caronl.png
+               ${project_dir}/resources/caronv.png
+               ${project_dir}/resources/homescreen.png
+               ${project_dir}/resources/library.png
+               ${project_dir}/resources/lutdial.png
+               ${project_dir}/resources/map.png
+               ${project_dir}/resources/mascots.png
+               ${project_dir}/resources/page1.png
+               ${project_dir}/resources/page2.png
+               ${project_dir}/resources/page3.png
+               ${project_dir}/resources/settings.png
+               ${project_dir}/resources/shades.png
+               ${project_dir}/resources/special.png
+               ${project_dir}/resources/switchframe1.png
+               ${project_dir}/resources/switchframe2.png
+               ${project_dir}/resources/textedit.png
+               ${project_dir}/resources/pointclick/dock1_e.png
                ${project_dir}/resources/pointclick/dock1_n.png
                ${project_dir}/resources/pointclick/dock1_s.png
                ${project_dir}/resources/pointclick/dock1_w_d1.png
