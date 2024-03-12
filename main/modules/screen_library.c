@@ -74,12 +74,12 @@ const uint8_t library_pos[][2] = {
 };
 
 const char library_item_content[][5][600] = {
-    // entry 1
+    // entry 1 Samuel Morse
     {"Samuel F.B. Morse developed an electric telegraph (1832–35) and then invented, with his friend Alfred Vail, the "
      "Morse Code (1838). The latter is a system for representing letters of the alphabet, numerals, and punctuation "
      "marks by arranging dots, dashes, and spaces. The codes are transmitted through either a telegraph machine or "
      "visual signals."},
-    // entry 2
+    // entry 2 Queen Victoria's Message
     {"To the President of the United States, Washington:—The Queen desires to congratulate the President upon the "
      "successful completion of this great international work, in which the Queen has taken the deepest interest.",
 
@@ -88,7 +88,7 @@ const char library_item_content[][5][600] = {
      "connects Great Britain with the United States will prove an additional link between the nations, whose "
      "friendship is founded upon their common interest and reciprocal esteem. The Queen has much pleasure in thus "
      "communicating with the President, and renewing to him her wishes for the prosperity of the United States."},
-    // entry 3
+    // entry 3 Transatlantic Telegraph Cables
     {"In an 1838 letter to Francis O.J. Smith in 1838, Morse wrote: ‘This mode of instantaneous communication must "
      "inevitably become an instrument of immense power, to be wielded for good or for evil, as it shall be properly or "
      "improperly directed.’ Transatlantic Telegraph Cables were undersea cables running under the Atlantic Ocean for "
@@ -99,7 +99,7 @@ const char library_item_content[][5][600] = {
      "In September 1858, after several days of progressive deterioration of the insulation, the cable failed "
      "altogether. The reaction to the news was tremendous. Some writers even hinted that the line was a mere hoax; "
      "others pronounced it a stock-exchange speculation. "},
-    // entry 4
+    // entry 4 SS Carondelet
     {"SS Carondelet was an immigrant ship, active in 1877 and 1878, that transported immigrants from Havana to New "
      "York City.The declaration has been preserved: “I, A. C. Burrows, Master of the S.S. Carondelet do solemnly, "
      "sincerely, and truly swear that the following List or Manifest, subscribed by me, and now delivered by me to the "
@@ -116,10 +116,25 @@ const char library_item_content[][5][600] = {
      "and that said List or Manifest truly "
      "sets forth the number of said passengers who have died on said voyage, and the names and ages of those who "
      "died.\n\n So help me God. \n\n A. C. Burrows. \n\n 3rd of February, 1878."},
-    // entry 5
-    {"In April 1844 Morse set up a small laboratory in a first floor committee room in the Senate wing of the Capitol "
+    // entry 5 Anatole Deibler
+    {"Anatole Deibler was deemed the 'most hated man in France'. There was more prejudice against him than American or "
+     "English executioners because of a superstition that a French headsman had an evil eye that brought death or "
+     "disaster to whoever caught glimpse. Deibler died suddenly from a heart attack at a metro station while on his "
+     "way to his 300th execution.",
+
+     "Culled From History Of the Guillotine: Most people believe the guillotine to have been invented by Dr. "
+     "Guillotine. He is said to have obtained his information of its use from reading an anonymous description of an "
+     "execution at Milan.",
+
+     "Sometimes stated that Dr. Guillotine himself perished by the bloody machine which bears his "
+     "name. During the French Revolution it was first given the name Louisette: first called la guillotine, April 28, "
+     "1792."},
+    // entry 6 The First Telegraph Post Office
+    {"In April 1844 Morse set up a small laboratory in a first floor committee room in the Senate wing of the "
+     "Capitol "
      "across from the Old Supreme Court chamber. On May 24, 1844, after weeks of testing, Morse gathered a small "
-     "group—reportedly in the Supreme Court chamber, but more likely in the committee room—to send the first message "
+     "group—reportedly in the Supreme Court chamber, but more likely in the committee room—to send the first "
+     "message "
      "all the way to Baltimore.",
 
      "Morse tapped out the message suggested to him by Ellsworth’s daughter Annie: “What "
@@ -127,21 +142,8 @@ const char library_item_content[][5][600] = {
      "Baltimore. The experiment was a success.",
 
      "The Post Office assumed control of the Washington-Baltimore telegraph "
-     "line in October and opened it to the public on a fee-basis, but Congress declined to fund the line’s extension "
-     "or to purchase Morse’s patents as he had hoped. The tenacious Morse instead secured private investment and "
-     "licensing, and by 1850, more than 10,000 miles of telegraph wire stretched across the nation."},
-    // entry 6
-    {"In April 1844 Morse set up a small laboratory in a first floor committee room in the Senate wing of the Capitol "
-     "across from the Old Supreme Court chamber. On May 24, 1844, after weeks of testing, Morse gathered a small "
-     "group—reportedly in the Supreme Court chamber, but more likely in the committee room—to send the first message "
-     "all the way to Baltimore.",
-
-     "Morse tapped out the message suggested to him by Ellsworth’s daughter Annie: “What "
-     "Hath God Wrought.” Moments later an identical message was returned from Morse’s partner Alfred Vail in "
-     "Baltimore. The experiment was a success.",
-
-     "The Post Office assumed control of the Washington-Baltimore telegraph "
-     "line in October and opened it to the public on a fee-basis, but Congress declined to fund the line’s extension "
+     "line in October and opened it to the public on a fee-basis, but Congress declined to fund the line’s "
+     "extension "
      "or to purchase Morse’s patents as he had hoped. The tenacious Morse instead secured private investment and "
      "licensing, and by 1850, more than 10,000 miles of telegraph wire stretched across the nation."},
     {"Entry 7"},
