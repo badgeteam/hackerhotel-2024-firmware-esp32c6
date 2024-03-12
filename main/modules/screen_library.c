@@ -20,7 +20,6 @@
 #include <stdio.h>
 #include <string.h>
 
-
 extern const uint8_t diamondl_png_start[] asm("_binary_diamondl_png_start");
 extern const uint8_t diamondl_png_end[] asm("_binary_diamondl_png_end");
 extern const uint8_t diamondr_png_start[] asm("_binary_diamondr_png_start");
@@ -34,8 +33,6 @@ extern const uint8_t library_png_start[] asm("_binary_library_png_start");
 extern const uint8_t library_png_end[] asm("_binary_library_png_end");
 
 static const char* TAG = "library";
-
-void DisplayLibraryEntry(int cursor);
 
 const char library_items_name[][60] = {
     "Samuel Morse",
@@ -167,7 +164,6 @@ void Display_library_content(QueueHandle_t keyboard_event_queue, int cursor, int
         configure_keyboard_press(keyboard_event_queue, SWITCH_1, false);
     if (library_item_nbpage[cursor] > page) {
         AddOneTextSWtoBuffer(SWITCH_5, "Next");
-        // configure_keyboard_press(keyboard_event_queue, SWITCH_5, true);
     } else {
         AddOneTextSWtoBuffer(SWITCH_5, "Continue");
     }
@@ -175,12 +171,15 @@ void Display_library_content(QueueHandle_t keyboard_event_queue, int cursor, int
     bsp_display_flush();
 }
 
-screen_t screen_library_content(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int cursor) {
-    ESP_LOGE(TAG, "screen_library_content");
+screen_t screen_library_content(
+    QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int* cursor
+) {
+    printf(TAG);
+    printf(": Content\n");
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, false, false, true);
     int page = 0;
-    Display_library_content(keyboard_event_queue, cursor, page);
+    Display_library_content(keyboard_event_queue, *cursor, page);
     while (1) {
         event_t event = {0};
         if (xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE) {
@@ -192,18 +191,15 @@ screen_t screen_library_content(QueueHandle_t application_event_queue, QueueHand
                             if (page)
                                 page--;
                             break;
-                        case SWITCH_2: break;
-                        case SWITCH_3: break;
-                        case SWITCH_4: break;
                         case SWITCH_5:
-                            if (page < library_item_nbpage[cursor])
+                            if (page < library_item_nbpage[*cursor])
                                 page++;
                             else
-                                return screen_library;
+                                return screen_LI_select;
                             break;
                         default: break;
                     }
-                    Display_library_content(keyboard_event_queue, cursor, page);
+                    Display_library_content(keyboard_event_queue, *cursor, page);
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
             }
@@ -211,61 +207,13 @@ screen_t screen_library_content(QueueHandle_t application_event_queue, QueueHand
     }
 }
 
-
-screen_t screen_library_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
-    ESP_LOGE(TAG, "Enter library");
-    bsp_apply_lut(lut_4s);
-    int cursor = 0;
-    // update the keyboard event handler settings
-    InitKeyboard(keyboard_event_queue);
-    configure_keyboard_presses(keyboard_event_queue, true, false, false, false, true);
-    configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, true);
-    DisplayLibraryEntry(cursor);
-
-    while (1) {
-        event_t event = {0};
-        if (xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE) {
-            switch (event.type) {
-                case event_input_button: break;  // Ignore raw button input
-                case event_input_keyboard:
-                    switch (event.args_input_keyboard.action) {
-                        case SWITCH_1: return screen_home; break;
-                        case SWITCH_2: break;
-                        case SWITCH_3: break;
-                        case ROTATION_L3: cursor = Decrement(cursor, Nb_item_library); break;
-                        case ROTATION_R3: cursor = Increment(cursor, Nb_item_library); break;
-                        case SWITCH_4: break;
-                        case SWITCH_5:
-                            screen_library_content(application_event_queue, keyboard_event_queue, cursor);
-                            break;
-                        default: break;
-                    }
-                    ESP_LOGE(TAG, "Cursor %d", cursor);
-                    DisplayLibraryEntry(cursor);
-                    configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, true);
-                    break;
-                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
-            }
-        }
-    }
-}
-
-void DisplayLibraryEntry(int cursor) {
+void DisplayLibrarySelect(int cursor) {
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_insert_png_buf(gfx, library_png_start, library_png_end - library_png_start, 0, 0, 0);
     AddOneTextSWtoBuffer(SWITCH_1, "Exit");
     DrawArrowHorizontal(SWITCH_3);
     AddOneTextSWtoBuffer(SWITCH_5, "Select");
-    // pax_center_text(gfx, BLACK, font1, fontsizeS, gfx->height / 2, 87, library_items_name[cursor]);
     drawParagraph(78, 87, library_items_name[cursor], true);
-    // pax_insert_png_buf(
-    //     gfx,
-    //     diamondb_png_start,
-    //     diamondb_png_end - diamondb_png_start,
-    //     library_pos[cursor][0] - 4,
-    //     library_pos[cursor][1] - 8,
-    //     0
-    // );
     pax_insert_png_buf(
         gfx,
         diamondt_png_start,
@@ -275,4 +223,56 @@ void DisplayLibraryEntry(int cursor) {
         0
     );
     bsp_display_flush();
+}
+
+screen_t screen_library_select(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue, int* cursor) {
+    printf(TAG);
+    printf(": Select\n");
+    bsp_apply_lut(lut_4s);
+    InitKeyboard(keyboard_event_queue);
+    configure_keyboard_presses(keyboard_event_queue, true, false, false, false, true);
+    configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, true);
+    DisplayLibrarySelect(*cursor);
+
+    while (1) {
+        event_t event = {0};
+        if (xQueueReceive(application_event_queue, &event, pdMS_TO_TICKS(10)) == pdTRUE) {
+            switch (event.type) {
+                case event_input_button: break;  // Ignore raw button input
+                case event_input_keyboard:
+                    switch (event.args_input_keyboard.action) {
+                        case SWITCH_1: return screen_home; break;
+                        case ROTATION_L3: *cursor = Decrement(*cursor, Nb_item_library); break;
+                        case ROTATION_R3: *cursor = Increment(*cursor, Nb_item_library); break;
+                        case SWITCH_5: return screen_LI_content; break;
+                        default: break;
+                    }
+                    ESP_LOGE(TAG, "Cursor %d", *cursor);
+                    DisplayLibrarySelect(*cursor);
+                    configure_keyboard_rotate_both(keyboard_event_queue, SWITCH_3, true);
+                    break;
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+            }
+        }
+    }
+}
+
+screen_t screen_library_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
+    screen_t current_screen = screen_LI_select;
+    int      cursor         = 0;
+    while (1) {
+        switch (current_screen) {
+            case screen_LI_select:
+                {
+                    current_screen = screen_library_select(application_event_queue, keyboard_event_queue, &cursor);
+                    break;
+                }
+            case screen_LI_content:
+                {
+                    current_screen = screen_library_content(application_event_queue, keyboard_event_queue, &cursor);
+                    break;
+                }
+            default: return screen_home;
+        }
+    }
 }
