@@ -26,6 +26,10 @@ typedef enum _screen {
     screen_LI_select,
     screen_LI_content,
 
+    screen_LH_splash,
+    screen_LH_playing,
+    screen_LH_victory,
+
     screen_BS_splash,
     screen_BS_placeships,
     screen_BS_battle,

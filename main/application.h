@@ -25,7 +25,7 @@
 #define production 1
 
 // SET PRODUCTION OR DEV HERE
-#define release_type production
+#define release_type dev
 //
 
 #define log 1

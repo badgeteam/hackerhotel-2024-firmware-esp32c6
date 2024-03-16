@@ -264,7 +264,7 @@ void app_main(void) {
     }
 
     // Main application
-    screen_t current_screen = screen_welcome;
+    screen_t current_screen = screen_scrambled;
     if (release_type == production)
         current_screen = screen_mascots;
     while (1) {
