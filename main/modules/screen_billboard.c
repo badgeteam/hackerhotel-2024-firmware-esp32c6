@@ -70,8 +70,8 @@ void receive_str(void) {
 
 void send_str(char _nickname[nicknamelength], char _payload[messagelength]) {
     badge_message_chat_t data;
-    strcpy(data.nickname, _nickname);
-    strcpy(data.payload, _payload);
+    strncpy(data.nickname, _nickname, strlen(_nickname));
+    strncpy(data.payload, _payload, strlen(_payload));
     badge_communication_send_chat(&data);
 }
 
@@ -106,8 +106,8 @@ void DisplayBillboard(int _addmessageflag, char* _nickname, char* _message) {
     // if the add message flag is raised
     if (_addmessageflag) {
         // add message to the board
-        strcpy(nicknamearray[messagecursor], _nickname);
-        strcpy(messagearray[messagecursor], _message);
+        strncpy(nicknamearray[messagecursor], _nickname, strlen(_nickname));
+        strncpy(messagearray[messagecursor], _message, strlen(_message));
 
         // increment or reset cursor
         if (messagecursor >= nbmessages - 1) {
@@ -121,10 +121,11 @@ void DisplayBillboard(int _addmessageflag, char* _nickname, char* _message) {
         int j = 0 - i;
         if (j < 0)
             j = nbmessages - i;
-        strcpy(billboardline, nicknamearray[j]);
+        strcpy(billboardline, "");
+        strncpy(billboardline, nicknamearray[j], strlen(nicknamearray[j]));
         if (strlen(nicknamearray[j]) != 0)  // don't put the colon if there is no message
             strcat(billboardline, ": ");
-        strcat(billboardline, messagearray[j]);
+        strncat(billboardline, messagearray[j], strlen(messagearray[j]));
 
         int shift = (i + messagecursor + nbmessages - 1) % nbmessages;
 
@@ -177,7 +178,6 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
                             // ESP_LOGI(TAG, "unsubscription result: %s", esp_err_to_name(err));
                             return screen_home;
                             break;
-
                         case SWITCH_2: break;
                         case SWITCH_3: break;
                         case SWITCH_4: break;
@@ -206,6 +206,7 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
                             break;
                         default: break;
                     }
+                    break;
                 case event_communication:
                     switch (event.args_communication.type) {
                         case MESSAGE_TYPE_CHAT:
@@ -220,8 +221,7 @@ screen_t screen_billboard_entry(QueueHandle_t application_event_queue, QueueHand
                         default: break;
                     }
                     break;
-                    break;
-                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
+                default: ESP_LOGE(TAG, "Unhandled event type %u", event.type); break;
             }
         }
     }

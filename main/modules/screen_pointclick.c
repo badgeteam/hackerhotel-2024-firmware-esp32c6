@@ -1017,7 +1017,6 @@ screen_t screen_library_closeup(
 ) {
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, true, true, false, false);
-    int displayflag = 1;
     ESP_LOGE(TAG, "library_closeup");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
@@ -1043,7 +1042,6 @@ screen_t screen_library_closeup(
                         case SWITCH_5: break;
                         default: break;
                     }
-                    displayflag = 1;
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
             }
@@ -1056,7 +1054,6 @@ screen_t screen_library_closeup_d1(
 ) {
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, true, true, false, false);
-    int displayflag = 1;
     ESP_LOGE(TAG, "library_closeup_d1");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
@@ -1082,7 +1079,6 @@ screen_t screen_library_closeup_d1(
                         case SWITCH_5: break;
                         default: break;
                     }
-                    displayflag = 1;
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
             }
@@ -1095,7 +1091,6 @@ screen_t screen_lighthouse1_n_gc_d1(
 ) {
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
-    int displayflag = 1;
     ESP_LOGE(TAG, "lighthouse1_n_gc_d1");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
@@ -1118,7 +1113,6 @@ screen_t screen_lighthouse1_n_gc_d1(
                         case SWITCH_5: break;
                         default: break;
                     }
-                    displayflag = 1;
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
             }
@@ -1132,7 +1126,6 @@ screen_t screen_lighthouse2_n_go(
 ) {
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
-    int displayflag = 1;
     ESP_LOGE(TAG, "lighthouse2_n_go");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
@@ -1155,7 +1148,6 @@ screen_t screen_lighthouse2_n_go(
                         case SWITCH_5: break;
                         default: break;
                     }
-                    displayflag = 1;
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
             }
@@ -1168,7 +1160,6 @@ screen_t screen_messageboard_closeup(
 ) {
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, true, true, false, false);
-    int displayflag = 1;
     ESP_LOGE(TAG, "messageboard_closeup");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
@@ -1194,7 +1185,6 @@ screen_t screen_messageboard_closeup(
                         case SWITCH_5: break;
                         default: break;
                     }
-                    displayflag = 1;
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
             }
@@ -1207,7 +1197,6 @@ screen_t screen_road1_e_jorge(
 ) {
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, true, false);
-    int displayflag = 1;
     ESP_LOGE(TAG, "road1_e_jorge");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
@@ -1235,7 +1224,6 @@ screen_t screen_road1_e_jorge(
                         case SWITCH_5: break;
                         default: break;
                     }
-                    displayflag = 1;
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
             }
@@ -1248,7 +1236,6 @@ screen_t screen_town1_n_d1(
 ) {
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
-    int displayflag = 1;
     ESP_LOGE(TAG, "town1_n_d1");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
@@ -1272,7 +1259,6 @@ screen_t screen_town1_n_d1(
                         case SWITCH_5: break;
                         default: break;
                     }
-                    displayflag = 1;
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
             }
@@ -1285,7 +1271,6 @@ screen_t screen_town1_e_d1(
 ) {
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
-    int displayflag = 1;
     ESP_LOGE(TAG, "town1_e_d1");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
@@ -1309,7 +1294,6 @@ screen_t screen_town1_e_d1(
                         case SWITCH_5: break;
                         default: break;
                     }
-                    displayflag = 1;
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
             }
@@ -1322,7 +1306,6 @@ screen_t screen_town1_s_d1_boat(
 ) {
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
-    int displayflag = 1;
     ESP_LOGE(TAG, "town1_s_d1_boat");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
@@ -1346,7 +1329,6 @@ screen_t screen_town1_s_d1_boat(
                         case SWITCH_5: break;
                         default: break;
                     }
-                    displayflag = 1;
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
             }
@@ -1359,7 +1341,6 @@ screen_t screen_town1_s_d1_messageboard(
 ) {
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
-    int displayflag = 1;
     ESP_LOGE(TAG, "town1_s_d1_messageboard");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
@@ -1381,7 +1362,6 @@ screen_t screen_town1_s_d1_messageboard(
                         case SWITCH_5: break;
                         default: break;
                     }
-                    displayflag = 1;
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
             }
@@ -1394,7 +1374,6 @@ screen_t screen_dune2_n_d(
 ) {
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, true, false, false);
-    int displayflag = 1;
     ESP_LOGE(TAG, "dune2_n_d");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
@@ -1417,7 +1396,6 @@ screen_t screen_dune2_n_d(
                         case SWITCH_5: break;
                         default: break;
                     }
-                    displayflag = 1;
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
             }
@@ -1430,7 +1408,6 @@ screen_t screen_shop_closeup(
 ) {
     InitKeyboard(keyboard_event_queue);
     configure_keyboard_presses(keyboard_event_queue, false, false, false, true, false);
-    int displayflag = 1;
     ESP_LOGE(TAG, "shop_closeup");
     pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
@@ -1457,7 +1434,6 @@ screen_t screen_shop_closeup(
                         case SWITCH_5: break;
                         default: break;
                     }
-                    displayflag = 1;
                     break;
                 default: ESP_LOGE(TAG, "Unhandled event type %u", event.type);
             }
@@ -2196,7 +2172,6 @@ screen_t screen_pointclick_town1(
     int displayflag  = 1;
     int nbdirection  = 4;
     int move_forward = 0;
-    int move_back    = 0;
     int button2      = 0;
     int button4      = 0;
     ESP_LOGE(TAG, "town1");
@@ -2267,7 +2242,6 @@ screen_t screen_pointclick_town1(
             displayflag = 0;
         }
         move_forward  = 0;
-        move_back     = 0;
         button2       = 0;
         button4       = 0;
         event_t event = {0};

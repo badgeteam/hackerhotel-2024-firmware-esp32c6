@@ -4966,7 +4966,7 @@ screen_t screen_hangman_definition(
     pax_background(gfx, WHITE);
     Addborder2toBuffer();
     pax_draw_text(gfx, BLACK, font1, fontsizeS * 2, 20, 20, victorian_words[_chosenwordID]);
-    DisplayWallofText(fontsizeS, 270, 6, 10, 55, victorian_definitions[_chosenwordID], 1);
+    drawParagraph(8, 55, victorian_definitions[_chosenwordID], false);
     bsp_display_flush();
 
     InitKeyboard(keyboard_event_queue);

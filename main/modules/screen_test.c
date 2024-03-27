@@ -62,22 +62,22 @@ void Display_credits_entry(int cursor) {
             break;
         case production_sponsor:
             Addborder2toBuffer();
-            WallofText(
+            drawParagraph(
+                6,
                 20,
                 "Thanks to espressif for providing us with the glorious ESP32C6, powering this device, and to Allnet "
                 "for helping us with production!",
-                1,
-                10
+                true
             );
             break;
         case thankyou:
             Addborder2toBuffer();
-            WallofText(
+            drawParagraph(
+                6,
                 20,
                 "Thank you to the Hacker Hotel team for making this event happen, and thank you for attending and "
                 "playing~ \n\n\n\n With love, badge.team",
-                1,
-                10
+                true
             );
             break;
 
