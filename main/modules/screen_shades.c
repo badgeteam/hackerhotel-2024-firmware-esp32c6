@@ -32,8 +32,7 @@ screen_t screen_shades_entry(QueueHandle_t application_event_queue, QueueHandle_
     };
     xQueueSend(keyboard_event_queue, &kbsettings, portMAX_DELAY);
 
-    const pax_font_t* font = pax_font_saira_regular;
-    pax_buf_t*        gfx  = bsp_get_gfx_buffer();
+    pax_buf_t* gfx = bsp_get_gfx_buffer();
     pax_background(gfx, WHITE);
     pax_insert_png_buf(gfx, shades_png_start, shades_png_end - shades_png_start, 0, 0, 0);
     bsp_display_flush();

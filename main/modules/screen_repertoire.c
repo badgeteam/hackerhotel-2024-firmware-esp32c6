@@ -48,6 +48,8 @@ uint16_t GetNBrepertoryID(void) {
     bool     res   = nvs_get_u16_wrapped("Repertoire", "IDcount", &value);
     if (log)
         ESP_LOGE(TAG, "Get NBrepertoryID: %d", value);
+    if (res != ESP_OK)
+        ESP_LOGE(TAG, "GetNBrepertoryID failed");
     return value;
 }
 
