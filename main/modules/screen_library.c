@@ -37,7 +37,7 @@ static const char* TAG = "library";
 
 void DisplayLibraryEntry(int cursor);
 
-const char library_items_name[Nb_item_library][60] = {
+const char library_items_name[][60] = {
     "Samuel Morse",
     "Queen Victoria's Message",
     "Transatlantic Telegraph Cables",
@@ -55,7 +55,7 @@ const char library_items_name[Nb_item_library][60] = {
     "Entry 13",
 };
 
-const uint8_t library_pos[Nb_item_library][2] = {
+const uint8_t library_pos[][2] = {
     {74, 38},
     {86, 34},
     {98, 37},
@@ -73,7 +73,7 @@ const uint8_t library_pos[Nb_item_library][2] = {
     {222, 37},
 };
 
-const char library_item_content[Nb_item_library][5][600] = {
+const char library_item_content[][5][600] = {
     // entry 1
     {"Samuel F.B. Morse developed an electric telegraph (1832–35) and then invented, with his friend Alfred Vail, the "
      "Morse Code (1838). The latter is a system for representing letters of the alphabet, numerals, and punctuation "
@@ -154,7 +154,7 @@ const char library_item_content[Nb_item_library][5][600] = {
     {"Entry 13"},
 };
 
-const uint8_t library_item_nbpage[Nb_item_library] = {0, 1, 1, 3, 2, 2, 0, 0, 0, 0, 0, 0, 0};
+const uint8_t library_item_nbpage[] = {0, 1, 1, 3, 2, 2, 0, 0, 0, 0, 0, 0, 0};
 
 pax_vec1_t DrawLibraryContent(int _yoffset, const char* _message) {
     pax_buf_t* gfx  = bsp_get_gfx_buffer();
@@ -270,7 +270,6 @@ pax_vec1_t DrawLibraryContent(int _yoffset, const char* _message) {
 }
 
 void Display_library_content(QueueHandle_t keyboard_event_queue, int cursor, int page) {
-    pax_buf_t* gfx = bsp_get_gfx_buffer();
     AddSWtoBufferLR("", "");
     if (page > 0) {
         AddOneTextSWtoBuffer(SWITCH_1, "Previous");
