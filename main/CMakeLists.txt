@@ -34,6 +34,7 @@ idf_component_register(
                 ${project_dir}/resources/battery2.png
                 ${project_dir}/resources/map.png
                 ${project_dir}/resources/lutdial.png
+                ${project_dir}/resources/news.png
                 ${project_dir}/resources/pointclick/dock1_e.png
                ${project_dir}/resources/pointclick/dock1_n.png
                ${project_dir}/resources/pointclick/dock1_s.png

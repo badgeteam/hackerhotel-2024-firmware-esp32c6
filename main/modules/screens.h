@@ -64,6 +64,6 @@ typedef enum _screen {
     screen_PC_town1_e_d1,
     screen_PC_town1_s_d1_boat,
     screen_PC_town1_s_d1_messageboard,
-    screen_PC_end
-
+    screen_PC_end,
+    screen_PC_start
 } screen_t;
