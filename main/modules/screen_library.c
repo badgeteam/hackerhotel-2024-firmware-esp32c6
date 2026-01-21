@@ -37,7 +37,7 @@ static const char* TAG = "library";
 
 void DisplayLibraryEntry(int cursor);
 
-const char library_items_name[Nb_item_library][60] = {
+const char library_items_name[][60] = {
     "Samuel Morse",
     "Queen Victoria's Message",
     "Transatlantic Telegraph Cables",
@@ -55,7 +55,7 @@ const char library_items_name[Nb_item_library][60] = {
     "Entry 13",
 };
 
-const uint8_t library_pos[Nb_item_library][2] = {
+const uint8_t library_pos[][2] = {
     {74, 38},
     {86, 34},
     {98, 37},
@@ -73,7 +73,7 @@ const uint8_t library_pos[Nb_item_library][2] = {
     {222, 37},
 };
 
-const char library_item_content[Nb_item_library][5][600] = {
+const char library_item_content[][5][600] = {
     // entry 1
     {"Samuel F.B. Morse developed an electric telegraph (1832–35) and then invented, with his friend Alfred Vail, the "
      "Morse Code (1838). The latter is a system for representing letters of the alphabet, numerals, and punctuation "
@@ -154,123 +154,9 @@ const char library_item_content[Nb_item_library][5][600] = {
     {"Entry 13"},
 };
 
-const uint8_t library_item_nbpage[Nb_item_library] = {0, 1, 1, 3, 2, 2, 0, 0, 0, 0, 0, 0, 0};
-
-pax_vec1_t DrawLibraryContent(int _yoffset, const char* _message) {
-    pax_buf_t* gfx  = bsp_get_gfx_buffer();
-    pax_vec1_t dims = {
-        .x = 999,
-        .y = 999,
-    };
-    pax_vec1_t cursorloc = {
-        .x = 0,
-        .y = 0,
-    };
-
-    int _centered  = 1;
-    int _cursor    = 1;
-    int maxnblines = 12;
-
-    ESP_LOGE(TAG, "Unhandled event type %s", _message);
-    ESP_LOGE(TAG, "Unhandled event type %d", strlen(_message));
-    char linetodisplay[128] = "";
-    char Words[64];  // Parsed Word
-    int  _xoffset       = 6;
-    int  _maxlinelength = gfx->height - _xoffset * 2;
-
-    // counters
-    int nblines     = 0;
-    int j           = 0;
-    int wordcount   = 0;
-    int cursorfound = 0;
-
-    if (_cursor == 0) {
-        cursorloc.x = _xoffset;
-        cursorloc.y = _yoffset;
-        cursorfound = 1;
-    }
-
-    // pax_background(gfx, WHITE);
-
-    // goes through each character until the end of the string (unless nblines >= maxnblines)
-    for (int i = 0; i <= (strlen(_message)); i++) {
-        // If space or end of string found, process word/lines
-        if (_message[i] == ' ' || _message[i] == '\0') {
-            Words[j] = '\0';  // end of string terminate the word
-            j        = 0;
-            strcat(linetodisplay, Words);  // add word to linetodisplay
-            strcat(linetodisplay, " ");    // and a space that was not parsed
-
-            // if longer than maxlinelenght, go to the next line
-            dims = pax_text_size(font1, fontsizeS, linetodisplay);
-            if ((int)dims.x > _maxlinelength || _message[i] == '\0') {
-                if (_message[i] != '\0')
-                    linetodisplay[strlen(linetodisplay) - (strlen(Words) + 2)] =
-                        '\0';  // remove the last word and 2 spaces
-
-                // center the text
-                if (_centered) {
-                    dims     = pax_text_size(font1, fontsizeS, linetodisplay);
-                    _xoffset = gfx->height / 2 - (int)(dims.x / 2);
-                }
-
-                ESP_LOGE(TAG, "line to display length: %d", strlen(linetodisplay));
-
-                pax_draw_text(
-                    gfx,
-                    BLACK,
-                    font1,
-                    fontsizeS,
-                    _xoffset,
-                    _yoffset + nblines * fontsizeS,
-                    linetodisplay
-                );  // displays the line
-
-                // calculate the cursor position
-
-                if ((_cursor < strlen(linetodisplay)) && !cursorfound) {
-                    ESP_LOGE(TAG, "cursor on: %c", linetodisplay[_cursor]);
-                    linetodisplay[_cursor] = '\0';
-                    cursorloc              = pax_text_size(font1, fontsizeS, linetodisplay);
-                    cursorloc.x            = cursorloc.x + _xoffset;
-                    cursorloc.y            = _yoffset + nblines * fontsizeS;
-                    cursorfound            = 1;
-                } else {
-                    _cursor = _cursor - strlen(linetodisplay);
-                    if (!_cursor) {
-                        cursorloc.x = _xoffset;
-                        cursorloc.y = _yoffset + (nblines + 1) * fontsizeS;
-                        cursorfound = 1;
-                    }
-                }
-                ESP_LOGE(TAG, "cursor x: %f", cursorloc.x);
-                ESP_LOGE(TAG, "cursor y: %f", cursorloc.y);
-
-
-                strcpy(linetodisplay, Words);  // Add the latest word that was parsed to the next line
-                strcat(linetodisplay, " ");
-                nblines++;
-                if (nblines >= maxnblines) {
-                    break;
-                }
-            }
-
-            // If it is the last word of the string
-            // if (_message[i] == '\0') {
-            //     pax_draw_text(gfx, BLACK, font1, fontsizeS, _xoffset, _yoffset + nblines * fontsizeS, linetodisplay);
-            // }
-            wordcount++;  // Move to the next word
-
-        } else {
-            Words[j] = _message[i];  // Store the character into newString
-            j++;                     // Move to the next character within the word
-        }
-    }
-    return cursorloc;
-}
+const uint8_t library_item_nbpage[] = {0, 1, 1, 3, 2, 2, 0, 0, 0, 0, 0, 0, 0};
 
 void Display_library_content(QueueHandle_t keyboard_event_queue, int cursor, int page) {
-    pax_buf_t* gfx = bsp_get_gfx_buffer();
     AddSWtoBufferLR("", "");
     if (page > 0) {
         AddOneTextSWtoBuffer(SWITCH_1, "Previous");
@@ -283,7 +169,7 @@ void Display_library_content(QueueHandle_t keyboard_event_queue, int cursor, int
     } else {
         AddOneTextSWtoBuffer(SWITCH_5, "Continue");
     }
-    DrawLibraryContent(Y_offset_library, library_item_content[cursor][page]);
+    drawParagraph(6, Y_offset_library, library_item_content[cursor][page], true);
     bsp_display_flush();
 }
 
@@ -369,7 +255,7 @@ void DisplayLibraryEntry(int cursor) {
     DrawArrowHorizontal(SWITCH_3);
     AddOneTextSWtoBuffer(SWITCH_5, "Select");
     // pax_center_text(gfx, BLACK, font1, fontsizeS, gfx->height / 2, 87, library_items_name[cursor]);
-    WallofTextnb_line(87, library_items_name[cursor], 1, 10, 140);
+    drawParagraph(78, 87, library_items_name[cursor], true);
     // pax_insert_png_buf(
     //     gfx,
     //     diamondb_png_start,

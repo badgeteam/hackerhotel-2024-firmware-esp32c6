@@ -153,6 +153,7 @@ typedef enum _menu_wifi_action {
     ACTION_PHASE2_CHAP,
 } menu_wifi_action_t;
 
+/*
 static bool edit_network_type(wifi_auth_mode_t* network_type) {
     pax_buf_t* gfx = bsp_get_gfx_buffer();
 
@@ -194,7 +195,7 @@ static bool edit_network_type(wifi_auth_mode_t* network_type) {
     // menu_navigate_previous(menu);
     // menu_navigate_next(menu);
 
-    /*if (action != ACTION_NONE) {
+    if (action != ACTION_NONE) {
         if (action == ACTION_BACK) {
             pick = -1;
             break;
@@ -206,7 +207,7 @@ static bool edit_network_type(wifi_auth_mode_t* network_type) {
         action = ACTION_NONE;
         render_wifi_help(pax_buffer);
     }
-}*/
+}
 
     pax_background(gfx, WHITE);
     menu_render(gfx, menu, 0, 0, 296, 128);
@@ -259,7 +260,7 @@ static bool edit_network_type(wifi_auth_mode_t* network_type) {
     bsp_display_flush();
 
     return false;
-}
+}*/
 
 static void draw_wifi_defaults() {
     const pax_font_t* font = pax_font_saira_regular;
@@ -378,14 +379,14 @@ static void edit_wifi(QueueHandle_t application_event_queue, QueueHandle_t keybo
     }
 }
 
-static void draw() {
-    const pax_font_t* font = pax_font_saira_regular;
-    pax_buf_t*        gfx  = bsp_get_gfx_buffer();
-    pax_background(gfx, WHITE);
-    pax_draw_text(gfx, RED, font, 18, 5, 5, "Settings & OTA update");
-    pax_insert_png_buf(gfx, settings_png_start, settings_png_end - settings_png_start, 0, gfx->width - 24, 0);
-    bsp_display_flush();
-}
+// static void draw() {
+//     const pax_font_t* font = pax_font_saira_regular;
+//     pax_buf_t*        gfx  = bsp_get_gfx_buffer();
+//     pax_background(gfx, WHITE);
+//     pax_draw_text(gfx, RED, font, 18, 5, 5, "Settings & OTA update");
+//     pax_insert_png_buf(gfx, settings_png_start, settings_png_end - settings_png_start, 0, gfx->width - 24, 0);
+//     bsp_display_flush();
+// }
 
 // screen_t screen_settings_entry(QueueHandle_t application_event_queue, QueueHandle_t keyboard_event_queue) {
 //     if (log)

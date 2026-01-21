@@ -353,179 +353,6 @@ int WaitingforOpponent(const char* _prompt, QueueHandle_t application_event_queu
     bsp_set_addressable_led(LED_YELLOW);
     return 1;
 }
-// Parse _message[] into an array of _nbwords
-// and makes them into up to _maxnblines which are _maxlinelength pixel long
-// can be centered if the _centered flag is high
-void DisplayWallofTextWords(
-    int  _fontsize,
-    int  _maxlinelength,
-    int  _maxnblines,
-    int  _nbwords,
-    int  _xoffset,
-    int  _yoffset,
-    char _message[200],
-    int  _centered
-) {
-    // set screen font and buffer
-    const pax_font_t* font = pax_font_sky;
-    pax_buf_t*        gfx  = bsp_get_gfx_buffer();
-
-    // to verify text length on buffer
-    pax_vec1_t dims = {
-        .x = 999,
-        .y = 999,
-    };
-
-    // char message[128]       = "The quick brown fox jumps over the lazy dog, The quick brie da";  // message to parse
-    char linetodisplay[128] = "";
-    char Words[50][32];  // Array of parsed words
-
-    // counters
-    int nblines   = 0;
-    int j         = 0;
-    int wordcount = 0;
-
-    pax_background(gfx, WHITE);
-
-    // goes through each character until the end of the string (unless nblines >= maxnblines)
-    for (int i = 0; i <= (strlen(_message)); i++) {
-        // If space or end of string found, process word/lines
-        if (_message[i] == ' ' || _message[i] == '\0') {
-            Words[wordcount][j] = '\0';  // end of string terminate the word
-            j                   = 0;
-            // pax_draw_text(gfx, BLACK, font, fontsize, xoffset, wordcount * fontsize, Words[wordcount]);//use to
-            // display words
-            strcat(linetodisplay, Words[wordcount]);  // add word to linetodisplay
-            strcat(linetodisplay, " ");               // and a space that was not parsed
-
-            // if longer than maxlinelength, go to the next line
-            dims = pax_text_size(font, _fontsize, linetodisplay);
-            if ((int)dims.x > _maxlinelength) {
-                linetodisplay[strlen(linetodisplay) - (strlen(Words[wordcount]) + 2)] =
-                    '\0';  // remove the last word and 2 spaces
-
-                // center the text
-                if (_centered) {
-                    dims     = pax_text_size(font, _fontsize, linetodisplay);
-                    _xoffset = gfx->height / 2 - (int)(dims.x / 2);
-                }
-
-                pax_draw_text(
-                    gfx,
-                    BLACK,
-                    font,
-                    _fontsize,
-                    _xoffset,
-                    _yoffset + nblines * _fontsize,
-                    linetodisplay
-                );  // displays
-                    // the line
-                strcpy(
-                    linetodisplay,
-                    Words[wordcount]
-                );  // Add the latest word that was parsed and removed to the next line
-                nblines++;
-                if (nblines >= _maxnblines) {
-                    break;
-                }
-            }
-
-            // If it is the last word of the string
-            if (_message[i] == '\0') {
-                pax_draw_text(gfx, BLACK, font, _fontsize, _xoffset, _yoffset + nblines * _fontsize, linetodisplay);
-            }
-            wordcount++;  // Move to the next word
-
-        } else {
-            Words[wordcount][j] = _message[i];  // Store the character into newString
-            j++;                                // Move to the next character within the word
-        }
-    }
-
-    bsp_display_flush();
-}
-
-// Parse _message[] into lines
-// and makes them into up to _maxnblines which are _maxlinelength pixel long
-// can be centered if the _centered flag is high
-void DisplayWallofText(
-    int _fontsize, int _maxlinelength, int _maxnblines, int _xoffset, int _yoffset, char _message[500], int _centered
-) {
-    // set screen font and buffer
-    const pax_font_t* font = pax_font_sky;
-    pax_buf_t*        gfx  = bsp_get_gfx_buffer();
-
-    // to verify text length on buffer
-    pax_vec1_t dims = {
-        .x = 999,
-        .y = 999,
-    };
-
-    // char message[128]       = "The quick brown fox jumps over the lazy dog, The quick brie da";  // message to parse
-    char linetodisplay[128] = "";
-    char Words[64];  // Array of parsed words
-
-    // counters
-    int nblines   = 0;
-    int j         = 0;
-    int wordcount = 0;
-
-    // pax_background(gfx, WHITE);
-
-    // goes through each character until the end of the string (unless nblines >= maxnblines)
-    for (int i = 0; i <= (strlen(_message)); i++) {
-        // If space or end of string found, process word/lines
-        if (_message[i] == ' ' || _message[i] == '\0') {
-            Words[j] = '\0';  // end of string terminate the word
-            j        = 0;
-            // pax_draw_text(gfx, BLACK, font, fontsize, xoffset, wordcount * fontsize, Words[wordcount]);//use to
-            // display words
-            strcat(linetodisplay, Words);  // add word to linetodisplay
-            strcat(linetodisplay, " ");    // and a space that was not parsed
-
-            // if longer than maxlinelength, go to the next line
-            dims = pax_text_size(font, _fontsize, linetodisplay);
-            if ((int)dims.x > _maxlinelength) {
-                linetodisplay[strlen(linetodisplay) - (strlen(Words) + 2)] = '\0';  // remove the last word and 2 spaces
-
-                // center the text
-                if (_centered) {
-                    dims     = pax_text_size(font, _fontsize, linetodisplay);
-                    _xoffset = gfx->height / 2 - (int)(dims.x / 2);
-                }
-
-                pax_draw_text(
-                    gfx,
-                    BLACK,
-                    font,
-                    _fontsize,
-                    _xoffset,
-                    _yoffset + nblines * _fontsize,
-                    linetodisplay
-                );  // displays
-                    // the line
-                strcpy(linetodisplay,
-                       Words);  // Add the latest word that was parsed and removed to the next line
-                nblines++;
-                if (nblines >= _maxnblines) {
-                    break;
-                }
-            }
-
-            // If it is the last word of the string
-            if (_message[i] == '\0') {
-                pax_draw_text(gfx, BLACK, font, _fontsize, _xoffset, _yoffset + nblines * _fontsize, linetodisplay);
-            }
-            wordcount++;  // Move to the next word
-
-        } else {
-            Words[j] = _message[i];  // Store the character into newString
-            j++;                     // Move to the next character within the word
-        }
-    }
-
-    // bsp_display_flush();
-}
 
 pax_vec1_t WallofText(int _yoffset, const char* _message, int _centered, int _cursor) {
     pax_buf_t* gfx  = bsp_get_gfx_buffer();
@@ -637,7 +464,29 @@ pax_vec1_t WallofText(int _yoffset, const char* _message, int _centered, int _cu
     return cursorloc;
 }
 
-pax_vec1_t WallofTextnb_line(int _yoffset, const char* _message, int _centered, int _cursor, int _maxlinelength) {
+int countwords(const char* text) {
+    int wordcount = 0;
+    for (int i = 0; i <= (strlen(text)); i++) {
+        if (text[i] == ' ' || text[i] == '\0') {
+            wordcount++;
+        }
+    }
+    return wordcount;
+}
+
+void getword(const char* text, char* word, int word_nb) {
+    int wordcount = 0;
+    strcpy(word, "");
+    for (int i = 0; i <= (strlen(text)); i++) {
+        if (text[i] == ' ' || text[i] == '\0') {
+            wordcount++;
+        } else if (word_nb == wordcount) {
+            strncat(word, &text[i], 1);
+        }
+    }
+}
+
+void drawParagraph(int x_offset, int y_offset, const char* text, bool centered) {
     pax_buf_t* gfx  = bsp_get_gfx_buffer();
     pax_vec1_t dims = {
         .x = 999,
@@ -648,13 +497,13 @@ pax_vec1_t WallofTextnb_line(int _yoffset, const char* _message, int _centered, 
         .y = 0,
     };
 
-    ESP_LOGE(TAG, "Unhandled event type %s", _message);
-    ESP_LOGE(TAG, "Unhandled event type %d", strlen(_message));
-    // char message[128]       = "The quick brown fox jumps over the lazy dog, The quick brie da";  // message to parse
+    int _cursor    = 1;
+    int maxnblines = 12;
+    int word_nb    = countwords(text);
+
     char linetodisplay[128] = "";
-    char Words[64];  // Parsed Word
-    int  _xoffset = 6;
-    // int  _maxlinelength = gfx->height - _xoffset * 2;
+    char word[50]           = "";
+    int  maxlinelength      = gfx->height - x_offset * 2;
 
     // counters
     int nblines     = 0;
@@ -663,88 +512,40 @@ pax_vec1_t WallofTextnb_line(int _yoffset, const char* _message, int _centered, 
     int cursorfound = 0;
 
     if (_cursor == 0) {
-        cursorloc.x = _xoffset;
-        cursorloc.y = _yoffset;
+        cursorloc.x = x_offset;
+        cursorloc.y = y_offset;
         cursorfound = 1;
     }
 
-    // pax_background(gfx, WHITE);
+    for (int i = 0; i <= word_nb; i++) {
+        getword(text, word, i);
+        strncat(linetodisplay, word, strlen(word));  // add word to linetodisplay
+        strcat(linetodisplay, " ");                  // and a space that was not parsed
 
-    // goes through each character until the end of the string (unless nblines >= maxnblines)
-    for (int i = 0; i <= (strlen(_message)); i++) {
-        // If space or end of string found, process word/lines
-        if (_message[i] == ' ' || _message[i] == '\0') {
-            Words[j] = '\0';  // end of string terminate the word
-            j        = 0;
-            strcat(linetodisplay, Words);  // add word to linetodisplay
-            strcat(linetodisplay, " ");    // and a space that was not parsed
-
-            // if longer than maxlinelenght, go to the next line
-            dims = pax_text_size(font1, fontsizeS, linetodisplay);
-            if ((int)dims.x > _maxlinelength || _message[i] == '\0') {
-                if (_message[i] != '\0')
-                    linetodisplay[strlen(linetodisplay) - (strlen(Words) + 2)] =
-                        '\0';  // remove the last word and 2 spaces
-
-                // center the text
-                if (_centered) {
-                    dims     = pax_text_size(font1, fontsizeS, linetodisplay);
-                    _xoffset = gfx->height / 2 - (int)(dims.x / 2);
-                }
-
-                ESP_LOGE(TAG, "line to display length: %d", strlen(linetodisplay));
-
-                pax_draw_text(
-                    gfx,
-                    BLACK,
-                    font1,
-                    fontsizeS,
-                    _xoffset,
-                    _yoffset + nblines * fontsizeS,
-                    linetodisplay
-                );  // displays the line
-
-                // calculate the cursor position
-
-                if ((_cursor < strlen(linetodisplay)) && !cursorfound) {
-                    ESP_LOGE(TAG, "cursor on: %c", linetodisplay[_cursor]);
-                    linetodisplay[_cursor] = '\0';
-                    cursorloc              = pax_text_size(font1, fontsizeS, linetodisplay);
-                    cursorloc.x            = cursorloc.x + _xoffset;
-                    cursorloc.y            = _yoffset + nblines * fontsizeS;
-                    cursorfound            = 1;
-                } else {
-                    _cursor = _cursor - strlen(linetodisplay);
-                    if (!_cursor) {
-                        cursorloc.x = _xoffset;
-                        cursorloc.y = _yoffset + (nblines + 1) * fontsizeS;
-                        cursorfound = 1;
-                    }
-                }
-                ESP_LOGE(TAG, "cursor x: %f", cursorloc.x);
-                ESP_LOGE(TAG, "cursor y: %f", cursorloc.y);
-
-
-                strcpy(linetodisplay, Words);  // Add the latest word that was parsed to the next line
-                strcat(linetodisplay, " ");
-                nblines++;
-                if (nblines >= 8) {
-                    break;
-                }
+        // if longer than maxlinelenght, make new line
+        dims = pax_text_size(font1, fontsizeS, linetodisplay);
+        if ((int)dims.x > maxlinelength || i >= (word_nb)) {
+            if ((int)dims.x > maxlinelength) {
+                linetodisplay[strlen(linetodisplay) - strlen(word) - 2] = '\0';  // remove the last word and 2 spaces
+                i--;                                                             // rewind 1 word back
             }
 
-            // If it is the last word of the string
-            // if (_message[i] == '\0') {
-            //     pax_draw_text(gfx, BLACK, font1, fontsizeS, _xoffset, _yoffset + nblines * fontsizeS, linetodisplay);
-            // }
-            wordcount++;  // Move to the next word
+            // center the text
+            if (centered) {
+                dims     = pax_text_size(font1, fontsizeS, linetodisplay);
+                x_offset = gfx->height / 2 - (int)(dims.x / 2);
+            }
 
-        } else {
-            Words[j] = _message[i];  // Store the character into newString
-            j++;                     // Move to the next character within the word
+            // displays the line
+            pax_draw_text(gfx, BLACK, font1, fontsizeS, x_offset, y_offset + nblines * fontsizeS, linetodisplay);
+
+            strcpy(linetodisplay, "");
+            nblines++;
+            if (nblines >= maxnblines || i >= (word_nb - 1)) {
+                return;
+            }
         }
     }
-    return cursorloc;
 }
 
 void AddSwitchesBoxtoBuffer(int _switch)  // in black
@@ -1090,7 +891,7 @@ esp_err_t nvs_get_u8_blob_wrapped(const char* namespace, const char* key, uint8_
     }
     res = nvs_get_blob(handle, key, value, &length);
     if (res != ESP_OK) {
-        value[0] = NULL;
+        value = NULL;
         return res;
     }
     nvs_close(handle);
